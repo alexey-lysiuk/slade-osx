@@ -1182,11 +1182,13 @@ void MapCanvas::update(long frametime) {
 }
 
 void MapCanvas::mouseToCenter() {
+#if 0
 	wxRect rect = GetScreenRect();
 #if SFML_VERSION_MAJOR < 2
 	sf::Window::SetCursorPosition(sf::Window::GetWidth()/2, sf::Window::GetHeight()/2);
 #else
 	sf::Mouse::setPosition(sf::Vector2i(rect.x + rect.width*0.5, rect.y + rect.height*0.5));
+#endif
 #endif
 }
 
