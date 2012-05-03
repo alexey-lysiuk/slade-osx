@@ -319,7 +319,7 @@
 
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		8A103248154AF4BE00D4393F /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8A103248154AF4BE00D4393F /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = source/Info.plist; sourceTree = "<group>"; };
 		8A17E7D9154C3435008FD77E /* libftgl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libftgl.a; path = thirdparty/FTGL/lib/libftgl.a; sourceTree = "<group>"; };
 		8A17E7DB154C3467008FD77E /* libfreetype.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfreetype.a; path = thirdparty/FreeType/lib/libfreetype.a; sourceTree = "<group>"; };
 		8A21528C154BD58E000E4252 /* libfluidsynth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfluidsynth.a; path = thirdparty/FluidSynth/lib/libfluidsynth.a; sourceTree = "<group>"; };
@@ -387,7 +387,7 @@
 		8A5692FD154EE501000DF3CE /* tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tables.h; sourceTree = "<group>"; };
 		8A569352154EE835000DF3CE /* InputPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InputPrefsPanel.cpp; path = src/InputPrefsPanel.cpp; sourceTree = "<group>"; };
 		8A569353154EE835000DF3CE /* InputPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InputPrefsPanel.h; path = src/InputPrefsPanel.h; sourceTree = "<group>"; };
-		8AD18A54154A8A7000AB9C07 /* SLADE-osx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "SLADE-osx.icns"; sourceTree = "<group>"; };
+		8AD18A54154A8A7000AB9C07 /* SLADE-osx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "SLADE-osx.icns"; path = "source/SLADE-osx.icns"; sourceTree = "<group>"; };
 		8AD18D56154A8A9A00AB9C07 /* ACSPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ACSPrefsPanel.cpp; path = src/ACSPrefsPanel.cpp; sourceTree = "<group>"; };
 		8AD18D57154A8A9A00AB9C07 /* ACSPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ACSPrefsPanel.h; path = src/ACSPrefsPanel.h; sourceTree = "<group>"; };
 		8AD18D58154A8A9A00AB9C07 /* ActionSpecial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ActionSpecial.cpp; path = src/ActionSpecial.cpp; sourceTree = "<group>"; };
@@ -1299,6 +1299,7 @@
 				8AD18F53154A8A9B00AB9C07 /* ZTextureEditorPanel.h */,
 			);
 			name = Sources;
+			path = source;
 			sourceTree = "<group>";
 		};
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
@@ -1603,7 +1604,7 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
-				8A537002154FE13E00F88FC4 /* ShellScript */,
+				8A537002154FE13E00F88FC4 /* Copy Resources */,
 			);
 			buildRules = (
 			);
@@ -1655,18 +1656,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		8A537002154FE13E00F88FC4 /* ShellScript */ = {
+		8A537002154FE13E00F88FC4 /* Copy Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Copy Resources";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "rsync -a \"${SRCROOT}/dist/res/\" \"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"";
+			shellScript = "rsync -a \"${SRCROOT}/source/dist/res/\" \"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2031,7 +2033,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = src/Main.h;
+				GCC_PREFIX_HEADER = source/src/Main.h;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_FILE_OFFSET_BITS=64",
 					__WXMAC__,
@@ -2055,7 +2057,7 @@
 					thirdparty/SFML/include,
 					thirdparty/wxWidgets/include,
 				);
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = source/Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2070,14 +2072,6 @@
 					thirdparty/sndfile/lib,
 					thirdparty/vorbis/lib,
 					thirdparty/wxWidgets/lib,
-					"\"$(SRCROOT)/thirdparty/SFML/lib\"",
-					"\"$(SRCROOT)/thirdparty/FreeType/lib\"",
-					"\"$(SRCROOT)/thirdparty/wxWidgets/lib\"",
-					"\"$(SRCROOT)/thirdparty/flac/lib\"",
-					"\"$(SRCROOT)/thirdparty/FTGL/lib\"",
-					"\"$(SRCROOT)/thirdparty/sndfile/lib\"",
-					"\"$(SRCROOT)/thirdparty/vorbis/lib\"",
-					"\"$(SRCROOT)/thirdparty/GTK/lib\"",
 				);
 				PRODUCT_NAME = Slade;
 				SHARED_PRECOMPS_DIR = "$(OBJROOT)/PrecompiledHeaders";
@@ -2092,7 +2086,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = src/Main.h;
+				GCC_PREFIX_HEADER = source/src/Main.h;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					NDEBUG,
 					"_FILE_OFFSET_BITS=64",
@@ -2117,7 +2111,7 @@
 					thirdparty/SFML/include,
 					thirdparty/wxWidgets/include,
 				);
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = source/Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2132,14 +2126,6 @@
 					thirdparty/sndfile/lib,
 					thirdparty/vorbis/lib,
 					thirdparty/wxWidgets/lib,
-					"\"$(SRCROOT)/thirdparty/SFML/lib\"",
-					"\"$(SRCROOT)/thirdparty/FreeType/lib\"",
-					"\"$(SRCROOT)/thirdparty/wxWidgets/lib\"",
-					"\"$(SRCROOT)/thirdparty/flac/lib\"",
-					"\"$(SRCROOT)/thirdparty/FTGL/lib\"",
-					"\"$(SRCROOT)/thirdparty/sndfile/lib\"",
-					"\"$(SRCROOT)/thirdparty/vorbis/lib\"",
-					"\"$(SRCROOT)/thirdparty/GTK/lib\"",
 				);
 				PRODUCT_NAME = Slade;
 				SHARED_PRECOMPS_DIR = "$(OBJROOT)/PrecompiledHeaders";
