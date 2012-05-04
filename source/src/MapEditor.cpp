@@ -114,6 +114,9 @@ bool MapEditor::openMap(Archive::mapdesc_t map) {
 			canvas->set3dCameraThing(cam);
 		else if (pstart)
 			canvas->set3dCameraThing(pstart);
+			
+		// Reset rendering data
+		canvas->forceRefreshRenderer();
 	}
 
 	return true;
@@ -1874,6 +1877,15 @@ CONSOLE_COMMAND(m_vertex_attached, 1) {
 		for (unsigned a = 0; a < vertex->nConnectedLines(); a++)
 			wxLogMessage("Line #%d", vertex->connectedLine(a)->getIndex());
 	}
+}
+
+CONSOLE_COMMAND(n_polys ,0) {
+	SLADEMap& map = theMapEditor->mapEditor().getMap();
+	int npoly = 0;
+	for (unsigned a = 0; a < map.nSectors(); a++)
+		npoly += map.getSector(a)->getPolygon()->nSubPolys();
+
+	theConsole->logMessage(S_FMT("%d polygons total", npoly));
 }
 
 /*

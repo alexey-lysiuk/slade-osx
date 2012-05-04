@@ -7,6 +7,7 @@ class GLTexture;
 class ThingType;
 class MapThing;
 class MapSector;
+class Polygon2D;
 class MapRenderer3D {
 private:
 	SLADEMap*	map;
@@ -14,10 +15,13 @@ private:
 	bool		fullbright;
 	bool		fog;
 	int			last_light;
+	GLTexture*	tex_last;
+	unsigned	n_quads;
+	unsigned	n_flats;
+	int			flat_last;
 
 	// Visibility
-	vector<double>	dist_sectors;
-	vector<double>	dist_lines;
+	vector<float>	dist_sectors;
 
 	// Camera
 	fpoint3_t	cam_position;
@@ -31,15 +35,19 @@ private:
 	// Structs
 	enum {
 		// Common flags
-		CALCULATED	= 0x01,
-		
-		// Thing flags
-		ICON		= 0x02,
+		TRANS	= 0x01,
+
+		// Quad/flat flags
+		SKY		= 0x02,
 
 		// Quad flags
-		TRANS		= 0x02,
-		SKY			= 0x04,
-		MIDTEX		= 0x08,
+		MIDTEX	= 0x04,
+
+		// Flat flags
+		CEIL	= 0x04,
+
+		// Thing flags
+		ICON	= 0x02,
 	};
 	struct gl_vertex_t {
 		float x, y, z;
@@ -60,11 +68,11 @@ private:
 		}
 	};
 	struct line_3d_t {
-		uint8_t				flags;
 		vector<quad_3d_t>	quads;
 		long				updated_time;
+		bool				visible;
 
-		line_3d_t() { flags = 0; updated_time = 0; }
+		line_3d_t() { updated_time = 0; visible = true; }
 	};
 	struct thing_3d_t {
 		uint8_t		flags;
@@ -82,11 +90,33 @@ private:
 			updated_time = 0;
 		}
 	};
+	struct flat_3d_t {
+		uint8_t		flags;
+		uint8_t		light;
+		rgba_t		colour;
+		GLTexture*	texture;
+		plane_t		plane;
+		float		alpha;
+		MapSector*	sector;
+		long		updated_time;
+
+		flat_3d_t() {
+			light = 255;
+			texture = NULL;
+			updated_time = 0;
+			flags = 0;
+			alpha = 1.0f;
+			sector = NULL;
+		}
+	};
 
 	// Map Structures
 	vector<line_3d_t>	lines;
-	vector<thing_3d_t>	things;
 	quad_3d_t**			quads;
+	vector<thing_3d_t>	things;
+	vector<flat_3d_t>	floors;
+	vector<flat_3d_t>	ceilings;
+	flat_3d_t**			flats;
 
 	// VBOs
 	GLuint	vbo_floors;
@@ -116,10 +146,11 @@ public:
 
 	bool	init();
 	void	refresh();
+	void	clearData();
 	void	buildSkyCircle();
 
 	// Camera
-	void	cameraMove(double distance);
+	void	cameraMove(double distance, bool z = true);
 	void	cameraTurn(double angle);
 	void	cameraMoveUp(double distance);
 	void	cameraStrafe(double distance);
@@ -136,9 +167,11 @@ public:
 	void	renderSky();
 
 	// Flats
-	void	updateSectorVBO(unsigned index);
+	void	updateFlatTexCoords(unsigned index, bool floor);
+	void	updateSector(unsigned index);
+	void	renderFlat(flat_3d_t* flat);
 	void	renderFlats();
-	void	renderFlatsVBO();
+	//void	renderFlatsVBO();
 
 	// Walls
 	void	setupQuad(quad_3d_t* quad, double x1, double y1, double x2, double y2, double top, double bottom);
@@ -158,6 +191,8 @@ public:
 	// Visibility checking
 	void	quickVisDiscard();
 	float	calcDistFade(double distance, double max = -1);
+	void	checkVisibleQuads();
+	void	checkVisibleFlats();
 };
 
 #endif//__MAP_RENDERER_3D_H__
