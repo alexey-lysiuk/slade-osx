@@ -2,52 +2,31 @@
 #ifndef __MAP_RENDERER_3D_H__
 #define __MAP_RENDERER_3D_H__
 
-class SLADEMap;
+#include "MapEditor.h"
+
 class GLTexture;
-class ThingType;
-class MapThing;
-class MapSector;
 class Polygon2D;
 class MapRenderer3D {
-private:
-	SLADEMap*	map;
-	bool		udmf_zdoom;
-	bool		fullbright;
-	bool		fog;
-	int			last_light;
-	GLTexture*	tex_last;
-	unsigned	n_quads;
-	unsigned	n_flats;
-	int			flat_last;
-
-	// Visibility
-	vector<float>	dist_sectors;
-
-	// Camera
-	fpoint3_t	cam_position;
-	fpoint2_t	cam_direction;
-	double		cam_pitch;
-	double		cam_angle;
-	fpoint3_t	cam_dir3d;
-	fpoint3_t	cam_strafe;
-	double		gravity;
-
+public:
 	// Structs
 	enum {
 		// Common flags
-		TRANS	= 0x01,
+		TRANS	= 2,
 
 		// Quad/flat flags
-		SKY		= 0x02,
+		SKY		= 4,
 
 		// Quad flags
-		MIDTEX	= 0x04,
+		BACK	= 8,
+		UPPER	= 16,
+		LOWER	= 32,
+		MIDTEX	= 64,
 
 		// Flat flags
-		CEIL	= 0x04,
+		CEIL	= 8,
 
 		// Thing flags
-		ICON	= 0x02,
+		ICON	= 4,
 	};
 	struct gl_vertex_t {
 		float x, y, z;
@@ -110,6 +89,98 @@ private:
 		}
 	};
 
+	MapRenderer3D(SLADEMap* map = NULL);
+	~MapRenderer3D();
+
+	bool	fullbrightEnabled() { return fullbright; }
+	bool	fogEnabled() { return fog; }
+	void	enableFullbright(bool enable = true) { fullbright = enable; }
+	void	enableFog(bool enable = true) { fog = enable; }
+	int		itemDistance() { return item_dist; }
+
+	bool	init();
+	void	refresh();
+	void	clearData();
+	void	buildSkyCircle();
+
+	quad_3d_t*	getQuad(selection_3d_t item);
+	flat_3d_t*	getFlat(selection_3d_t item);
+
+	// Camera
+	void	cameraMove(double distance, bool z = true);
+	void	cameraTurn(double angle);
+	void	cameraMoveUp(double distance);
+	void	cameraStrafe(double distance);
+	void	cameraPitch(double amount);
+	void	cameraUpdateVectors();
+	void	cameraSet(fpoint3_t position, fpoint2_t direction);
+	void	cameraApplyGravity(double mult);
+
+	// -- Rendering --
+	void	setupView(int width, int height);
+	void	setLight(rgba_t& colour, uint8_t light, float alpha = 1.0f);
+	void	renderMap();
+	void	renderSkySlice(float top, float bottom, float atop, float abottom, float size, float tx = 0.125f, float ty = 2.0f);
+	void	renderSky();
+
+	// Flats
+	void	updateFlatTexCoords(unsigned index, bool floor);
+	void	updateSector(unsigned index);
+	void	renderFlat(flat_3d_t* flat);
+	void	renderFlats();
+	void	renderFlatSelection(vector<selection_3d_t>& selection, float alpha = 1.0f);
+
+	// Walls
+	void	setupQuad(quad_3d_t* quad, double x1, double y1, double x2, double y2, double top, double bottom);
+	void	setupQuadTexCoords(quad_3d_t* quad, int length, double left, double top, bool pegbottom = false, double sx = 1, double sy = 1);
+	void	updateLine(unsigned index);
+	void	renderQuad(quad_3d_t* quad, float alpha = 1.0f);
+	void	renderWalls();
+	void	renderWallSelection(vector<selection_3d_t>& selection, float alpha = 1.0f);
+
+	// Things
+	void	updateThing(unsigned index, MapThing* thing);
+	void	renderThings();
+	void	renderThingSelection(vector<selection_3d_t>& selection, float alpha = 1.0f);
+
+	// VBO stuff
+	void	updateFlatsVBO();
+	void	updateWallsVBO();
+
+	// Visibility checking
+	void	quickVisDiscard();
+	float	calcDistFade(double distance, double max = -1);
+	void	checkVisibleQuads();
+	void	checkVisibleFlats();
+
+	// Hilight
+	selection_3d_t	determineHilight();
+	void			renderHilight(selection_3d_t hilight, float alpha = 1.0f);
+
+private:
+	SLADEMap*	map;
+	bool		udmf_zdoom;
+	bool		fullbright;
+	bool		fog;
+	int			last_light;
+	GLTexture*	tex_last;
+	unsigned	n_quads;
+	unsigned	n_flats;
+	int			flat_last;
+
+	// Visibility
+	vector<float>	dist_sectors;
+
+	// Camera
+	fpoint3_t	cam_position;
+	fpoint2_t	cam_direction;
+	double		cam_pitch;
+	double		cam_angle;
+	fpoint3_t	cam_dir3d;
+	fpoint3_t	cam_strafe;
+	double		gravity;
+	int			item_dist;
+
 	// Map Structures
 	vector<line_3d_t>	lines;
 	quad_3d_t**			quads;
@@ -134,65 +205,6 @@ private:
 	rgba_t		skycol_top;
 	rgba_t		skycol_bottom;
 	fpoint2_t	sky_circle[32];
-
-public:
-	MapRenderer3D(SLADEMap* map = NULL);
-	~MapRenderer3D();
-
-	bool	fullbrightEnabled() { return fullbright; }
-	bool	fogEnabled() { return fog; }
-	void	enableFullbright(bool enable = true) { fullbright = enable; }
-	void	enableFog(bool enable = true) { fog = enable; }
-
-	bool	init();
-	void	refresh();
-	void	clearData();
-	void	buildSkyCircle();
-
-	// Camera
-	void	cameraMove(double distance, bool z = true);
-	void	cameraTurn(double angle);
-	void	cameraMoveUp(double distance);
-	void	cameraStrafe(double distance);
-	void	cameraPitch(double amount);
-	void	cameraUpdateVectors();
-	void	cameraSet(fpoint3_t position, fpoint2_t direction);
-	void	cameraApplyGravity(double mult);
-
-	// -- Rendering --
-	void	setupView(int width, int height);
-	void	setLight(rgba_t& colour, uint8_t light, float alpha = 1.0f);
-	void	renderMap();
-	void	renderSkySlice(float top, float bottom, float atop, float abottom, float size, float tx = 0.125f, float ty = 2.0f);
-	void	renderSky();
-
-	// Flats
-	void	updateFlatTexCoords(unsigned index, bool floor);
-	void	updateSector(unsigned index);
-	void	renderFlat(flat_3d_t* flat);
-	void	renderFlats();
-	//void	renderFlatsVBO();
-
-	// Walls
-	void	setupQuad(quad_3d_t* quad, double x1, double y1, double x2, double y2, double top, double bottom);
-	void	setupQuadTexCoords(quad_3d_t* quad, int length, double left, double top, bool pegbottom = false, double sx = 1, double sy = 1);
-	void	updateLine(unsigned index);
-	void	renderQuad(quad_3d_t* quad, float alpha = 1.0f);
-	void	renderWalls();
-
-	// Things
-	void	updateThing(unsigned index, MapThing* thing);
-	void	renderThings();
-
-	// VBO stuff
-	void	updateFlatsVBO();
-	void	updateWallsVBO();
-
-	// Visibility checking
-	void	quickVisDiscard();
-	float	calcDistFade(double distance, double max = -1);
-	void	checkVisibleQuads();
-	void	checkVisibleFlats();
 };
 
 #endif//__MAP_RENDERER_3D_H__

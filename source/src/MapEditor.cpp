@@ -30,6 +30,8 @@ MapEditor::MapEditor() {
 	grid_snap = true;
 	copy_thing = NULL;
 	copy_sector = NULL;
+	link_3d_light = true;
+	link_3d_offset = true;
 }
 
 MapEditor::~MapEditor() {
@@ -144,7 +146,7 @@ bool MapEditor::updateHilight(fpoint2_t mouse_pos, double dist_scale) {
 	else if (edit_mode == MODE_LINES)
 		hilight_item = map.nearestLine(mouse_pos.x, mouse_pos.y, 32/dist_scale);
 	else if (edit_mode == MODE_SECTORS)
-		hilight_item = map.inSector(mouse_pos.x, mouse_pos.y);
+		hilight_item = map.sectorAt(mouse_pos.x, mouse_pos.y);
 	else if (edit_mode == MODE_THINGS) {
 		hilight_item = -1;
 
@@ -330,9 +332,15 @@ void MapEditor::selectionUpdated() {
 }
 
 void MapEditor::clearSelection() {
-	if (canvas) canvas->itemsSelected(selection, false);
-	selection.clear();
-	theMapEditor->propsPanel()->openObject(NULL);
+	if (edit_mode == MODE_3D) {
+		if (canvas) canvas->itemsSelected3d(selection_3d, false);
+		selection_3d.clear();
+	}
+	else {
+		if (canvas) canvas->itemsSelected(selection, false);
+		selection.clear();
+		theMapEditor->propsPanel()->openObject(NULL);
+	}
 }
 
 void MapEditor::selectAll() {
@@ -366,37 +374,72 @@ void MapEditor::selectAll() {
 }
 
 bool MapEditor::selectCurrent(bool clear_none) {
-	// If nothing is hilighted
-	if (hilight_item == -1) {
-		// Clear selection if specified
-		if (clear_none) {
-			if (canvas) canvas->itemsSelected(selection, false);
-			selection.clear();
-			selectionUpdated();
-			addEditorMessage("Selection cleared");
+	// --- 3d mode ---
+	if (edit_mode == MODE_3D) {
+		// If nothing is hilighted
+		if (hilight_3d.index == -1) {
+			// Clear selection if specified
+			if (clear_none) {
+				if (canvas) canvas->itemsSelected3d(selection_3d, false);
+				selection_3d.clear();
+				addEditorMessage("Selection cleared");
+			}
+
+			return false;
 		}
 
-		return false;
-	}
-
-	// Otherwise, check if item is in selection
-	for (unsigned a = 0; a < selection.size(); a++) {
-		if (selection[a] == hilight_item) {
-			// Already selected, deselect
-			selection.erase(selection.begin() + a);
-			if (canvas) canvas->itemSelected(hilight_item, false);
-			selectionUpdated();
-			return true;
+		// Otherwise, check if item is in selection
+		for (unsigned a = 0; a < selection_3d.size(); a++) {
+			if (selection_3d[a].index == hilight_3d.index &&
+				selection_3d[a].type == hilight_3d.type) {
+				// Already selected, deselect
+				selection_3d.erase(selection_3d.begin() + a);
+				if (canvas) canvas->itemSelected3d(hilight_3d, false);
+				return true;
+			}
 		}
+
+		// Not already selected, add to selection
+		selection_3d.push_back(hilight_3d);
+		if (canvas) canvas->itemSelected3d(hilight_3d);
+
+		return true;
 	}
 
-	// Not already selected, add to selection
-	selection.push_back(hilight_item);
-	if (canvas) canvas->itemSelected(hilight_item, true);
+	// --- 2d mode ---
+	else {
+		// If nothing is hilighted
+		if (hilight_item == -1) {
+			// Clear selection if specified
+			if (clear_none) {
+				if (canvas) canvas->itemsSelected(selection, false);
+				selection.clear();
+				selectionUpdated();
+				addEditorMessage("Selection cleared");
+			}
 
-	selectionUpdated();
+			return false;
+		}
 
-	return true;
+		// Otherwise, check if item is in selection
+		for (unsigned a = 0; a < selection.size(); a++) {
+			if (selection[a] == hilight_item) {
+				// Already selected, deselect
+				selection.erase(selection.begin() + a);
+				if (canvas) canvas->itemSelected(hilight_item, false);
+				selectionUpdated();
+				return true;
+			}
+		}
+
+		// Not already selected, add to selection
+		selection.push_back(hilight_item);
+		if (canvas) canvas->itemSelected(hilight_item, true);
+
+		selectionUpdated();
+
+		return true;
+	}
 }
 
 bool MapEditor::selectWithin(double xmin, double ymin, double xmax, double ymax, bool add) {
@@ -652,22 +695,38 @@ void MapEditor::getSelectedSectors(vector<MapSector*>& list) {
 }
 
 void MapEditor::getSelectedThings(vector<MapThing*>& list) {
-	if (edit_mode != MODE_THINGS)
-		return;
+	if (edit_mode == MODE_3D) {
+		// Multiple selection
+		if (selection_3d.size() > 1) {
+			for (unsigned a = 0; a < selection_3d.size(); a++) {
+				if (selection_3d[a].type == SEL_THING)
+					list.push_back(map.getThing(selection_3d[a].index));
+			}
+		}
 
-	// Multiple selection
-	if (selection.size() > 1) {
-		for (unsigned a = 0; a < selection.size(); a++)
-			list.push_back(map.getThing(selection[a]));
+		// Single selection
+		else if (selection_3d.size() == 1 && selection_3d[0].type == SEL_THING)
+			list.push_back(map.getThing(selection_3d[0].index));
+
+		// No selection (use hilight
+		else if (hilight_3d.index >= 0 && hilight_3d.type == SEL_THING)
+			list.push_back(map.getThing(hilight_3d.index));
 	}
+	else if (edit_mode == MODE_THINGS) {
+		// Multiple selection
+		if (selection.size() > 1) {
+			for (unsigned a = 0; a < selection.size(); a++)
+				list.push_back(map.getThing(selection[a]));
+		}
 
-	// Single selection
-	else if (selection.size() == 1)
-		list.push_back(map.getThing(selection[0]));
+		// Single selection
+		else if (selection.size() == 1)
+			list.push_back(map.getThing(selection[0]));
 
-	// No selection (use hilight)
-	else if (hilight_item >= 0)
-		list.push_back(map.getThing(hilight_item));
+		// No selection (use hilight)
+		else if (hilight_item >= 0)
+			list.push_back(map.getThing(hilight_item));
+	}
 }
 
 void MapEditor::getSelectedObjects(vector<MapObject*>& list) {
@@ -793,7 +852,7 @@ bool MapEditor::beginMove(fpoint2_t mouse_pos) {
 		// Sectors mode
 		else if (edit_mode == MODE_SECTORS) {
 			for (unsigned a = 0; a < move_items.size(); a++)
-				map.getVerticesOfSector(move_items[a], move_verts);
+				map.getSector(move_items[a])->getVertices(move_verts);
 		}
 	}
 
@@ -868,7 +927,7 @@ void MapEditor::endMove() {
 		else if (edit_mode == MODE_SECTORS) {
 			vector<MapVertex*> sv;
 			for (unsigned a = 0; a < move_items.size(); a++)
-				map.getVerticesOfSector(move_items[a], sv);
+				map.getSector(move_items[a])->getVertices(sv);
 
 			for (unsigned a = 0; a < sv.size(); a++)
 				move_verts[map.vertexIndex(sv[a])] = true;
@@ -1140,7 +1199,7 @@ void MapEditor::changeSectorLight(int amount) {
 
 void MapEditor::changeThingType(int newtype) {
 	// Do nothing if not in things mode
-	if (edit_mode != MODE_THINGS)
+	if (edit_mode != MODE_THINGS && edit_mode != MODE_3D)
 		return;
 
 	// Get selected things (if any)
@@ -1173,13 +1232,13 @@ void MapEditor::thingQuickAngle(fpoint2_t mouse_pos) {
 
 	// If selection is empty, check for hilight
 	if (selection.size() == 0 && hilight_item >= 0) {
-		map.thingSetAnglePoint(hilight_item, mouse_pos);
+		map.getThing(hilight_item)->setAnglePoint(mouse_pos);
 		return;
 	}
 
 	// Go through selection
 	for (unsigned a = 0; a < selection.size(); a++)
-		map.thingSetAnglePoint(selection[a], mouse_pos);
+		map.getThing(selection[a])->setAnglePoint(mouse_pos);
 }
 
 void MapEditor::createObject(double x, double y) {
@@ -1715,7 +1774,7 @@ void MapEditor::endLineDraw(bool apply) {
 
 			// Clear any unneeded textures
 			MapLine* line = side->getParentLine();
-			map.clearLineUnneededTextures(line->getIndex());
+			line->clearUnneededTextures();
 
 			// Set middle texture if needed
 			if (side == line->s1() && !line->s2() && side->stringProperty("texturemiddle") == "-") {
@@ -1737,6 +1796,443 @@ void MapEditor::endLineDraw(bool apply) {
 
 	// Clear draw points
 	draw_points.clear();
+}
+
+bool MapEditor::wallMatchesNotSelected(MapSide* side, uint8_t part, string tex) {
+	// Check for blank texture where it isn't needed
+	if (tex == "-") {
+		MapLine* line = side->getParentLine();
+		int needed = line->needsTexture();
+		if (side == line->s1()) {
+			if (part == SEL_SIDE_TOP && (needed & TEX_FRONT_UPPER) == 0)
+				return false;
+			if (part == SEL_SIDE_MIDDLE && (needed & TEX_FRONT_MIDDLE) == 0)
+				return false;
+			if (part == SEL_SIDE_BOTTOM && (needed & TEX_FRONT_LOWER) == 0)
+				return false;
+		}
+		else if (side == line->s2()) {
+			if (part == SEL_SIDE_TOP && (needed & TEX_BACK_UPPER) == 0)
+				return false;
+			if (part == SEL_SIDE_MIDDLE && (needed & TEX_BACK_MIDDLE) == 0)
+				return false;
+			if (part == SEL_SIDE_BOTTOM && (needed & TEX_BACK_LOWER) == 0)
+				return false;
+		}
+	}
+
+	// Check texture
+	if (part == SEL_SIDE_TOP && side->stringProperty("texturetop") != tex)
+		return false;
+	if (part == SEL_SIDE_MIDDLE && side->stringProperty("texturemiddle") != tex)
+		return false;
+	if (part == SEL_SIDE_BOTTOM && side->stringProperty("texturebottom") != tex)
+		return false;
+
+	// Check it isn't already selected
+	for (unsigned s = 0; s < selection_3d.size(); s++) {
+		if (selection_3d[s].type == part && selection_3d[s].index == side->getIndex())
+			return false;
+	}
+
+	return true;
+}
+
+void MapEditor::selectAdjacent3d(selection_3d_t item) {
+	// Check item
+	if (item.index < 0)
+		return;
+
+	// Select item if not already selected
+	bool selected = false;
+	for (unsigned s = 0; s < selection_3d.size(); s++) {
+		if (selection_3d[s].type == item.type && selection_3d[s].index == item.index) {
+			selected = true;
+			break;
+		}
+	}
+	if (!selected) {
+		selection_3d.push_back(item);
+		if (canvas) canvas->itemSelected3d(item);
+	}
+
+	// Flat
+	if (item.type == SEL_FLOOR || item.type == SEL_CEILING) {
+		// Get initial sector
+		MapSector* sector = map.getSector(item.index);
+		if (!sector) return;
+
+		// Go through sector lines
+		vector<MapLine*> lines;
+		sector->getLines(lines);
+		for (unsigned a = 0; a < lines.size(); a++) {
+			// Get sector on opposite side
+			MapSector* osector = NULL;
+			if (lines[a]->frontSector() == sector)
+				osector = lines[a]->backSector();
+			else
+				osector = lines[a]->frontSector();
+
+			// Skip if no sector
+			if (!osector || osector == sector)
+				continue;
+
+			// Check for match
+			if (item.type == SEL_FLOOR) {
+				// Check sector floor height
+				if (osector->intProperty("heightfloor") != sector->intProperty("heightfloor"))
+					continue;
+
+				// Check sector floor texture
+				if (osector->floorTexture() != sector->floorTexture())
+					continue;
+			}
+			else {
+				// Check sector ceiling height
+				if (osector->intProperty("heightceiling") != sector->intProperty("heightceiling"))
+					continue;
+
+				// Check sector ceiling texture
+				if (osector->ceilingTexture() != sector->ceilingTexture())
+					continue;
+			}
+
+			// Check flat isn't already selected
+			selected = false;
+			for (unsigned s = 0; s < selection_3d.size(); s++) {
+				if (selection_3d[s].type == item.type && selection_3d[s].index == osector->getIndex()) {
+					selected = true;
+					break;
+				}
+			}
+
+			// Recursively select adjacent flats
+			if (!selected)
+				selectAdjacent3d(selection_3d_t(osector->getIndex(), item.type));
+		}
+	}
+	
+	// Wall
+	else if (item.type != SEL_THING) {
+		// Get initial side
+		MapSide* side = map.getSide(item.index);
+		if (!side)
+			return;
+
+		// Get initial line
+		MapLine* line = side->getParentLine();
+		if (!line)
+			return;
+
+		// Get texture to match
+		string tex;
+		if (item.type == SEL_SIDE_BOTTOM)
+			tex = side->stringProperty("texturebottom");
+		else if (item.type == SEL_SIDE_MIDDLE)
+			tex = side->stringProperty("texturemiddle");
+		else
+			tex = side->stringProperty("texturetop");
+
+		// Go through attached lines (vertex 1)
+		for (unsigned a = 0; a < line->v1()->nConnectedLines(); a++) {
+			MapLine* oline = line->v1()->connectedLine(a);
+			if (!oline || oline == line)
+				continue;
+
+			// Get line sides
+			MapSide* side1 = oline->s1();
+			MapSide* side2 = oline->s2();
+
+			// Front side
+			if (side1) {
+				// Upper texture
+				if (wallMatchesNotSelected(side1, SEL_SIDE_TOP, tex))
+					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_TOP));
+
+				// Middle texture
+				if (wallMatchesNotSelected(side1, SEL_SIDE_MIDDLE, tex))
+					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_MIDDLE));
+
+				// Lower texture
+				if (wallMatchesNotSelected(side1, SEL_SIDE_BOTTOM, tex))
+					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_BOTTOM));
+			}
+
+			// Back side
+			if (side2) {
+				// Upper texture
+				if (wallMatchesNotSelected(side2, SEL_SIDE_TOP, tex))
+					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_TOP));
+
+				// Middle texture
+				if (wallMatchesNotSelected(side2, SEL_SIDE_MIDDLE, tex))
+					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_MIDDLE));
+
+				// Lower texture
+				if (wallMatchesNotSelected(side2, SEL_SIDE_BOTTOM, tex))
+					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_BOTTOM));
+			}
+		}
+
+		// Go through attached lines (vertex 2)
+		for (unsigned a = 0; a < line->v2()->nConnectedLines(); a++) {
+			MapLine* oline = line->v2()->connectedLine(a);
+			if (!oline || oline == line)
+				continue;
+
+			// Get line sides
+			MapSide* side1 = oline->s1();
+			MapSide* side2 = oline->s2();
+
+			// Front side
+			if (side1) {
+				// Upper texture
+				if (wallMatchesNotSelected(side1, SEL_SIDE_TOP, tex))
+					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_TOP));
+
+				// Middle texture
+				if (wallMatchesNotSelected(side1, SEL_SIDE_MIDDLE, tex))
+					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_MIDDLE));
+
+				// Lower texture
+				if (wallMatchesNotSelected(side1, SEL_SIDE_BOTTOM, tex))
+					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_BOTTOM));
+			}
+
+			// Back side
+			if (side2) {
+				// Upper texture
+				if (wallMatchesNotSelected(side2, SEL_SIDE_TOP, tex))
+					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_TOP));
+
+				// Middle texture
+				if (wallMatchesNotSelected(side2, SEL_SIDE_MIDDLE, tex))
+					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_MIDDLE));
+
+				// Lower texture
+				if (wallMatchesNotSelected(side2, SEL_SIDE_BOTTOM, tex))
+					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_BOTTOM));
+			}
+		}
+	}
+}
+
+void MapEditor::changeSectorLight3d(int amount) {
+	// Get items to process
+	vector<selection_3d_t> items;
+	if (selection_3d.size() == 0 && hilight_3d.type != SEL_THING)
+		items.push_back(hilight_3d);
+	else {
+		for (unsigned a = 0; a < selection_3d.size(); a++) {
+			if (selection_3d[a].type != SEL_THING)
+				items.push_back(selection_3d[a]);
+		}
+	}
+
+	// Go through items
+	for (unsigned a = 0; a < items.size(); a++) {
+		// Wall
+		if (items[a].type == SEL_SIDE_BOTTOM || items[a].type == SEL_SIDE_MIDDLE || items[a].type == SEL_SIDE_TOP) {
+			// Get side
+			MapSide* side = map.getSide(items[a].index);
+			if (!side) continue;
+
+			// Check for decrease when light = 255
+			if (side->getSector()->getLight(0) == 255 && amount < -1)
+				amount++;
+
+			// Change sector light level
+			side->getSector()->changeLight(amount);
+		}
+
+		// Flat
+		if (items[a].type == SEL_FLOOR || items[a].type == SEL_CEILING) {
+			// Get sector
+			MapSector* s = map.getSector(items[a].index);
+
+			// Change light level
+			if (items[a].type == SEL_FLOOR && !link_3d_light)
+				s->changeLight(amount, 1);
+			else if (items[a].type == SEL_CEILING && !link_3d_light)
+				s->changeLight(amount, 2);
+			else {
+				// Check for decrease when light = 255
+				if (s->getLight(0) == 255 && amount < -1)
+					amount++;
+
+				s->changeLight(amount, 0);
+			}
+		}
+	}
+
+	// Editor message
+	if (items.size() > 0) {
+		if (amount > 0)
+			addEditorMessage(S_FMT("Light increased by %d", amount));
+		else
+			addEditorMessage(S_FMT("Light decreased by %d", -amount));
+	}
+}
+
+void MapEditor::changeWallOffset3d(int amount, bool x) {
+	// Get items to process
+	vector<selection_3d_t> items;
+	if (selection_3d.size() == 0) {
+		if (hilight_3d.type >= SEL_SIDE_TOP && hilight_3d.type <= SEL_SIDE_BOTTOM)
+			items.push_back(hilight_3d);
+	}
+	else {
+		for (unsigned a = 0; a < selection_3d.size(); a++) {
+			if (selection_3d[a].type >= SEL_SIDE_TOP && selection_3d[a].type <= SEL_SIDE_BOTTOM)
+				items.push_back(selection_3d[a]);
+		}
+	}
+
+	// Go through items
+	vector<int> done;
+	for (unsigned a = 0; a < items.size(); a++) {
+		MapSide* side = map.getSide(items[a].index);
+
+		// If offsets are linked, just change the whole side offset
+		if (link_3d_offset) {
+			// Check we haven't processed this side already
+			bool d = false;
+			for (unsigned b = 0; b < done.size(); b++) {
+				if (done[b] == items[a].index) {
+					d = true;
+					break;
+				}
+			}
+			if (d)
+				continue;
+
+			// Change the appropriate offset
+			if (x) {
+				int offset = side->intProperty("offsetx");
+				side->setIntProperty("offsetx", offset + amount);
+			}
+			else {
+				int offset = side->intProperty("offsety");
+				side->setIntProperty("offsety", offset + amount);
+			}
+
+			// Add to done list
+			done.push_back(items[a].index);
+		}
+
+		// Unlinked offsets
+		else {
+			// Build property string (offset[x/y]_[top/mid/bottom])
+			string ofs = "offsetx";
+			if (!x) ofs = "offsety";
+			if (items[a].type == SEL_SIDE_BOTTOM)
+				ofs += "_bottom";
+			else if (items[a].type == SEL_SIDE_TOP)
+				ofs += "_top";
+			else
+				ofs += "_mid";
+
+			// Change the offset
+			int offset = side->floatProperty(ofs);
+			side->setFloatProperty(ofs, offset + amount);
+		}
+	}
+
+	// Editor message
+	if (items.size() > 0) {
+		string axis = "X";
+		if (!x) axis = "Y";
+
+		if (amount > 0)
+			addEditorMessage(S_FMT("%s offset increased by %d", CHR(axis), amount));
+		else
+			addEditorMessage(S_FMT("%s offset decreased by %d", CHR(axis), -amount));
+	}
+}
+
+void MapEditor::changeSectorHeight3d(int amount) {
+	// Get items to process
+	vector<selection_3d_t> items;
+	if (selection_3d.size() == 0 && hilight_3d.type != SEL_THING)
+		items.push_back(hilight_3d);
+	else {
+		for (unsigned a = 0; a < selection_3d.size(); a++) {
+			if (selection_3d[a].type != SEL_THING)
+				items.push_back(selection_3d[a]);
+		}
+	}
+
+	// Go through items
+	vector<int> ceilings;
+	for (unsigned a = 0; a < items.size(); a++) {
+		// Wall (ceiling only for now)
+		if (items[a].type == SEL_SIDE_BOTTOM || items[a].type == SEL_SIDE_MIDDLE || items[a].type == SEL_SIDE_TOP) {
+			// Get sector
+			MapSector* sector = map.getSide(items[a].index)->getSector();
+
+			// Check this sector's ceiling hasn't already been changed
+			bool done = false;
+			int index = sector->getIndex();
+			for (unsigned b = 0; b < ceilings.size(); b++) {
+				if (ceilings[b] == index) {
+					done = true;
+					break;
+				}
+			}
+			if (done)
+				continue;
+
+			// Change height
+			int height = sector->intProperty("heightceiling");
+			sector->setIntProperty("heightceiling", height + amount);
+
+			// Set to changed
+			ceilings.push_back(index);
+		}
+
+		// Floor
+		else if (items[a].type == SEL_FLOOR) {
+			// Get sector
+			MapSector* sector = map.getSector(items[a].index);
+
+			// Change height
+			int height = sector->intProperty("heightfloor");
+			sector->setIntProperty("heightfloor", height + amount);
+		}
+
+		// Ceiling
+		else if (items[a].type == SEL_CEILING) {
+			// Get sector
+			MapSector* sector = map.getSector(items[a].index);
+
+			// Check this sector's ceiling hasn't already been changed
+			bool done = false;
+			int index = sector->getIndex();
+			for (unsigned b = 0; b < ceilings.size(); b++) {
+				if (ceilings[b] == index) {
+					done = true;
+					break;
+				}
+			}
+			if (done)
+				continue;
+
+			// Change height
+			int height = sector->intProperty("heightceiling");
+			sector->setIntProperty("heightceiling", height + amount);
+
+			// Set to changed
+			ceilings.push_back(sector->getIndex());
+		}
+	}
+
+	// Editor message
+	if (items.size() > 0) {
+		if (amount > 0)
+			addEditorMessage(S_FMT("Height increased by %d", amount));
+		else
+			addEditorMessage(S_FMT("Height decreased by %d", -amount));
+	}
 }
 
 string MapEditor::getEditorMessage(int index) {
@@ -1784,42 +2280,44 @@ string MapEditor::getModeString() {
 bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 	// --- General keybinds ---
 
-	// Increment grid
-	if (key == "me2d_grid_inc")
-		incrementGrid();
+	if (edit_mode != MODE_3D) {
+		// Increment grid
+		if (key == "me2d_grid_inc")
+			incrementGrid();
 
-	// Decrement grid
-	else if (key == "me2d_grid_dec")
-		decrementGrid();
+		// Decrement grid
+		else if (key == "me2d_grid_dec")
+			decrementGrid();
 
-	// Select all
-	else if (key == "select_all")
-		selectAll();
+		// Select all
+		else if (key == "select_all")
+			selectAll();
 
-	// Clear selection
-	else if (key == "me2d_clear_selection") {
-		clearSelection();
-		addEditorMessage("Selection cleared");
-	}
+		// Clear selection
+		else if (key == "me2d_clear_selection") {
+			clearSelection();
+			addEditorMessage("Selection cleared");
+		}
 
-	// Lock/unlock hilight
-	else if (key == "me2d_lock_hilight") {
-		// Toggle lock
-		hilight_locked = !hilight_locked;
+		// Lock/unlock hilight
+		else if (key == "me2d_lock_hilight") {
+			// Toggle lock
+			hilight_locked = !hilight_locked;
 
-		// Add editor message
-		if (hilight_locked)
-			addEditorMessage("Locked current hilight");
-		else
-			addEditorMessage("Unlocked hilight");
-
-		return true;
+			// Add editor message
+			if (hilight_locked)
+				addEditorMessage("Locked current hilight");
+			else
+				addEditorMessage("Unlocked hilight");
+		}
 	}
 
 	// --- Line mode keybinds ---
-	else if (key.StartsWith("me2d_line") && edit_mode == MODE_LINES) {
+	if (key.StartsWith("me2d_line") && edit_mode == MODE_LINES) {
 		// Split line
 		if (key == "me2d_line_split")	splitLine(position.x, position.y);
+		else
+			return false;
 	}
 
 	// --- Sector mode keybinds ---
@@ -1843,10 +2341,79 @@ bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 		else if (key == "me2d_sector_light_up")		changeSectorLight(1);
 		else if (key == "me2d_sector_light_down16")	changeSectorLight(-16);
 		else if (key == "me2d_sector_light_down")	changeSectorLight(-1);
+		else
+			return false;
+	}
+
+	// --- 3d mode keybinds ---
+	else if (key.StartsWith("me3d_") && edit_mode == MODE_3D) {
+		// Check for extended udmf properties
+		bool ext = false;
+		if (theGameConfiguration->getMapFormat() == MAP_UDMF &&
+			S_CMPNOCASE(theGameConfiguration->udmfNamespace(), "zdoom"))
+			ext = true;
+
+		// Clear selection
+		if (key == "me3d_clear_selection") {
+			clearSelection();
+			addEditorMessage("Selection cleared");
+		}
+
+		// Toggle linked light levels
+		else if (key == "me3d_light_toggle_link") {
+			if (!ext)
+				addEditorMessage("Unlinked light levels not supported in this game configuration");
+			else {
+				link_3d_light = !link_3d_light;
+				if (link_3d_light)
+					addEditorMessage("Flat light levels linked");
+				else
+					addEditorMessage("Flat light levels unlinked");
+			}
+		}
+
+		// Toggle linked offsets
+		else if (key == "me3d_wall_toggle_link_ofs") {
+			if (!ext)
+				addEditorMessage("Unlinked wall offsets not supported in this game configuration");
+			else {
+				link_3d_offset = !link_3d_offset;
+				if (link_3d_offset)
+					addEditorMessage("Wall offsets linked");
+				else
+					addEditorMessage("Wall offsets unlinked");
+			}
+		}
+
+		// Light changes
+		else if	(key == "me3d_light_up16")		changeSectorLight3d(16);
+		else if (key == "me3d_light_up")		changeSectorLight3d(1);
+		else if (key == "me3d_light_down16")	changeSectorLight3d(-16);
+		else if (key == "me3d_light_down")		changeSectorLight3d(-1);
+
+		// Wall offset changes
+		else if	(key == "me3d_wall_xoff_up8")	changeWallOffset3d(8, true);
+		else if	(key == "me3d_wall_xoff_up")	changeWallOffset3d(1, true);
+		else if	(key == "me3d_wall_xoff_down8")	changeWallOffset3d(-8, true);
+		else if	(key == "me3d_wall_xoff_down")	changeWallOffset3d(-1, true);
+		else if	(key == "me3d_wall_yoff_up8")	changeWallOffset3d(8, false);
+		else if	(key == "me3d_wall_yoff_up")	changeWallOffset3d(1, false);
+		else if	(key == "me3d_wall_yoff_down8")	changeWallOffset3d(-8, false);
+		else if	(key == "me3d_wall_yoff_down")	changeWallOffset3d(-1, false);
+
+		// Height changes
+		else if	(key == "me3d_flat_height_up8")		changeSectorHeight3d(8);
+		else if	(key == "me3d_flat_height_up")		changeSectorHeight3d(1);
+		else if	(key == "me3d_flat_height_down8")	changeSectorHeight3d(-8);
+		else if	(key == "me3d_flat_height_down")	changeSectorHeight3d(-1);
 	}
 
 	// Not handled
-	return false;
+	else
+		return false;
+
+
+	return true;
 }
 
 void MapEditor::updateDisplay() {
@@ -1870,6 +2437,26 @@ CONSOLE_COMMAND(m_show_item, 1) {
 	theMapEditor->mapEditor().showItem(index);
 }
 
+
+
+
+
+// testing stuff
+
+CONSOLE_COMMAND(m_test_sector, 0) {
+	sf::Clock clock;
+	SLADEMap& map = theMapEditor->mapEditor().getMap();
+	for (unsigned a = 0; a < map.nThings(); a++)
+		map.sectorAt(map.getThing(a)->xPos(), map.getThing(a)->yPos());
+#if SFML_VERSION_MAJOR < 2	// SFML 1.6: uppercase G, returns time in seconds as a float
+	long ms = clock.GetElapsedTime() * 1000;
+#else						// SFML 2.0: lowercase G, returns a Time object
+	long ms = clock.getElapsedTime().asMilliseconds();
+#endif
+	wxLogMessage("Took %dms", ms);
+}
+
+/*
 CONSOLE_COMMAND(m_vertex_attached, 1) {
 	MapVertex* vertex = theMapEditor->mapEditor().getMap().getVertex(atoi(CHR(args[0])));
 	if (vertex) {
@@ -1878,7 +2465,9 @@ CONSOLE_COMMAND(m_vertex_attached, 1) {
 			wxLogMessage("Line #%d", vertex->connectedLine(a)->getIndex());
 	}
 }
+*/
 
+/*
 CONSOLE_COMMAND(n_polys ,0) {
 	SLADEMap& map = theMapEditor->mapEditor().getMap();
 	int npoly = 0;
@@ -1887,6 +2476,7 @@ CONSOLE_COMMAND(n_polys ,0) {
 
 	theConsole->logMessage(S_FMT("%d polygons total", npoly));
 }
+*/
 
 /*
 CONSOLE_COMMAND(m_test_save, 1) {

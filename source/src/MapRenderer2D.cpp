@@ -1181,9 +1181,9 @@ void MapRenderer2D::renderFlatsImmediate(int type, bool texture, float alpha) {
 		if (texture) {
 			// Get the sector texture
 			if (type <= 1)
-				tex = theMapEditor->textureManager().getFlat(sector->floorTexture());
+				tex = theMapEditor->textureManager().getFlat(sector->floorTexture(), theGameConfiguration->mixTexFlats());
 			else
-				tex = theMapEditor->textureManager().getFlat(sector->ceilingTexture());
+				tex = theMapEditor->textureManager().getFlat(sector->ceilingTexture(), theGameConfiguration->mixTexFlats());
 
 			// Bind the texture if needed
 			if (tex) {
@@ -1233,7 +1233,7 @@ void MapRenderer2D::renderFlatsImmediate(int type, bool texture, float alpha) {
 
 		// Render the polygon
 		if (!flat_ignore_light) {
-			rgba_t col = map->getSectorColour(sector, type);
+			rgba_t col = sector->getColour(type);
 			col.ampf(flat_brightness, flat_brightness, flat_brightness, 1.0f);
 			glColor4f(col.fr(), col.fg(), col.fb(), alpha);
 		}
@@ -1295,9 +1295,9 @@ void MapRenderer2D::renderFlatsVBO(int type, bool texture, float alpha) {
 		if (texture) {
 			// Get the sector texture
 			if (type <= 1)
-				tex = theMapEditor->textureManager().getFlat(sector->floorTexture());
+				tex = theMapEditor->textureManager().getFlat(sector->floorTexture(), theGameConfiguration->mixTexFlats());
 			else
-				tex = theMapEditor->textureManager().getFlat(sector->ceilingTexture());
+				tex = theMapEditor->textureManager().getFlat(sector->ceilingTexture(), theGameConfiguration->mixTexFlats());
 		}
 
 		// Setup polygon texture info if needed
@@ -1355,7 +1355,7 @@ void MapRenderer2D::renderFlatsVBO(int type, bool texture, float alpha) {
 
 		// Render the polygon
 		if (!flat_ignore_light) {
-			rgba_t col = map->getSectorColour(sector, type);
+			rgba_t col = sector->getColour(type);
 			col.ampf(flat_brightness, flat_brightness, flat_brightness, 1.0f);
 			glColor4f(col.fr(), col.fg(), col.fb(), alpha);
 		}
@@ -1394,7 +1394,7 @@ void MapRenderer2D::renderFlatHilight(int index, float fade) {
 
 	// Get all lines belonging to the hilighted sector
 	vector<MapLine*> lines;
-	map->getLinesOfSector(index, lines);
+	map->getSector(index)->getLines(lines);
 
 	// Draw hilight
 	MapLine* line = NULL;
@@ -1499,7 +1499,7 @@ void MapRenderer2D::renderTaggedFlats(vector<MapSector*>& sectors, float fade) {
 
 		// Get all lines belonging to the tagged sector
 		vector<MapLine*> lines;
-		map->getLinesOfSector(sectors[a], lines);
+		sectors[a]->getLines(lines);
 
 		// Draw hilight
 		MapLine* line = NULL;

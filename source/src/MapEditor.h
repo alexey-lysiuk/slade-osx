@@ -8,6 +8,11 @@
 struct selection_3d_t {
 	int		index;
 	uint8_t	type;
+
+	selection_3d_t(int index = -1, uint8_t type = 0) {
+		this->index = index;
+		this->type = type;
+	}
 };
 
 class MapCanvas;
@@ -24,6 +29,8 @@ private:
 	int			gridsize;
 	int			sector_mode;
 	bool		grid_snap;
+	bool		link_3d_light;
+	bool		link_3d_offset;
 
 	// Tagged items
 	vector<MapSector*>	tagged_sectors;
@@ -54,6 +61,7 @@ private:
 	// 3d mode
 	selection_3d_t			hilight_3d;
 	vector<selection_3d_t>	selection_3d;
+	bool					wallMatchesNotSelected(MapSide* side, uint8_t part, string tex);	// Helper for selectAdjacent3d
 
 public:
 	enum {
@@ -70,9 +78,9 @@ public:
 		SECTOR_CEILING,
 
 		// 3d mode selection type
-		SEL_LINE_TOP,
-		SEL_LINE_MIDDLE,
-		SEL_LINE_BOTTOM,
+		SEL_SIDE_TOP = 0,
+		SEL_SIDE_MIDDLE,
+		SEL_SIDE_BOTTOM,
 		SEL_FLOOR,
 		SEL_CEILING,
 		SEL_THING,
@@ -94,6 +102,10 @@ public:
 	bool				hilightLocked() { return hilight_locked; }
 	void				lockHilight(bool lock = true) { hilight_locked = lock; }
 	bool				gridSnap() { return grid_snap; }
+
+	vector<selection_3d_t>&	get3dSelection() { return selection_3d; }
+	void					set3dHilight(selection_3d_t hl) { hilight_3d = hl; }
+	selection_3d_t			hilightItem3d() { return hilight_3d; }
 
 	void	setEditMode(int mode);
 	void	setSectorEditMode(int mode);
@@ -161,6 +173,12 @@ public:
 	void		setShapeDrawOrigin(fpoint2_t point, bool nearest = false);
 	void		updateShapeDraw(fpoint2_t point);
 	void		endLineDraw(bool apply = true);
+
+	// 3d mode
+	void	selectAdjacent3d(selection_3d_t item);
+	void	changeSectorLight3d(int amount);
+	void	changeWallOffset3d(int amount, bool x);
+	void	changeSectorHeight3d(int amount);
 
 	// Editor messages
 	unsigned	numEditorMessages();

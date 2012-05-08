@@ -64,6 +64,8 @@ CVAR(Int, flat_drawtype, 2, CVAR_SAVE)
 CVAR(Bool, selection_clear_click, false, CVAR_SAVE)
 CVAR(Bool, map_showfps, false, CVAR_SAVE)
 CVAR(Bool, camera_3d_gravity, true, CVAR_SAVE)
+CVAR(Int, camera_3d_crosshair_size, 6, CVAR_SAVE)
+CVAR(Bool, camera_3d_show_distance, false, CVAR_SAVE)
 
 // for testing
 PolygonSplitter splitter;
@@ -76,6 +78,8 @@ SectorBuilder sbuilder;
 EXTERN_CVAR(Int, vertex_size)
 EXTERN_CVAR(Bool, vertex_round)
 EXTERN_CVAR(Float, render_max_dist)
+EXTERN_CVAR(Int, render_3d_things)
+EXTERN_CVAR(Int, render_3d_hilight)
 
 
 /* MapCanvas::MapCanvas
@@ -130,6 +134,7 @@ MapCanvas::MapCanvas(wxWindow *parent, int id, MapEditor* editor)
 	Bind(wxEVT_KEY_DOWN, &MapCanvas::onKeyDown, this);
 	Bind(wxEVT_KEY_UP, &MapCanvas::onKeyUp, this);
 	Bind(wxEVT_LEFT_DOWN, &MapCanvas::onMouseDown, this);
+	Bind(wxEVT_LEFT_DCLICK, &MapCanvas::onMouseDown, this);
 	Bind(wxEVT_RIGHT_DOWN, &MapCanvas::onMouseDown, this);
 	Bind(wxEVT_MIDDLE_DOWN, &MapCanvas::onMouseDown, this);
 	Bind(wxEVT_AUX1_DOWN, &MapCanvas::onMouseDown, this);
@@ -373,7 +378,7 @@ void MapCanvas::viewMatchSpot(double mx, double my, double sx, double sy) {
 void MapCanvas::set3dCameraThing(MapThing* thing) {
 	// Determine position
 	fpoint3_t pos(thing->xPos(), thing->yPos(), 40);
-	int sector = editor->getMap().inSector(pos.x, pos.y);
+	int sector = editor->getMap().sectorAt(pos.x, pos.y);
 	if (sector >= 0)
 		pos.z += editor->getMap().getSector(sector)->intProperty("heightfloor");
 
@@ -758,8 +763,10 @@ void MapCanvas::drawMap2d() {
 	}
 
 	// Draw animations
-	for (unsigned a = 0; a < animations.size(); a++)
-		animations[a]->draw();
+	for (unsigned a = 0; a < animations.size(); a++) {
+		if (!animations[a]->mode3d())
+			animations[a]->draw();
+	}
 
 	// Draw moving stuff if needed
 	if (mouse_state == MSTATE_MOVE) {
@@ -774,6 +781,34 @@ void MapCanvas::drawMap2d() {
 			renderer_2d->renderMovingThings(editor->movingItems(), editor->moveVector()); break;
 		default: break;
 		};
+	}
+}
+
+void MapCanvas::drawMap3d() {
+	// Setup 3d renderer view
+	renderer_3d->setupView(GetSize().x, GetSize().y);
+
+	// Render 3d map
+	renderer_3d->renderMap();
+
+	// Determine hilight
+	selection_3d_t hl = renderer_3d->determineHilight();
+	editor->set3dHilight(hl);
+
+	// Draw hilight if any
+	if (hl.index >= 0)
+		renderer_3d->renderHilight(hl, anim_flash_level);
+
+	// Draw selection if any
+	vector<selection_3d_t> selection = editor->get3dSelection();
+	renderer_3d->renderFlatSelection(selection);
+	renderer_3d->renderWallSelection(selection);
+	renderer_3d->renderThingSelection(selection);
+
+	// Draw animations
+	for (unsigned a = 0; a < animations.size(); a++) {
+		if (animations[a]->mode3d())
+			animations[a]->draw();
 	}
 }
 
@@ -793,17 +828,15 @@ void MapCanvas::draw() {
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisable(GL_TEXTURE_2D);
 
-	// Draw 3d map if in 3d mode
-	if (editor->editMode() == MapEditor::MODE_3D) {
-		renderer_3d->setupView(GetSize().x, GetSize().y);
-		renderer_3d->renderMap();
-	}
-
-	// Otherwise, draw 2d map
+	// Draw 2d or 3d map depending on mode
+	if (editor->editMode() == MapEditor::MODE_3D)
+		drawMap3d();
 	else
 		drawMap2d();
 
 	// Draw info overlay
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0.0f, GetSize().x, GetSize().y, 0.0f, -1.0f, 1.0f);
@@ -845,8 +878,57 @@ void MapCanvas::draw() {
 	if (overlay_current)
 		overlay_current->draw(GetSize().x, GetSize().y, anim_overlay_fade);
 
+	// Draw crosshair if 3d mode
+	if (editor->editMode() == MapEditor::MODE_3D) {
+		// Get crosshair colour
+		rgba_t col = ColourConfiguration::getColour("map_3d_crosshair");
+		col.set_gl();
+
+		glDisable(GL_TEXTURE_2D);
+		glEnable(GL_LINE_SMOOTH);
+		glLineWidth(1.5f);
+
+		double midx = GetSize().x * 0.5;
+		double midy = GetSize().y * 0.5;
+		int size = camera_3d_crosshair_size;
+
+		glBegin(GL_LINES);
+		// Right
+		col.set_gl(false);
+		glVertex2d(midx+1, midy);
+		glColor4f(col.fr(), col.fg(), col.fb(), 0.0f);
+		glVertex2d(midx+size, midy);
+
+		// Left
+		col.set_gl(false);
+		glVertex2d(midx-1, midy);
+		glColor4f(col.fr(), col.fg(), col.fb(), 0.0f);
+		glVertex2d(midx-size, midy);
+
+		// Bottom
+		col.set_gl(false);
+		glVertex2d(midx, midy+1);
+		glColor4f(col.fr(), col.fg(), col.fb(), 0.0f);
+		glVertex2d(midx, midy+size);
+
+		// Top
+		col.set_gl(false);
+		glVertex2d(midx, midy-1);
+		glColor4f(col.fr(), col.fg(), col.fb(), 0.0f);
+		glVertex2d(midx, midy-size);
+		glEnd();
+
+		// Draw item distance (if any)
+		if (renderer_3d->itemDistance() >= 0 && camera_3d_show_distance) {
+			glEnable(GL_TEXTURE_2D);
+			col.set_gl(true);
+			Drawing::drawText(S_FMT("%d", renderer_3d->itemDistance()), midx+5, midy+5, rgba_t(255, 255, 255, 200), Drawing::FONT_SMALL);
+		}
+	}
+
 	// FPS counter
 	if (map_showfps) {
+		glEnable(GL_TEXTURE_2D);
 		if (frametime_last > 0) {
 			int fps = 1.0 / (frametime_last/1000.0);
 			fps_avg.push_back(fps);
@@ -876,23 +958,6 @@ bool MapCanvas::update2d(double mult) {
 	// Do item moving if needed
 	if (mouse_state == MSTATE_MOVE)
 		editor->doMove(mouse_pos_m);
-
-	// Flashing animation for hilight
-	// Pulsates between 0.5-1.0f (multiplied with hilight alpha)
-	if (anim_flash_inc) {
-		anim_flash_level += 0.015f*mult;
-		if (anim_flash_level >= 1.0f) {
-			anim_flash_inc = false;
-			anim_flash_level = 1.0f;
-		}
-	}
-	else {
-		anim_flash_level -= 0.015f*mult;
-		if (anim_flash_level <= 0.5f) {
-			anim_flash_inc = true;
-			anim_flash_level = 0.6f;
-		}
-	}
 
 	// --- Fade map objects depending on mode ---
 
@@ -1037,21 +1102,8 @@ bool MapCanvas::update2d(double mult) {
 	// Update renderer scale
 	renderer_2d->setScale(view_scale_inter);
 
-	// Update animations
-	bool anim_running = false;
-	for (unsigned a = 0; a < animations.size(); a++) {
-		if (!animations[a]->update(theApp->runTimer())) {
-			// If animation is finished, delete and remove from the list
-			delete animations[a];
-			animations.erase(animations.begin() + a);
-			a--;
-		}
-		else
-			anim_running = true;
-	}
-
 	// Check if framerate shouldn't be throttled
-	if (mouse_state == MSTATE_SELECTION || mouse_state == MSTATE_PANNING || anim_running || view_anim || anim_mode_crossfade)
+	if (mouse_state == MSTATE_SELECTION || mouse_state == MSTATE_PANNING || view_anim || anim_mode_crossfade)
 		return true;
 	else
 		return false;
@@ -1127,6 +1179,23 @@ void MapCanvas::update(long frametime) {
 	else
 		mode_anim = update2d(mult);
 
+	// Flashing animation for hilight
+	// Pulsates between 0.5-1.0f (multiplied with hilight alpha)
+	if (anim_flash_inc) {
+		anim_flash_level += 0.015f*mult;
+		if (anim_flash_level >= 1.0f) {
+			anim_flash_inc = false;
+			anim_flash_level = 1.0f;
+		}
+	}
+	else {
+		anim_flash_level -= 0.015f*mult;
+		if (anim_flash_level <= 0.5f) {
+			anim_flash_inc = true;
+			anim_flash_level = 0.6f;
+		}
+	}
+
 	// Fader for info overlay
 	bool fade_anim = true;
 	if (anim_info_show && !overlayActive()) {
@@ -1165,15 +1234,28 @@ void MapCanvas::update(long frametime) {
 	if (overlayActive())
 		overlay_current->update(frametime);
 
+	// Update animations
+	bool anim_running = false;
+	for (unsigned a = 0; a < animations.size(); a++) {
+		if (!animations[a]->update(theApp->runTimer())) {
+			// If animation is finished, delete and remove from the list
+			delete animations[a];
+			animations.erase(animations.begin() + a);
+			a--;
+		}
+		else
+			anim_running = true;
+	}
+
 	// Determine the framerate limit
 #ifdef USE_SFML_RENDERWINDOW
 	// SFML RenderWindow can handle high framerates better than wxGLCanvas, or something like that
-	if (mode_anim || fade_anim || overlay_fade_anim)
+	if (mode_anim || fade_anim || overlay_fade_anim || anim_running)
 		fr_idle = 0;
 	else	// No high-priority animations running, throttle framerate
 		fr_idle = 25;
 #else
-	if (mode_anim || fade_anim || overlay_fade_anim)
+	if (mode_anim || fade_anim || overlay_fade_anim || anim_running)
 		fr_idle = 5;
 	else	// No high-priority animations running, throttle framerate
 		fr_idle = 30;
@@ -1183,8 +1265,13 @@ void MapCanvas::update(long frametime) {
 }
 
 void MapCanvas::mouseToCenter() {
+#if SFML_VERSION_MAJOR > 1
+	wxRect rect = GetScreenRect();
+	sf::Mouse::setPosition(sf::Vector2i(rect.x + int(rect.width*0.5), rect.y + int(rect.height*0.5)));
+#else
 	mouse_warp = true;
 	WarpPointer(GetSize().x * 0.5, GetSize().y * 0.5);
+#endif
 	/*
 	wxRect rect = GetScreenRect();
 #if SFML_VERSION_MAJOR < 2
@@ -1327,6 +1414,42 @@ void MapCanvas::itemsSelected(vector<int>& items, bool selected) {
 	}
 }
 
+void MapCanvas::itemSelected3d(selection_3d_t item, bool selected) {
+	// Wall selected
+	if (item.type == MapEditor::SEL_SIDE_BOTTOM ||
+		item.type == MapEditor::SEL_SIDE_TOP ||
+		item.type == MapEditor::SEL_SIDE_MIDDLE) {
+		// Get quad
+		MapRenderer3D::quad_3d_t* quad = renderer_3d->getQuad(item);
+
+		if (quad) {
+			// Get quad points
+			fpoint3_t points[4];
+			for (unsigned a = 0; a < 4; a++)
+				points[a].set(quad->points[a].x, quad->points[a].y, quad->points[a].z);
+
+			// Start animation
+			animations.push_back(new MCA3dWallSelection(theApp->runTimer(), points, selected));
+		}
+	}
+
+	// Flat selected
+	if (item.type == MapEditor::SEL_CEILING || item.type == MapEditor::SEL_FLOOR) {
+		// Get flat
+		MapRenderer3D::flat_3d_t* flat = renderer_3d->getFlat(item);
+
+		// Start animation
+		if (flat)
+			animations.push_back(new MCA3dFlatSelection(theApp->runTimer(), flat->sector, flat->plane, selected));
+	}
+}
+
+void MapCanvas::itemsSelected3d(vector<selection_3d_t>& items, bool selected) {
+	// Just do one animation per item in 3d mode
+	for (unsigned a = 0; a < items.size(); a++)
+		itemSelected3d(items[a], selected);
+}
+
 void MapCanvas::updateInfoOverlay() {
 	// Update info overlay depending on edit mode
 	switch (editor->editMode()) {
@@ -1462,6 +1585,98 @@ void MapCanvas::changeSectorTexture() {
 	editor->lockHilight(hl_lock);
 }
 
+void MapCanvas::changeThingType3d(selection_3d_t first) {
+	// Get first selected thing
+	MapThing* thing = editor->getMap().getThing(first.index);
+
+	// Do nothing if no things selected/hilighted
+	if (!thing)
+		return;
+
+	// Open type browser
+	ThingTypeBrowser browser(theMapEditor, thing->getType());
+	if (browser.ShowModal() == wxID_OK)
+		editor->changeThingType(browser.getSelectedType());
+}
+
+void MapCanvas::changeTexture3d(selection_3d_t first) {
+	// Check index
+	if (first.index < 0)
+		return;
+
+	// Get initial texture
+	string tex;
+	int type = 0;
+	if (first.type == MapEditor::SEL_FLOOR) {
+		tex = editor->getMap().getSector(first.index)->floorTexture();
+		type = 1;
+	}
+	else if (first.type == MapEditor::SEL_CEILING) {
+		tex = editor->getMap().getSector(first.index)->ceilingTexture();
+		type = 1;
+	}
+	else if (first.type == MapEditor::SEL_SIDE_BOTTOM)
+		tex = editor->getMap().getSide(first.index)->stringProperty("texturebottom");
+	else if (first.type == MapEditor::SEL_SIDE_MIDDLE)
+		tex = editor->getMap().getSide(first.index)->stringProperty("texturemiddle");
+	else if (first.type == MapEditor::SEL_SIDE_TOP)
+		tex = editor->getMap().getSide(first.index)->stringProperty("texturetop");
+
+	// Open texture browser
+	MapTextureBrowser browser(theMapEditor, type, tex);
+	browser.SetTitle("Browse Texture");
+	if (browser.ShowModal() == wxID_OK) {
+		bool mix = theGameConfiguration->mixTexFlats();
+		tex = browser.getSelectedItem()->getName();
+		selection_3d_t hl = editor->hilightItem3d();
+		
+		// Apply to flats
+		vector<selection_3d_t>& selection = editor->get3dSelection();
+		if (mix || type == 1) {
+			// Selection
+			if (selection.size() > 0) {
+				for (unsigned a = 0; a < selection.size(); a++) {
+					if (selection[a].type == MapEditor::SEL_FLOOR)
+						editor->getMap().getSector(selection[a].index)->setStringProperty("texturefloor", tex);
+					else if (selection[a].type == MapEditor::SEL_CEILING)
+						editor->getMap().getSector(selection[a].index)->setStringProperty("textureceiling", tex);
+				}
+			}
+			else if (hl.index >= 0) {
+				// Hilight if no selection
+				if (hl.type == MapEditor::SEL_FLOOR)
+					editor->getMap().getSector(hl.index)->setStringProperty("texturefloor", tex);
+				else if (hl.type == MapEditor::SEL_CEILING)
+					editor->getMap().getSector(hl.index)->setStringProperty("textureceiling", tex);
+			}
+		}
+
+		// Apply to walls
+		if (mix || type == 0) {
+			// Selection
+			if (selection.size() > 0) {
+				for (unsigned a = 0; a < selection.size(); a++) {
+					if (selection[a].type == MapEditor::SEL_SIDE_BOTTOM)
+						editor->getMap().getSide(selection[a].index)->setStringProperty("texturebottom", tex);
+					else if (selection[a].type == MapEditor::SEL_SIDE_MIDDLE)
+						editor->getMap().getSide(selection[a].index)->setStringProperty("texturemiddle", tex);
+					else if (selection[a].type == MapEditor::SEL_SIDE_TOP)
+						editor->getMap().getSide(selection[a].index)->setStringProperty("texturetop", tex);
+				}
+			}
+			else if (hl.index >= 0) {
+				// Hilight if no selection
+				if (hl.type == MapEditor::SEL_SIDE_BOTTOM)
+					editor->getMap().getSide(hl.index)->setStringProperty("texturebottom", tex);
+				else if (hl.type == MapEditor::SEL_SIDE_MIDDLE)
+					editor->getMap().getSide(hl.index)->setStringProperty("texturemiddle", tex);
+				else if (hl.type == MapEditor::SEL_SIDE_TOP)
+					editor->getMap().getSide(hl.index)->setStringProperty("texturetop", tex);
+			}
+		}
+	}
+}
+
 void MapCanvas::onKeyBindPress(string name) {
 	// Check if an overlay is active
 	if (overlayActive()) {
@@ -1480,9 +1695,11 @@ void MapCanvas::onKeyBindPress(string name) {
 	// Toggle 3d mode
 	if (name == "map_toggle_3d") {
 		if (editor->editMode() == MapEditor::MODE_3D)
-			changeEditMode(MapEditor::MODE_LINES);
-		else
+			changeEditMode(mode_last);
+		else {
+			mode_last = editor->editMode();
 			changeEditMode(MapEditor::MODE_3D);
+		}
 	}
 
 	// Handle keybinds depending on mode
@@ -1727,6 +1944,40 @@ void MapCanvas::keyBinds3d(string name) {
 	// Release mouse cursor
 	else if (name == "me3d_release_mouse")
 		lockMouse(false);
+
+	// Toggle things
+	else if (name == "me3d_toggle_things") {
+		// Change thing display type
+		render_3d_things = render_3d_things + 1;
+		if (render_3d_things > 1)
+			render_3d_things = 0;
+
+		// Editor message
+		if (render_3d_things == 0)
+			editor->addEditorMessage("Things disabled");
+		else
+			editor->addEditorMessage("Things enabled: Sprites");
+	}
+
+	// Toggle hilight
+	else if (name == "me3d_toggle_hilight") {
+		// Change hilight type
+		render_3d_hilight = render_3d_hilight + 1;
+		if (render_3d_hilight > 2)
+			render_3d_hilight = 0;
+
+		// Editor message
+		if (render_3d_hilight == 0)
+			editor->addEditorMessage("Hilight disabled");
+		else if (render_3d_hilight == 1)
+			editor->addEditorMessage("Hilight enabled: Outline");
+		else if (render_3d_hilight == 2)
+			editor->addEditorMessage("Hilight enabled: Solid");
+	}
+
+	// Send to map editor
+	else
+		editor->handleKeyBind(name, mouse_pos_m);
 }
 
 void MapCanvas::onKeyBindRelease(string name) {
@@ -1961,11 +2212,22 @@ void MapCanvas::onMouseDown(wxMouseEvent& e) {
 	}
 
 	// Left button
-	if (e.LeftDown()) {
-		// If the mouse is unlocked and we're in 3d mode, lock the mouse
-		if (!mouse_locked && editor->editMode() == MapEditor::MODE_3D) {
-			mouseToCenter();
-			lockMouse(true);
+	if (e.LeftDown() || e.LeftDClick()) {
+		// 3d mode
+		if (editor->editMode() == MapEditor::MODE_3D) {
+			// If the mouse is unlocked, lock the mouse
+			if (!mouse_locked) {
+				mouseToCenter();
+				lockMouse(true);
+			}
+			else {
+				if (e.ShiftDown())	// Shift down, select all matching adjacent structures
+					editor->selectAdjacent3d(editor->hilightItem3d());
+				else	// Toggle selection
+					editor->selectCurrent();
+			}
+
+			return;
 		}
 
 		// Line drawing state, add line draw point
@@ -2008,6 +2270,20 @@ void MapCanvas::onMouseDown(wxMouseEvent& e) {
 
 	// Right button
 	else if (e.RightDown()) {
+		// 3d mode
+		if (editor->editMode() == MapEditor::MODE_3D) {
+			// Get first selected item
+			selection_3d_t first = editor->hilightItem3d();
+			if (editor->get3dSelection().size() > 0)
+				first = editor->get3dSelection()[0];
+
+			// Check type
+			if (first.type == MapEditor::SEL_THING)
+				changeThingType3d(first);
+			else
+				changeTexture3d(first);
+		}
+
 		// Remove line draw point if in line drawing state
 		if (mouse_state == MSTATE_LINE_DRAW) {
 			// Line drawing
@@ -2121,8 +2397,8 @@ void MapCanvas::onMouseMotion(wxMouseEvent& e) {
 	// Check for 3d mode
 	if (editor->editMode() == MapEditor::MODE_3D && mouse_locked) {
 		// Get relative mouse movement
-		int xrel = e.GetX() - (GetSize().x * 0.5);
-		int yrel = e.GetY() - (GetSize().y * 0.5);
+		double xrel = e.GetX() - int(GetSize().x * 0.5);
+		double yrel = e.GetY() - int(GetSize().y * 0.5);
 
 		renderer_3d->cameraTurn(xrel*0.1);
 		renderer_3d->cameraPitch(-yrel*0.003);
