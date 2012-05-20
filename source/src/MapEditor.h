@@ -43,9 +43,11 @@ private:
 	vector<int>	move_items;
 	int			move_item_closest;
 
-	// Object properties
+	// Object properties and copy/paste
 	MapThing*	copy_thing;
 	MapSector*	copy_sector;
+	string		copy_texture;
+	double		copy_offsets[2];
 
 	// Drawing
 	vector<fpoint2_t>	draw_points;
@@ -61,7 +63,13 @@ private:
 	// 3d mode
 	selection_3d_t			hilight_3d;
 	vector<selection_3d_t>	selection_3d;
-	bool					wallMatchesNotSelected(MapSide* side, uint8_t part, string tex);	// Helper for selectAdjacent3d
+
+	// Helper for selectAdjacent3d
+	bool wallMatches(MapSide* side, uint8_t part, string tex);
+	void getAdjacentWalls3d(selection_3d_t item, vector<selection_3d_t>& list);
+
+	// Helper for autoAlignX3d
+	void doAlignX3d(MapSide* side, int offset, string tex, vector<selection_3d_t>& walls_done);
 
 public:
 	enum {
@@ -77,6 +85,11 @@ public:
 		SECTOR_FLOOR,
 		SECTOR_CEILING,
 
+		// Selection
+		DESELECT = 0,
+		SELECT,
+		TOGGLE,
+
 		// 3d mode selection type
 		SEL_SIDE_TOP = 0,
 		SEL_SIDE_MIDDLE,
@@ -84,6 +97,11 @@ public:
 		SEL_FLOOR,
 		SEL_CEILING,
 		SEL_THING,
+
+		// Copy/paste types
+		COPY_TEXTYPE = 0,
+		COPY_OFFSETS,
+		COPY_SCALE,
 	};
 
 	MapEditor();
@@ -135,6 +153,7 @@ public:
 	void		getSelectedObjects(vector<MapObject*>& list);
 	void		showItem(int index);
 	bool		isHilightOrSelection() { return selection.size() > 0 || hilight_item != -1; }
+	void		selectItem3d(selection_3d_t item, int sel = TOGGLE);
 
 	// Grid
 	void	incrementGrid();
@@ -155,6 +174,7 @@ public:
 	void	flipLines(bool sides = true);
 	void	changeSectorHeight(int amount, bool floor = true, bool ceiling = true);
 	void	changeSectorLight(int amount);
+	void	joinSectors(bool remove_lines);
 	void	changeThingType(int newtype);
 	void	thingQuickAngle(fpoint2_t mouse_pos);
 	
@@ -179,6 +199,11 @@ public:
 	void	changeSectorLight3d(int amount);
 	void	changeWallOffset3d(int amount, bool x);
 	void	changeSectorHeight3d(int amount);
+	void	autoAlignX3d(selection_3d_t start);
+	void	resetWall3d();
+	void	toggleUnpegged3d(bool lower);
+	void	copy3d(int type);
+	void	paste3d(int type);
 
 	// Editor messages
 	unsigned	numEditorMessages();

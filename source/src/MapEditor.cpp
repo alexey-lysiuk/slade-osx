@@ -121,6 +121,9 @@ bool MapEditor::openMap(Archive::mapdesc_t map) {
 		canvas->forceRefreshRenderer();
 	}
 
+	link_3d_light = true;
+	link_3d_offset = true;
+
 	return true;
 }
 
@@ -131,6 +134,8 @@ void MapEditor::clearMap() {
 	// Clear selection
 	selection.clear();
 	hilight_item = -1;
+	link_3d_light = true;
+	link_3d_offset = true;
 }
 
 bool MapEditor::updateHilight(fpoint2_t mouse_pos, double dist_scale) {
@@ -187,22 +192,22 @@ bool MapEditor::updateHilight(fpoint2_t mouse_pos, double dist_scale) {
 				MapLine* line = map.getLine(hilight_item);
 				if (line->s2()) back = line->s2()->getSector();
 				if (line->s1()) front = line->s1()->getSector();
-				needs_tag = theGameConfiguration->actionSpecial((int)line->prop("special"))->needsTag();
-				tag = line->prop("arg0");
-				arg2 = line->prop("arg1");
-				arg3 = line->prop("arg2");
-				arg4 = line->prop("arg3");
-				arg5 = line->prop("arg4");
+				needs_tag = theGameConfiguration->actionSpecial(line->intProperty("special"))->needsTag();
+				tag = line->intProperty("arg0");
+				arg2 = line->intProperty("arg1");
+				arg3 = line->intProperty("arg2");
+				arg4 = line->intProperty("arg3");
+				arg5 = line->intProperty("arg4");
 
 			// Hexen and UDMF things can have specials too
 			} else /* edit_mode == MODE_THINGS */ {
 				MapThing* thing = map.getThing(hilight_item);
-				needs_tag = theGameConfiguration->actionSpecial((int)thing->prop("special"))->needsTag();
-				tag = thing->prop("arg0");
-				arg2 = thing->prop("arg1");
-				arg3 = thing->prop("arg2");
-				arg4 = thing->prop("arg3");
-				arg5 = thing->prop("arg4");
+				needs_tag = theGameConfiguration->actionSpecial(thing->intProperty("special"))->needsTag();
+				tag = thing->intProperty("arg0");
+				arg2 = thing->intProperty("arg1");
+				arg3 = thing->intProperty("arg2");
+				arg4 = thing->intProperty("arg3");
+				arg5 = thing->intProperty("arg4");
 			}
 
 			// Sector tag
@@ -772,6 +777,31 @@ void MapEditor::showItem(int index) {
 	}
 }
 
+void MapEditor::selectItem3d(selection_3d_t item, int sel) {
+	// Go through selection
+	for (unsigned a = 0; a < selection_3d.size(); a++) {
+		// Check for match
+		if (selection_3d[a].index == item.index && selection_3d[a].type == item.type) {
+			// Selecting, do nothing
+			if (sel == SELECT)
+				return;
+
+			// Deselecting, remove from selection list
+			else if (sel == DESELECT || sel == TOGGLE) {
+				selection_3d[a] = selection_3d.back();
+				selection_3d.pop_back();
+				return;
+			}
+		}
+	}
+
+	// Selection didn't exist, add if selecting or toggling
+	if (sel == SELECT || sel == TOGGLE) {
+		selection_3d.push_back(item);
+		if (canvas) canvas->itemSelected3d(item);
+	}
+}
+
 void MapEditor::incrementGrid() {
 	gridsize++;
 	if (gridsize > 20)
@@ -1197,6 +1227,67 @@ void MapEditor::changeSectorLight(int amount) {
 	updateDisplay();
 }
 
+void MapEditor::joinSectors(bool remove_lines) {
+	// Check edit mode
+	if (edit_mode != MODE_SECTORS)
+		return;
+
+	// Check selection
+	if (selection.size() < 2)
+		return;
+
+	// Get 'target' sector
+	MapSector* target = map.getSector(selection[0]);
+
+	// Init list of lines
+	vector<MapLine*> lines;
+
+	// Go through selection
+	for (unsigned a = 1; a < selection.size(); a++) {
+		// Go through sector sides
+		MapSector* sector = map.getSector(selection[a]);
+		while (sector->connectedSides().size() > 0) {
+			// Set sector
+			MapSide* side = sector->connectedSides()[0];
+			side->setSector(target);
+
+			// Add line to list if not already there
+			bool exists = false;
+			for (unsigned l = 0; l < lines.size(); l++) {
+				if (side->getParentLine() == lines[l]) {
+					exists = true;
+					break;
+				}
+			}
+			if (!exists)
+				lines.push_back(side->getParentLine());
+		}
+
+		// Delete sector
+		map.removeSector(sector);
+	}
+
+	// Remove any changed lines that now have the target sector on both sides (if needed)
+	int nlines = 0;
+	if (remove_lines) {
+		for (unsigned a = 0; a < lines.size(); a++) {
+			if (lines[a]->frontSector() == target && lines[a]->backSector() == target) {
+				map.removeLine(lines[a]);
+				nlines++;
+			}
+		}
+	}
+
+	// Editor message
+	if (nlines == 0)
+		addEditorMessage(S_FMT("Joined %d Sectors", selection.size()));
+	else
+		addEditorMessage(S_FMT("Joined %d Sectors (removed %d Lines)", selection.size(), nlines));
+
+	// Clear selection
+	selection.clear();
+}
+
 void MapEditor::changeThingType(int newtype) {
 	// Do nothing if not in things mode
 	if (edit_mode != MODE_THINGS && edit_mode != MODE_3D)
@@ -1577,9 +1668,9 @@ void MapEditor::updateShapeDraw(fpoint2_t point) {
 	// Rectangle
 	if (shapedraw_shape == 0) {
 		draw_points.push_back(fpoint2_t(tl.x, tl.y));
-		draw_points.push_back(fpoint2_t(br.x, tl.y));
-		draw_points.push_back(fpoint2_t(br.x, br.y));
 		draw_points.push_back(fpoint2_t(tl.x, br.y));
+		draw_points.push_back(fpoint2_t(br.x, br.y));
+		draw_points.push_back(fpoint2_t(br.x, tl.y));
 		draw_points.push_back(fpoint2_t(tl.x, tl.y));
 	}
 
@@ -1664,7 +1755,9 @@ void MapEditor::endLineDraw(bool apply) {
 		vector<me_ls_t> edges;
 		for (unsigned a = nl_start; a < map.nLines(); a++) {
 			edges.push_back(me_ls_t(map.getLine(a), true));
-			edges.push_back(me_ls_t(map.getLine(a), false));
+			fpoint2_t mid = map.getLine(a)->midPoint();
+			if (map.sectorAt(mid.x, mid.y) >= 0)
+				edges.push_back(me_ls_t(map.getLine(a), false));
 		}
 		
 		// Build sectors
@@ -1711,10 +1804,10 @@ void MapEditor::endLineDraw(bool apply) {
 				}
 
 				// If we can reuse the sector, do so
-				if (!reused) {
+				if (!reused)
 					sectors_reused.push_back(sector);
+				else
 					sector = NULL;
-				}
 			}
 			
 			// Create sector
@@ -1798,7 +1891,7 @@ void MapEditor::endLineDraw(bool apply) {
 	draw_points.clear();
 }
 
-bool MapEditor::wallMatchesNotSelected(MapSide* side, uint8_t part, string tex) {
+bool MapEditor::wallMatches(MapSide* side, uint8_t part, string tex) {
 	// Check for blank texture where it isn't needed
 	if (tex == "-") {
 		MapLine* line = side->getParentLine();
@@ -1830,12 +1923,124 @@ bool MapEditor::wallMatchesNotSelected(MapSide* side, uint8_t part, string tex) 
 		return false;
 
 	// Check it isn't already selected
+	/*
 	for (unsigned s = 0; s < selection_3d.size(); s++) {
 		if (selection_3d[s].type == part && selection_3d[s].index == side->getIndex())
 			return false;
 	}
+	*/
 
 	return true;
+}
+
+void MapEditor::getAdjacentWalls3d(selection_3d_t item, vector<selection_3d_t>& list) {
+	// Add item to list if needed
+	for (unsigned a = 0; a < list.size(); a++) {
+		if (list[a].type == item.type && list[a].index == item.index)
+			return;
+	}
+	list.push_back(item);
+
+	// Get initial side
+	MapSide* side = map.getSide(item.index);
+	if (!side)
+		return;
+
+	// Get initial line
+	MapLine* line = side->getParentLine();
+	if (!line)
+		return;
+
+	// Get texture to match
+	string tex;
+	if (item.type == SEL_SIDE_BOTTOM)
+		tex = side->stringProperty("texturebottom");
+	else if (item.type == SEL_SIDE_MIDDLE)
+		tex = side->stringProperty("texturemiddle");
+	else
+		tex = side->stringProperty("texturetop");
+
+	// Go through attached lines (vertex 1)
+	for (unsigned a = 0; a < line->v1()->nConnectedLines(); a++) {
+		MapLine* oline = line->v1()->connectedLine(a);
+		if (!oline || oline == line)
+			continue;
+
+		// Get line sides
+		MapSide* side1 = oline->s1();
+		MapSide* side2 = oline->s2();
+
+		// Front side
+		if (side1) {
+			// Upper texture
+			if (wallMatches(side1, SEL_SIDE_TOP, tex))
+				getAdjacentWalls3d(selection_3d_t(side1->getIndex(), SEL_SIDE_TOP), list);
+
+			// Middle texture
+			if (wallMatches(side1, SEL_SIDE_MIDDLE, tex))
+				getAdjacentWalls3d(selection_3d_t(side1->getIndex(), SEL_SIDE_MIDDLE), list);
+
+			// Lower texture
+			if (wallMatches(side1, SEL_SIDE_BOTTOM, tex))
+				getAdjacentWalls3d(selection_3d_t(side1->getIndex(), SEL_SIDE_BOTTOM), list);
+		}
+
+		// Back side
+		if (side2) {
+			// Upper texture
+			if (wallMatches(side2, SEL_SIDE_TOP, tex))
+				getAdjacentWalls3d(selection_3d_t(side2->getIndex(), SEL_SIDE_TOP), list);
+
+			// Middle texture
+			if (wallMatches(side2, SEL_SIDE_MIDDLE, tex))
+				getAdjacentWalls3d(selection_3d_t(side2->getIndex(), SEL_SIDE_MIDDLE), list);
+
+			// Lower texture
+			if (wallMatches(side2, SEL_SIDE_BOTTOM, tex))
+				getAdjacentWalls3d(selection_3d_t(side2->getIndex(), SEL_SIDE_BOTTOM), list);
+		}
+	}
+
+	// Go through attached lines (vertex 2)
+	for (unsigned a = 0; a < line->v2()->nConnectedLines(); a++) {
+		MapLine* oline = line->v2()->connectedLine(a);
+		if (!oline || oline == line)
+			continue;
+
+		// Get line sides
+		MapSide* side1 = oline->s1();
+		MapSide* side2 = oline->s2();
+
+		// Front side
+		if (side1) {
+			// Upper texture
+			if (wallMatches(side1, SEL_SIDE_TOP, tex))
+				getAdjacentWalls3d(selection_3d_t(side1->getIndex(), SEL_SIDE_TOP), list);
+
+			// Middle texture
+			if (wallMatches(side1, SEL_SIDE_MIDDLE, tex))
+				getAdjacentWalls3d(selection_3d_t(side1->getIndex(), SEL_SIDE_MIDDLE), list);
+
+			// Lower texture
+			if (wallMatches(side1, SEL_SIDE_BOTTOM, tex))
+				getAdjacentWalls3d(selection_3d_t(side1->getIndex(), SEL_SIDE_BOTTOM), list);
+		}
+
+		// Back side
+		if (side2) {
+			// Upper texture
+			if (wallMatches(side2, SEL_SIDE_TOP, tex))
+				getAdjacentWalls3d(selection_3d_t(side2->getIndex(), SEL_SIDE_TOP), list);
+
+			// Middle texture
+			if (wallMatches(side2, SEL_SIDE_MIDDLE, tex))
+				getAdjacentWalls3d(selection_3d_t(side2->getIndex(), SEL_SIDE_MIDDLE), list);
+
+			// Lower texture
+			if (wallMatches(side2, SEL_SIDE_BOTTOM, tex))
+				getAdjacentWalls3d(selection_3d_t(side2->getIndex(), SEL_SIDE_BOTTOM), list);
+		}
+	}
 }
 
 void MapEditor::selectAdjacent3d(selection_3d_t item) {
@@ -1843,18 +2048,8 @@ void MapEditor::selectAdjacent3d(selection_3d_t item) {
 	if (item.index < 0)
 		return;
 
-	// Select item if not already selected
-	bool selected = false;
-	for (unsigned s = 0; s < selection_3d.size(); s++) {
-		if (selection_3d[s].type == item.type && selection_3d[s].index == item.index) {
-			selected = true;
-			break;
-		}
-	}
-	if (!selected) {
-		selection_3d.push_back(item);
-		if (canvas) canvas->itemSelected3d(item);
-	}
+	// Select item
+	selectItem3d(item, SELECT);
 
 	// Flat
 	if (item.type == SEL_FLOOR || item.type == SEL_CEILING) {
@@ -1898,7 +2093,7 @@ void MapEditor::selectAdjacent3d(selection_3d_t item) {
 			}
 
 			// Check flat isn't already selected
-			selected = false;
+			bool selected = false;
 			for (unsigned s = 0; s < selection_3d.size(); s++) {
 				if (selection_3d[s].type == item.type && selection_3d[s].index == osector->getIndex()) {
 					selected = true;
@@ -1914,106 +2109,10 @@ void MapEditor::selectAdjacent3d(selection_3d_t item) {
 	
 	// Wall
 	else if (item.type != SEL_THING) {
-		// Get initial side
-		MapSide* side = map.getSide(item.index);
-		if (!side)
-			return;
-
-		// Get initial line
-		MapLine* line = side->getParentLine();
-		if (!line)
-			return;
-
-		// Get texture to match
-		string tex;
-		if (item.type == SEL_SIDE_BOTTOM)
-			tex = side->stringProperty("texturebottom");
-		else if (item.type == SEL_SIDE_MIDDLE)
-			tex = side->stringProperty("texturemiddle");
-		else
-			tex = side->stringProperty("texturetop");
-
-		// Go through attached lines (vertex 1)
-		for (unsigned a = 0; a < line->v1()->nConnectedLines(); a++) {
-			MapLine* oline = line->v1()->connectedLine(a);
-			if (!oline || oline == line)
-				continue;
-
-			// Get line sides
-			MapSide* side1 = oline->s1();
-			MapSide* side2 = oline->s2();
-
-			// Front side
-			if (side1) {
-				// Upper texture
-				if (wallMatchesNotSelected(side1, SEL_SIDE_TOP, tex))
-					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_TOP));
-
-				// Middle texture
-				if (wallMatchesNotSelected(side1, SEL_SIDE_MIDDLE, tex))
-					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_MIDDLE));
-
-				// Lower texture
-				if (wallMatchesNotSelected(side1, SEL_SIDE_BOTTOM, tex))
-					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_BOTTOM));
-			}
-
-			// Back side
-			if (side2) {
-				// Upper texture
-				if (wallMatchesNotSelected(side2, SEL_SIDE_TOP, tex))
-					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_TOP));
-
-				// Middle texture
-				if (wallMatchesNotSelected(side2, SEL_SIDE_MIDDLE, tex))
-					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_MIDDLE));
-
-				// Lower texture
-				if (wallMatchesNotSelected(side2, SEL_SIDE_BOTTOM, tex))
-					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_BOTTOM));
-			}
-		}
-
-		// Go through attached lines (vertex 2)
-		for (unsigned a = 0; a < line->v2()->nConnectedLines(); a++) {
-			MapLine* oline = line->v2()->connectedLine(a);
-			if (!oline || oline == line)
-				continue;
-
-			// Get line sides
-			MapSide* side1 = oline->s1();
-			MapSide* side2 = oline->s2();
-
-			// Front side
-			if (side1) {
-				// Upper texture
-				if (wallMatchesNotSelected(side1, SEL_SIDE_TOP, tex))
-					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_TOP));
-
-				// Middle texture
-				if (wallMatchesNotSelected(side1, SEL_SIDE_MIDDLE, tex))
-					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_MIDDLE));
-
-				// Lower texture
-				if (wallMatchesNotSelected(side1, SEL_SIDE_BOTTOM, tex))
-					selectAdjacent3d(selection_3d_t(side1->getIndex(), SEL_SIDE_BOTTOM));
-			}
-
-			// Back side
-			if (side2) {
-				// Upper texture
-				if (wallMatchesNotSelected(side2, SEL_SIDE_TOP, tex))
-					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_TOP));
-
-				// Middle texture
-				if (wallMatchesNotSelected(side2, SEL_SIDE_MIDDLE, tex))
-					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_MIDDLE));
-
-				// Lower texture
-				if (wallMatchesNotSelected(side2, SEL_SIDE_BOTTOM, tex))
-					selectAdjacent3d(selection_3d_t(side2->getIndex(), SEL_SIDE_BOTTOM));
-			}
-		}
+		vector<selection_3d_t> list;
+		getAdjacentWalls3d(item, list);
+		for (unsigned a = 0; a < list.size(); a++)
+			selectItem3d(list[a], SELECT);
 	}
 }
 
@@ -2087,6 +2186,8 @@ void MapEditor::changeWallOffset3d(int amount, bool x) {
 				items.push_back(selection_3d[a]);
 		}
 	}
+	if (items.size() == 0)
+		return;
 
 	// Go through items
 	vector<int> done;
@@ -2235,6 +2336,312 @@ void MapEditor::changeSectorHeight3d(int amount) {
 	}
 }
 
+void MapEditor::doAlignX3d(MapSide* side, int offset, string tex, vector<selection_3d_t>& walls_done) {
+	// Check if this wall has already been processed
+	for (unsigned a = 0; a < walls_done.size(); a++) {
+		if (walls_done[a].index == side->getIndex())
+			return;
+	}
+	
+	// Add to 'done' list
+	walls_done.push_back(selection_3d_t(side->getIndex(), SEL_SIDE_MIDDLE));
+
+	// Set offset
+	side->setIntProperty("offsetx", offset);
+
+	// Get 'next' vertex
+	MapLine* line = side->getParentLine();
+	MapVertex* vertex = line->v2();
+	if (side == line->s2())
+		vertex = line->v1();
+
+	// Get integral length of line
+	int intlen = MathStuff::round(line->getLength());
+
+	// Go through connected lines
+	for (unsigned a = 0; a < vertex->nConnectedLines(); a++) {
+		MapLine* l = vertex->connectedLine(a);
+		
+		// First side
+		MapSide* s = l->s1();
+		if (s) {
+			// Check for matching texture
+			if (s->stringProperty("texturetop") == tex || s->stringProperty("texturemiddle") == tex || s->stringProperty("texturebottom") == tex)
+				doAlignX3d(s, offset + intlen, tex, walls_done);
+		}
+
+		// Second side
+		s = l->s2();
+		if (s) {
+			// Check for matching texture
+			if (s->stringProperty("texturetop") == tex || s->stringProperty("texturemiddle") == tex || s->stringProperty("texturebottom") == tex)
+				doAlignX3d(s, offset + intlen, tex, walls_done);
+		}
+	}
+}
+
+void MapEditor::autoAlignX3d(selection_3d_t start) {
+	// Check start is a wall
+	if (start.type != SEL_SIDE_BOTTOM && start.type != SEL_SIDE_MIDDLE && start.type != SEL_SIDE_TOP)
+		return;
+
+	// Get starting side
+	MapSide* side = map.getSide(start.index);
+	if (!side) return;
+
+	// Get texture to match
+	string tex;
+	if (start.type == SEL_SIDE_BOTTOM)
+		tex = side->stringProperty("texturebottom");
+	else if (start.type == SEL_SIDE_MIDDLE)
+		tex = side->stringProperty("texturemiddle");
+	else if (start.type == SEL_SIDE_TOP)
+		tex = side->stringProperty("texturetop");
+
+	// Init aligned wall list
+	vector<selection_3d_t> walls_done;
+
+	// Do alignment
+	doAlignX3d(side, side->intProperty("offsetx"), tex, walls_done);
+
+	// Editor message
+	addEditorMessage("Auto-aligned on X axis");
+}
+
+void MapEditor::resetWall3d() {
+	// Get items to process
+	vector<selection_3d_t> items;
+	if (selection_3d.size() == 0) {
+		if (hilight_3d.type == SEL_SIDE_TOP || hilight_3d.type == SEL_SIDE_BOTTOM || hilight_3d.type == SEL_SIDE_MIDDLE)
+			items.push_back(hilight_3d);
+	}
+	else {
+		for (unsigned a = 0; a < selection_3d.size(); a++) {
+			if (selection_3d[a].type == SEL_SIDE_TOP || selection_3d[a].type == SEL_SIDE_BOTTOM || selection_3d[a].type == SEL_SIDE_MIDDLE)
+				items.push_back(selection_3d[a]);
+		}
+	}
+	if (items.size() == 0)
+		return;
+
+	// Go through items
+	for (unsigned a = 0; a < items.size(); a++) {
+		MapSide* side = map.getSide(items[a].index);
+		if (!side) continue;
+
+		// Reset offsets
+		if (link_3d_offset) {
+			// If offsets are linked, reset base offsets
+			side->setIntProperty("offsetx", 0);
+			side->setIntProperty("offsety", 0);
+		}
+		else {
+			// Otherwise, reset offsets for the current wall part
+			if (items[a].type == SEL_SIDE_TOP) {
+				side->setFloatProperty("offsetx_top", 0);
+				side->setFloatProperty("offsety_top", 0);
+			}
+			else if (items[a].type == SEL_SIDE_MIDDLE) {
+				side->setFloatProperty("offsetx_mid", 0);
+				side->setFloatProperty("offsety_mid", 0);
+			}
+			else {
+				side->setFloatProperty("offsetx_bottom", 0);
+				side->setFloatProperty("offsety_bottom", 0);
+			}
+		}
+
+		// Reset scaling
+		if (theGameConfiguration->udmfNamespace() == "zdoom") {
+			if (items[a].type == SEL_SIDE_TOP) {
+				side->setFloatProperty("scalex_top", 1);
+				side->setFloatProperty("scaley_top", 1);
+			}
+			else if (items[a].type == SEL_SIDE_MIDDLE) {
+				side->setFloatProperty("scalex_mid", 1);
+				side->setFloatProperty("scaley_mid", 1);
+			}
+			else {
+				side->setFloatProperty("scalex_bottom", 1);
+				side->setFloatProperty("scaley_bottom", 1);
+			}
+		}
+	}
+
+	// Editor message
+	if (theGameConfiguration->udmfNamespace() == "zdoom")
+		addEditorMessage("Offsets and scaling reset");
+	else
+		addEditorMessage("Offsets reset");
+}
+
+void MapEditor::toggleUnpegged3d(bool lower) {
+	// Get items to process
+	vector<selection_3d_t> items;
+	if (selection_3d.size() == 0) {
+		if (hilight_3d.type == SEL_SIDE_TOP || hilight_3d.type == SEL_SIDE_BOTTOM || hilight_3d.type == SEL_SIDE_MIDDLE)
+			items.push_back(hilight_3d);
+	}
+	else {
+		for (unsigned a = 0; a < selection_3d.size(); a++) {
+			if (selection_3d[a].type == SEL_SIDE_TOP || selection_3d[a].type == SEL_SIDE_BOTTOM || selection_3d[a].type == SEL_SIDE_MIDDLE)
+				items.push_back(selection_3d[a]);
+		}
+	}
+	if (items.size() == 0)
+		return;
+
+	// Go through items
+	for (unsigned a = 0; a < items.size(); a++) {
+		// Get line
+		MapLine* line = map.getSide(items[a].index)->getParentLine();
+		if (!line) continue;
+
+		// Toggle flag
+		if (lower) {
+			bool unpegged = theGameConfiguration->lineBasicFlagSet("dontpegbottom", line);
+			theGameConfiguration->setLineBasicFlag("dontpegbottom", line, !unpegged);
+		}
+		else {
+			bool unpegged = theGameConfiguration->lineBasicFlagSet("dontpegtop", line);
+			theGameConfiguration->setLineBasicFlag("dontpegtop", line, !unpegged);
+		}
+	}
+
+	// Editor message
+	if (lower)
+		addEditorMessage("Lower Unpegged flag toggled");
+	else
+		addEditorMessage("Upper Unpegged flag toggled");
+}
+
+void MapEditor::copy3d(int type) {
+	// Check hilight
+	if (hilight_3d.index < 0)
+		return;
+
+	// Upper wall
+	else if (hilight_3d.type == SEL_SIDE_TOP) {
+		// Texture
+		if (type == COPY_TEXTYPE)
+			copy_texture = map.getSide(hilight_3d.index)->stringProperty("texturetop");
+	}
+
+	// Middle wall
+	else if (hilight_3d.type == SEL_SIDE_MIDDLE) {
+		// Texture
+		if (type == COPY_TEXTYPE)
+			copy_texture = map.getSide(hilight_3d.index)->stringProperty("texturemiddle");
+	}
+
+	// Lower wall
+	else if (hilight_3d.type == SEL_SIDE_BOTTOM) {
+		// Texture
+		if (type == COPY_TEXTYPE)
+			copy_texture = map.getSide(hilight_3d.index)->stringProperty("texturebottom");
+	}
+
+	// Floor
+	else if (hilight_3d.type == SEL_FLOOR) {
+		// Texture
+		if (type == COPY_TEXTYPE)
+			copy_texture = map.getSector(hilight_3d.index)->floorTexture();
+	}
+
+	// Ceiling
+	else if (hilight_3d.type == SEL_CEILING) {
+		// Texture
+		if (type == COPY_TEXTYPE)
+			copy_texture = map.getSector(hilight_3d.index)->ceilingTexture();
+	}
+
+	// Thing
+	else if (hilight_3d.type == SEL_THING) {
+		if (!copy_thing)
+			copy_thing = new MapThing();
+
+		copy_thing->copy(map.getThing(hilight_3d.index));
+	}
+
+	// Flash
+	if (canvas)
+		canvas->itemSelected3d(hilight_3d);
+
+	// Editor message
+	if (type == COPY_TEXTYPE) {
+		if (hilight_3d.type == SEL_THING)
+			addEditorMessage("Copied Thing Type");
+		else
+			addEditorMessage("Copied Texture");
+	}
+}
+
+void MapEditor::paste3d(int type) {
+	// Get items to paste to
+	vector<selection_3d_t> items;
+	if (selection_3d.size() == 0 && hilight_3d.index >= 0)
+		items.push_back(hilight_3d);
+	else if (selection_3d.size() > 0) {
+		for (unsigned a = 0; a < selection_3d.size(); a++)
+			items.push_back(selection_3d[a]);
+	}
+	else
+		return;
+
+	// Go through items
+	for (unsigned a = 0; a < items.size(); a++) {
+		// Upper wall
+		if (items[a].type == SEL_SIDE_TOP) {
+			// Texture
+			if (type == COPY_TEXTYPE)
+				map.getSide(items[a].index)->setStringProperty("texturetop", copy_texture);
+		}
+
+		// Middle wall
+		if (items[a].type == SEL_SIDE_MIDDLE) {
+			// Texture
+			if (type == COPY_TEXTYPE)
+				map.getSide(items[a].index)->setStringProperty("texturemiddle", copy_texture);
+		}
+
+		// Lower wall
+		if (items[a].type == SEL_SIDE_BOTTOM) {
+			// Texture
+			if (type == COPY_TEXTYPE)
+				map.getSide(items[a].index)->setStringProperty("texturebottom", copy_texture);
+		}
+
+		// Floor
+		if (items[a].type == SEL_FLOOR) {
+			// Texture
+			if (type == COPY_TEXTYPE)
+				map.getSector(items[a].index)->setStringProperty("texturefloor", copy_texture);
+		}
+
+		// Ceiling
+		if (items[a].type == SEL_CEILING) {
+			// Texture
+			if (type == COPY_TEXTYPE)
+				map.getSector(items[a].index)->setStringProperty("textureceiling", copy_texture);
+		}
+
+		// Thing
+		if (items[a].type == SEL_THING) {
+			// Type
+			if (type == COPY_TEXTYPE)
+				map.getThing(items[a].index)->setIntProperty("type", copy_thing->getType());
+		}
+	}
+
+	// Editor message
+	if (type == COPY_TEXTYPE) {
+		if (hilight_3d.type == SEL_THING)
+			addEditorMessage("Pasted Thing Type");
+		else
+			addEditorMessage("Pasted Texture");
+	}
+}
+
 string MapEditor::getEditorMessage(int index) {
 	// Check index
 	if (index < 0 || index >= (int)editor_messages.size())
@@ -2341,6 +2748,11 @@ bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 		else if (key == "me2d_sector_light_up")		changeSectorLight(1);
 		else if (key == "me2d_sector_light_down16")	changeSectorLight(-16);
 		else if (key == "me2d_sector_light_down")	changeSectorLight(-1);
+
+		// Join
+		else if (key == "me2d_sector_join")			joinSectors(true);
+		else if (key == "me2d_sector_join_keep")	joinSectors(false);
+
 		else
 			return false;
 	}
@@ -2385,6 +2797,10 @@ bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 			}
 		}
 
+		// Copy/paste
+		else if (key == "me3d_copy_tex_type")	copy3d(COPY_TEXTYPE);
+		else if (key == "me3d_paste_tex_type")	paste3d(COPY_TEXTYPE);
+
 		// Light changes
 		else if	(key == "me3d_light_up16")		changeSectorLight3d(16);
 		else if (key == "me3d_light_up")		changeSectorLight3d(1);
@@ -2406,12 +2822,27 @@ bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 		else if	(key == "me3d_flat_height_up")		changeSectorHeight3d(1);
 		else if	(key == "me3d_flat_height_down8")	changeSectorHeight3d(-8);
 		else if	(key == "me3d_flat_height_down")	changeSectorHeight3d(-1);
+
+		// Auto-align
+		else if (key == "me3d_wall_autoalign_x")
+			autoAlignX3d(hilight_3d);
+
+		// Reset wall offsets
+		else if (key == "me3d_wall_reset")
+			resetWall3d();
+
+		// Toggle lower unpegged
+		else if (key == "me3d_wall_unpeg_lower")
+			toggleUnpegged3d(true);
+
+		// Toggle upper unpegged
+		else if (key == "me3d_wall_unpeg_upper")
+			toggleUnpegged3d(false);
 	}
 
 	// Not handled
 	else
 		return false;
-
 
 	return true;
 }

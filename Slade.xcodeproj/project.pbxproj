@@ -106,6 +106,7 @@
 		8A569327154EE501000DF3CE /* tables.h in Headers */ = {isa = PBXBuildFile; fileRef = 8A5692FD154EE501000DF3CE /* tables.h */; };
 		8A56932A154EE51E000DF3CE /* libmodplug_slade.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5692CD154EE4AC000DF3CE /* libmodplug_slade.a */; };
 		8A569354154EE835000DF3CE /* InputPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A569352154EE835000DF3CE /* InputPrefsPanel.cpp */; };
+		8A6320CC1568E9770058EB1D /* InfoOverlay3d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A6320CA1568E9770058EB1D /* InfoOverlay3d.cpp */; };
 		8AD18A56154A8A7000AB9C07 /* SLADE-osx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 8AD18A54154A8A7000AB9C07 /* SLADE-osx.icns */; };
 		8AD18F54154A8A9B00AB9C07 /* ACSPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D56154A8A9A00AB9C07 /* ACSPrefsPanel.cpp */; };
 		8AD18F55154A8A9B00AB9C07 /* ActionSpecial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D58154A8A9A00AB9C07 /* ActionSpecial.cpp */; };
@@ -387,6 +388,8 @@
 		8A5692FD154EE501000DF3CE /* tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tables.h; sourceTree = "<group>"; };
 		8A569352154EE835000DF3CE /* InputPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InputPrefsPanel.cpp; path = src/InputPrefsPanel.cpp; sourceTree = "<group>"; };
 		8A569353154EE835000DF3CE /* InputPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InputPrefsPanel.h; path = src/InputPrefsPanel.h; sourceTree = "<group>"; };
+		8A6320CA1568E9770058EB1D /* InfoOverlay3d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InfoOverlay3d.cpp; path = src/InfoOverlay3d.cpp; sourceTree = "<group>"; };
+		8A6320CB1568E9770058EB1D /* InfoOverlay3d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InfoOverlay3d.h; path = src/InfoOverlay3d.h; sourceTree = "<group>"; };
 		8AD18A54154A8A7000AB9C07 /* SLADE-osx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "SLADE-osx.icns"; path = "source/SLADE-osx.icns"; sourceTree = "<group>"; };
 		8AD18D56154A8A9A00AB9C07 /* ACSPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ACSPrefsPanel.cpp; path = src/ACSPrefsPanel.cpp; sourceTree = "<group>"; };
 		8AD18D57154A8A9A00AB9C07 /* ACSPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ACSPrefsPanel.h; path = src/ACSPrefsPanel.h; sourceTree = "<group>"; };
@@ -1067,6 +1070,8 @@
 				8AD18DEE154A8A9A00AB9C07 /* Icons.cpp */,
 				8AD18DEF154A8A9A00AB9C07 /* Icons.h */,
 				8AD18DF0154A8A9A00AB9C07 /* ImageFormats.h */,
+				8A6320CA1568E9770058EB1D /* InfoOverlay3d.cpp */,
+				8A6320CB1568E9770058EB1D /* InfoOverlay3d.h */,
 				8A569352154EE835000DF3CE /* InputPrefsPanel.cpp */,
 				8A569353154EE835000DF3CE /* InputPrefsPanel.h */,
 				8AD18DF1154A8A9A00AB9C07 /* InterfacePrefsPanel.cpp */,
@@ -1822,6 +1827,8 @@
 				8AD18F9E154A8A9B00AB9C07 /* HexEntryPanel.cpp in Sources */,
 				8AD18F9F154A8A9B00AB9C07 /* HogArchive.cpp in Sources */,
 				8AD18FA0154A8A9B00AB9C07 /* Icons.cpp in Sources */,
+				8A6320CC1568E9770058EB1D /* InfoOverlay3d.cpp in Sources */,
+				8A569354154EE835000DF3CE /* InputPrefsPanel.cpp in Sources */,
 				8AD18FA1154A8A9B00AB9C07 /* InterfacePrefsPanel.cpp in Sources */,
 				8AD18FA2154A8A9B00AB9C07 /* KeyBind.cpp in Sources */,
 				8AD18FA3154A8A9B00AB9C07 /* LfdArchive.cpp in Sources */,
@@ -1930,11 +1937,10 @@
 				8AD19034154A8A9B00AB9C07 /* WolfArchive.cpp in Sources */,
 				8AD19035154A8A9B00AB9C07 /* WxStuff.cpp in Sources */,
 				8AD19036154A8A9B00AB9C07 /* ZipArchive.cpp in Sources */,
+				8AD19053154A8A9B00AB9C07 /* ZTextureEditorPanel.cpp in Sources */,
 				8AD19050154A8A9B00AB9C07 /* ancientzip.cpp in Sources */,
 				8AD19051154A8A9B00AB9C07 /* files.cpp in Sources */,
 				8AD19052154A8A9B00AB9C07 /* m_alloc.cpp in Sources */,
-				8AD19053154A8A9B00AB9C07 /* ZTextureEditorPanel.cpp in Sources */,
-				8A569354154EE835000DF3CE /* InputPrefsPanel.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

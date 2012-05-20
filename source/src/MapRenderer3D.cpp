@@ -160,7 +160,7 @@ MapRenderer3D::quad_3d_t* MapRenderer3D::getQuad(selection_3d_t item) {
 
 MapRenderer3D::flat_3d_t* MapRenderer3D::getFlat(selection_3d_t item) {
 	// Check index
-	if (item.index >= floors.size())
+	if ((unsigned)item.index >= floors.size())
 		return NULL;
 
 	// Floor
@@ -1380,9 +1380,9 @@ void MapRenderer3D::updateThing(unsigned index, MapThing* thing) {
 	// Determine z position
 	if (things[index].sector) {
 		// Get sector floor (or ceiling) height
-		int sheight = things[index].sector->prop("heightfloor").getIntValue();
+		int sheight = things[index].sector->intProperty("heightfloor");
 		if (things[index].type->isHanging()) {
-			sheight = things[index].sector->prop("heightceiling").getIntValue();
+			sheight = things[index].sector->intProperty("heightceiling");
 			sheight -= theight;
 		}
 
@@ -1392,7 +1392,7 @@ void MapRenderer3D::updateThing(unsigned index, MapThing* thing) {
 			things[index].z -= render_thing_icon_size*0.5;
 		if (things[index].z < sheight)
 			things[index].z = sheight;
-		things[index].z += thing->prop("height").getFloatValue();
+		things[index].z += thing->floatProperty("height");
 	}
 
 	// Adjust height by sprite Y offset if needed
@@ -1814,6 +1814,12 @@ selection_3d_t MapRenderer3D::determineHilight() {
 	double min_dist = 9999999;
 	selection_3d_t current;
 	fpoint2_t strafe(cam_position.x+cam_strafe.x, cam_position.y+cam_strafe.y);
+	
+	// Check for required map structures
+	if (!map || lines.size() != map->nLines() ||
+		floors.size() != map->nSectors() ||
+		things.size() != map->nThings())
+		return current;
 
 	// Check lines
 	double height, dist;
@@ -1906,6 +1912,10 @@ selection_3d_t MapRenderer3D::determineHilight() {
 		return current;
 	double halfwidth, theight;
 	for (unsigned a = 0; a < map->nThings(); a++) {
+		// Ignore if no sprite
+		if (!things[a].sprite)
+			continue;
+			
 		// Ignore if not visible
 		MapThing* thing = map->getThing(a);
 		if (MathStuff::lineSide(thing->xPos(), thing->yPos(), cam_position.x, cam_position.y, strafe.x, strafe.y) > 0)
