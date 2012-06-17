@@ -199,6 +199,7 @@ void WadArchive::updateNamespaces() {
 				wad_ns_pair_t ns(getRoot()->getEntry(0), entry);
 				ns.start_index = 0;
 				ns.end_index = index;
+				ns.name = "f";
 				namespaces.push_back(ns);
 			}
 		}
@@ -239,7 +240,7 @@ void WadArchive::updateNamespaces() {
 		ns.end_index = entryIndex(ns.end);
 
 		// Testing
-		//wxLogMessage("Namespace %s from %s (%d) to %s (%d)", CHR(ns.name), 
+		//wxLogMessage("Namespace %s from %s (%d) to %s (%d)", CHR(ns.name),
 		//	CHR(ns.start->getName()), ns.start_index, CHR(ns.end->getName()), ns.end_index);
 	}
 }
