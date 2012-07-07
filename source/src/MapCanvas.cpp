@@ -127,8 +127,6 @@ MapCanvas::MapCanvas(wxWindow *parent, int id, MapEditor* editor)
 #else
 	setVerticalSyncEnabled(false);
 #endif
-#else
-	timer.Start(2);
 #endif
 
 	// Bind Events
@@ -156,6 +154,8 @@ MapCanvas::MapCanvas(wxWindow *parent, int id, MapEditor* editor)
 #ifdef USE_SFML_RENDERWINDOW
 	Bind(wxEVT_IDLE, &MapCanvas::onIdle, this);
 #endif
+
+	timer.Start(2);
 }
 
 /* MapCanvas::~MapCanvas
@@ -1266,7 +1266,7 @@ void MapCanvas::update(long frametime) {
 #ifdef USE_SFML_RENDERWINDOW
 	// SFML RenderWindow can handle high framerates better than wxGLCanvas, or something like that
 	if (mode_anim || fade_anim || overlay_fade_anim || anim_running)
-		fr_idle = 0;
+		fr_idle = 2;
 	else	// No high-priority animations running, throttle framerate
 		fr_idle = map_bg_ms;
 #else
@@ -1830,7 +1830,7 @@ void MapCanvas::keyBinds2d(string name) {
 	}
 
 	// Move items (toggle)
-	else if (name == "me2d_move" && mouse_state == MSTATE_NORMAL) {
+	else if (name == "me2d_move") {
 		if (mouse_state == MSTATE_NORMAL) {
 			if (editor->beginMove(mouse_pos_m)) {
 				mouse_state = MSTATE_MOVE;
@@ -1922,6 +1922,27 @@ void MapCanvas::keyBinds2d(string name) {
 	// Change sector texture
 	else if (name == "me2d_sector_change_texture" && editor->editMode() == MapEditor::MODE_SECTORS && mouse_state == MSTATE_NORMAL)
 		changeSectorTexture();
+
+
+	// --- Accept/cancel keys (for special states) ---
+
+	else if (name == "map_edit_accept") {
+		// Accept move
+		if (mouse_state == MSTATE_MOVE) {
+			editor->endMove();
+			mouse_state = MSTATE_NORMAL;
+			renderer_2d->forceUpdate();
+		}
+	}
+
+	else if (name == "map_edit_cancel") {
+		// Cancel move
+		if (mouse_state == MSTATE_MOVE) {
+			editor->endMove(false);
+			mouse_state = MSTATE_NORMAL;
+			renderer_2d->forceUpdate();
+		}
+	}
 
 	// Not handled here, send to editor
 	else if (mouse_state == MSTATE_NORMAL)
@@ -2534,7 +2555,7 @@ void MapCanvas::onRTimer(wxTimerEvent& e) {
 
 	last_time = (sfclock.getElapsedTime().asMilliseconds());
 	update(frametime);
-	//Refresh();
+	Refresh();
 }
 #endif
 

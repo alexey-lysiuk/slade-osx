@@ -107,6 +107,9 @@
 		8A56932A154EE51E000DF3CE /* libmodplug_slade.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5692CD154EE4AC000DF3CE /* libmodplug_slade.a */; };
 		8A569354154EE835000DF3CE /* InputPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A569352154EE835000DF3CE /* InputPrefsPanel.cpp */; };
 		8A6320CC1568E9770058EB1D /* InfoOverlay3d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A6320CA1568E9770058EB1D /* InfoOverlay3d.cpp */; };
+		8A92003815A86BFB00F58CED /* CIEDeltaEquations.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003215A86BFB00F58CED /* CIEDeltaEquations.cpp */; };
+		8A92003915A86BFB00F58CED /* ColorimetryPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003415A86BFB00F58CED /* ColorimetryPrefsPanel.cpp */; };
+		8A92003A15A86BFB00F58CED /* ScriptEditorPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003615A86BFB00F58CED /* ScriptEditorPanel.cpp */; };
 		8AD18A56154A8A7000AB9C07 /* SLADE-osx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 8AD18A54154A8A7000AB9C07 /* SLADE-osx.icns */; };
 		8AD18F54154A8A9B00AB9C07 /* ACSPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D56154A8A9A00AB9C07 /* ACSPrefsPanel.cpp */; };
 		8AD18F55154A8A9B00AB9C07 /* ActionSpecial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D58154A8A9A00AB9C07 /* ActionSpecial.cpp */; };
@@ -390,6 +393,12 @@
 		8A569353154EE835000DF3CE /* InputPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InputPrefsPanel.h; path = src/InputPrefsPanel.h; sourceTree = "<group>"; };
 		8A6320CA1568E9770058EB1D /* InfoOverlay3d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InfoOverlay3d.cpp; path = src/InfoOverlay3d.cpp; sourceTree = "<group>"; };
 		8A6320CB1568E9770058EB1D /* InfoOverlay3d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InfoOverlay3d.h; path = src/InfoOverlay3d.h; sourceTree = "<group>"; };
+		8A92003215A86BFB00F58CED /* CIEDeltaEquations.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CIEDeltaEquations.cpp; path = src/CIEDeltaEquations.cpp; sourceTree = "<group>"; };
+		8A92003315A86BFB00F58CED /* CIEDeltaEquations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CIEDeltaEquations.h; path = src/CIEDeltaEquations.h; sourceTree = "<group>"; };
+		8A92003415A86BFB00F58CED /* ColorimetryPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ColorimetryPrefsPanel.cpp; path = src/ColorimetryPrefsPanel.cpp; sourceTree = "<group>"; };
+		8A92003515A86BFB00F58CED /* ColorimetryPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ColorimetryPrefsPanel.h; path = src/ColorimetryPrefsPanel.h; sourceTree = "<group>"; };
+		8A92003615A86BFB00F58CED /* ScriptEditorPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ScriptEditorPanel.cpp; path = src/ScriptEditorPanel.cpp; sourceTree = "<group>"; };
+		8A92003715A86BFB00F58CED /* ScriptEditorPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ScriptEditorPanel.h; path = src/ScriptEditorPanel.h; sourceTree = "<group>"; };
 		8AD18A54154A8A7000AB9C07 /* SLADE-osx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "SLADE-osx.icns"; path = "source/SLADE-osx.icns"; sourceTree = "<group>"; };
 		8AD18D56154A8A9A00AB9C07 /* ACSPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ACSPrefsPanel.cpp; path = src/ACSPrefsPanel.cpp; sourceTree = "<group>"; };
 		8AD18D57154A8A9A00AB9C07 /* ACSPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ACSPrefsPanel.h; path = src/ACSPrefsPanel.h; sourceTree = "<group>"; };
@@ -994,10 +1003,14 @@
 				8AD18D8A154A8A9A00AB9C07 /* BSPArchive.h */,
 				8AD18D9A154A8A9A00AB9C07 /* BZip2Archive.cpp */,
 				8AD18D9B154A8A9A00AB9C07 /* BZip2Archive.h */,
+				8A92003215A86BFB00F58CED /* CIEDeltaEquations.cpp */,
+				8A92003315A86BFB00F58CED /* CIEDeltaEquations.h */,
 				8AD18D9F154A8A9A00AB9C07 /* Clipboard.cpp */,
 				8AD18DA0154A8A9A00AB9C07 /* Clipboard.h */,
 				8AD18DA2154A8A9A00AB9C07 /* CodePages.cpp */,
 				8AD18DA3154A8A9A00AB9C07 /* CodePages.h */,
+				8A92003415A86BFB00F58CED /* ColorimetryPrefsPanel.cpp */,
+				8A92003515A86BFB00F58CED /* ColorimetryPrefsPanel.h */,
 				8AD18DA4154A8A9A00AB9C07 /* ColourBox.cpp */,
 				8AD18DA5154A8A9A00AB9C07 /* ColourBox.h */,
 				8AD18DA6154A8A9A00AB9C07 /* ColourConfiguration.cpp */,
@@ -1204,6 +1217,8 @@
 				8AD18EBD154A8A9B00AB9C07 /* RffArchive.h */,
 				8AD18EBE154A8A9B00AB9C07 /* SAction.cpp */,
 				8AD18EBF154A8A9B00AB9C07 /* SAction.h */,
+				8A92003615A86BFB00F58CED /* ScriptEditorPanel.cpp */,
+				8A92003715A86BFB00F58CED /* ScriptEditorPanel.h */,
 				8AD18EC0154A8A9B00AB9C07 /* SectorBuilder.cpp */,
 				8AD18EC1154A8A9B00AB9C07 /* SectorBuilder.h */,
 				8AD18EC2154A8A9B00AB9C07 /* SectorInfoOverlay.cpp */,
@@ -1941,6 +1956,9 @@
 				8AD19050154A8A9B00AB9C07 /* ancientzip.cpp in Sources */,
 				8AD19051154A8A9B00AB9C07 /* files.cpp in Sources */,
 				8AD19052154A8A9B00AB9C07 /* m_alloc.cpp in Sources */,
+				8A92003815A86BFB00F58CED /* CIEDeltaEquations.cpp in Sources */,
+				8A92003915A86BFB00F58CED /* ColorimetryPrefsPanel.cpp in Sources */,
+				8A92003A15A86BFB00F58CED /* ScriptEditorPanel.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2144,7 +2162,7 @@
 				ARCHS = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = src;
@@ -2161,7 +2179,7 @@
 			buildSettings = {
 				ARCHS = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = src;

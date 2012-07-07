@@ -950,16 +950,16 @@ void MapEditor::doMove(fpoint2_t mouse_pos) {
 	move_vec.set(snapToGrid(dx), snapToGrid(dy));
 }
 
-void MapEditor::endMove() {
+void MapEditor::endMove(bool accept) {
 	// Move depending on edit mode
-	if (edit_mode == MODE_THINGS) {
+	if (edit_mode == MODE_THINGS && accept) {
 		// Move things
 		for (unsigned a = 0; a < move_items.size(); a++) {
 			MapThing* t = map.getThing(move_items[a]);
 			map.moveThing(move_items[a], t->xPos() + move_vec.x, t->yPos() + move_vec.y);
 		}
 	}
-	else {
+	else if (accept) {
 		// Any other edit mode we're technically moving vertices
 
 		// Get list of vertices being moved
@@ -1262,13 +1262,20 @@ void MapEditor::joinSectors(bool remove_lines) {
 	// Get 'target' sector
 	MapSector* target = map.getSector(selection[0]);
 
+	// Get sectors to merge
+	vector<MapSector*> sectors;
+	getSelectedSectors(sectors);
+
+	// Clear selection
+	clearSelection();
+
 	// Init list of lines
 	vector<MapLine*> lines;
 
-	// Go through selection
-	for (unsigned a = 1; a < selection.size(); a++) {
+	// Go through merge sectors
+	for (unsigned a = 1; a < sectors.size(); a++) {
 		// Go through sector sides
-		MapSector* sector = map.getSector(selection[a]);
+		MapSector* sector = sectors[a];
 		while (sector->connectedSides().size() > 0) {
 			// Set sector
 			MapSide* side = sector->connectedSides()[0];
@@ -1306,9 +1313,6 @@ void MapEditor::joinSectors(bool remove_lines) {
 		addEditorMessage(S_FMT("Joined %d Sectors", selection.size()));
 	else
 		addEditorMessage(S_FMT("Joined %d Sectors (removed %d Lines)", selection.size(), nlines));
-
-	// Clear selection
-	selection.clear();
 }
 
 void MapEditor::changeThingType(int newtype) {

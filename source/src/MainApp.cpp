@@ -409,7 +409,7 @@ void MainApp::initActions() {
 	new SAction("arch_audio_convertdw", "Convert Doom Sound to WAV", "t_convert", "Convert any selected Doom Sound format entries to WAV format");
 	new SAction("arch_audio_convertmus", "Convert MUS to MIDI", "t_convert", "Convert any selected MUS format entries to MIDI format");
 	new SAction("arch_scripts_compileacs", "Compile ACS", "t_compile", "Compile any selected text entries to ACS bytecode");
-	new SAction("arch_scripts_compilehacs", "Compile ACS (Hexen bytecode)", "t_compile", "Compile any selected text entries to Hexen-compatible ACS bytecode");
+	new SAction("arch_scripts_compilehacs", "Compile ACS (Hexen bytecode)", "t_compile2", "Compile any selected text entries to Hexen-compatible ACS bytecode");
 	new SAction("arch_map_opendb2", "Open Map in Doom Builder 2", "", "Open the selected map in Doom Builder 2");
 
 	// GfxEntryPanel
@@ -436,6 +436,8 @@ void MainApp::initActions() {
 	new SAction("txed_new_file", "New Texture from File", "t_tex_newfile", "Create a new texture from an image file");
 	new SAction("txed_rename", "Rename Texture", "t_tex_rename", "Rename the selected texture(s)");
 	new SAction("txed_export", "Export Texture", "t_tex_export", "Create standalone images from the selected texture(s)");
+	new SAction("txed_extract", "Extract Texture", "t_tex_extract", "Export the selected texture(s) as PNG files");
+	new SAction("txed_offsets", "Modify Offsets", "t_tex_offset", "Mass modify offsets in the selected texture(s)");
 	new SAction("txed_up", "Move Up", "t_up", "Move the selected texture(s) up in the list");
 	new SAction("txed_down", "Move Down", "t_down", "Move the selected texture(s) down in the list");
 	new SAction("txed_copy", "Copy", "t_copy", "Copy the selected texture(s)");
@@ -476,6 +478,7 @@ void MainApp::initActions() {
 	new SAction("ppal_removeothers", "Remove Others", "t_palette_deleteothers", "Keep only this palette and erase all others");
 	new SAction("ppal_report", "Write Report", "e_text", "Write an info report on this palette");
 	new SAction("ppal_generate", "Generate Palettes", "e_palette", "Generate full range of palettes from the first");
+	new SAction("ppal_colormap", "Generate Colormaps", "e_colormap", "Generate colormap lump from the first palette");
 
 	// Map Editor Window
 	new SAction("mapw_save", "&Save Map Changes", "t_save", "Save any changes to the current map", "Ctrl+S");
@@ -491,6 +494,7 @@ void MainApp::initActions() {
 	new SAction("mapw_showconsole", "&Console", "t_console", "Toggle the Console window", "Ctrl+2");
 	new SAction("mapw_showproperties", "&Item Properties", "t_properties", "Toggle the Item Properties window", "Ctrl+1");
 	new SAction("mapw_showdrawoptions", "&Shape Draw Options", "t_settings", "Toggle the Shape Drawing Options window", "Ctrl+3");
+	new SAction("mapw_showscripteditor", "Script &Editor", "e_text", "Toggle the Script Editor window", "Ctrl+4");
 	int group_flat_type = SAction::newGroup();
 	new SAction("mapw_flat_none", "Wireframe", "t_flat_w", "Don't show flats (wireframe)", "", SAction::RADIO, -1, group_flat_type);
 	new SAction("mapw_flat_untextured", "Untextured", "t_flat_u", "Show untextured flats", "", SAction::RADIO, -1, group_flat_type);
@@ -503,6 +507,8 @@ void MainApp::initActions() {
 	new SAction("mapw_thing_changetype", "Change Type", "", "Change the currently selected or hilighted thing type(s)");
 	new SAction("mapw_sector_changetexture", "Change Texture", "", "Change the currently selected or hilighted sector texture(s)");
 	new SAction("mapw_item_properties", "Properties", "t_properties", "Edit the currently selected item's properties");
+	new SAction("mapw_script_save", "Save", "t_save", "Save changes to scripts");
+	new SAction("mapw_script_compile", "Compile", "t_compile", "Compile scripts");
 }
 
 /* MainApp::OnInit

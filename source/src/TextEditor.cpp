@@ -46,6 +46,8 @@ CVAR(Bool, txed_brace_match, false, CVAR_SAVE)
 CVAR(Int, txed_edge_column, 80, CVAR_SAVE)
 CVAR(Bool, txed_indent_guides, false, CVAR_SAVE)
 CVAR(String, txed_style_set, "SLADE Default", CVAR_SAVE)
+CVAR(Bool, txed_calltips_mouse, true, CVAR_SAVE)
+CVAR(Bool, txed_calltips_parenthesis, true, CVAR_SAVE)
 rgba_t col_edge_line(200, 200, 230, 255);
 
 
@@ -231,6 +233,13 @@ void TextEditor::setup() {
 
 	// Apply default style
 	StyleSet::applyCurrent(this);
+	CallTipUseStyle(10);
+	StyleSetChangeable(wxSTC_STYLE_CALLTIP, true);
+	wxFont font_ct(10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+	StyleSetFont(wxSTC_STYLE_CALLTIP, font_ct);
+	CallTipSetBackground(wxColour(255, 255, 180));
+	CallTipSetForeground(wxColour(0, 0, 0));
+	CallTipSetForegroundHighlight(wxColour(0, 0, 200));
 
 	// Set lexer
 	if (txed_syntax_hilight)
@@ -695,7 +704,7 @@ void TextEditor::onCharAdded(wxStyledTextEvent& e) {
 	// The following require a language to work
 	if (language) {
 		// Call tip
-		if (e.GetKey() == '(') {
+		if (e.GetKey() == '(' && txed_calltips_parenthesis) {
 			openCalltip(GetCurrentPos());
 		}
 
@@ -705,8 +714,9 @@ void TextEditor::onCharAdded(wxStyledTextEvent& e) {
 		}
 
 		// Comma, possibly update calltip
-		if (e.GetKey() == ',') {
-			if (CallTipActive())
+		if (e.GetKey() == ',' && txed_calltips_parenthesis) {
+			//openCalltip(GetCurrentPos());
+			//if (CallTipActive())
 				updateCalltip();
 		}
 	}
@@ -761,7 +771,7 @@ void TextEditor::onCalltipClicked(wxStyledTextEvent& e) {
  * certain amount of time
  *******************************************************************/
 void TextEditor::onMouseDwellStart(wxStyledTextEvent& e) {
-	if (!CallTipActive())
+	if (!CallTipActive() && txed_calltips_mouse)
 		openCalltip(e.GetPosition(), -1);
 }
 

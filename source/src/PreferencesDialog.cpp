@@ -40,6 +40,7 @@
 #include "ACSPrefsPanel.h"
 #include "GraphicsPrefsPanel.h"
 #include "PNGPrefsPanel.h"
+#include "ColorimetryPrefsPanel.h"
 #include "AudioPrefsPanel.h"
 #include "ColourPrefsPanel.h"
 #include "MapEditorPrefsPanel.h"
@@ -50,7 +51,14 @@
 #include "NodesPrefsPanel.h"
 #include "InputPrefsPanel.h"
 #include "Icons.h"
+#include "MainWindow.h"
 #include <wx/gbsizer.h>
+
+
+/*******************************************************************
+ * VARIABLES
+ *******************************************************************/
+PreferencesDialog* PreferencesDialog::instance = NULL;
 
 
 /*******************************************************************
@@ -85,6 +93,7 @@ PreferencesDialog::PreferencesDialog(wxWindow* parent) : wxDialog(parent, -1, "S
 	panel = new TextStylePrefsPanel(tree_prefs);	tree_prefs->AddSubPage(panel, "Fonts & Colours"); prefs_pages.push_back(panel);
 	panel = new GraphicsPrefsPanel(tree_prefs);		tree_prefs->AddPage(panel, "Graphics"); prefs_pages.push_back(panel);
 	panel = new PNGPrefsPanel(tree_prefs);			tree_prefs->AddSubPage(panel, "PNG"); prefs_pages.push_back(panel);
+	panel = new ColorimetryPrefsPanel(tree_prefs);	tree_prefs->AddSubPage(panel, "Colorimetry"); prefs_pages.push_back(panel);
 	panel = new AudioPrefsPanel(tree_prefs);		tree_prefs->AddPage(panel, "Audio"); prefs_pages.push_back(panel);
 	tree_prefs->AddPage(new wxPanel(tree_prefs, -1), "Scripting");
 	panel = new ACSPrefsPanel(tree_prefs);			tree_prefs->AddSubPage(panel, "ACS"); prefs_pages.push_back(panel);
@@ -195,4 +204,18 @@ void PreferencesDialog::onButtonClicked(wxCommandEvent& e) {
 		applyPreferences();
 	else
 		e.Skip();
+}
+
+void PreferencesDialog::openPreferences(wxWindow* parent) {
+	// Create dialog if needed
+	if (!instance)
+		instance = new PreferencesDialog(parent);
+	else
+		instance->SetParent(parent);
+
+	// Show dialog
+	instance->CenterOnParent();
+	if (instance->ShowModal() == wxID_OK)
+		instance->applyPreferences();
+	theMainWindow->getArchiveManagerPanel()->refreshAllTabs();
 }

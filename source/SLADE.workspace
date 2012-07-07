@@ -18,5 +18,8 @@
       <Project Name="SLADE-osx" ConfigName="Release"/>
       <Project Name="SLADE" ConfigName="Debug-osx"/>
     </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release-CMake" Selected="no">
+      <Project Name="SLADE" ConfigName="Release-CMake"/>
+    </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>
