@@ -412,11 +412,12 @@ void MapEditorWindow::buildNodes(Archive* wad) {
 	// Check for undefined path
 	if (!wxFileExists(builder.path) && !nb_warned) {
 		// Open nodebuilder preferences
-		PreferencesDialog pd(this);
-		pd.showPage("Node Builders");
-		if (pd.ShowModal() == wxID_OK)
-			pd.applyPreferences();
-		theMainWindow->getArchiveManagerPanel()->refreshAllTabs();
+		//PreferencesDialog pd(this);
+		//pd.showPage("Node Builders");
+		//if (pd.ShowModal() == wxID_OK)
+		//	pd.applyPreferences();
+		//theMainWindow->getArchiveManagerPanel()->refreshAllTabs();
+		PreferencesDialog::openPreferences(this, "Node Builders");
 
 		// Get new builder if one was selected
 		builder = NodeBuilders::getBuilder(nodebuilder_id);
@@ -654,7 +655,8 @@ bool MapEditorWindow::handleAction(string id) {
 
 		dialog_ebr.SetSizer(sizer);
 		dialog_ebr.Layout();
-		dialog_ebr.SetInitialSize(wxSize(-1, 300));
+		dialog_ebr.SetInitialSize(wxSize(500, 300));
+		dialog_ebr.CenterOnParent();
 		if (dialog_ebr.ShowModal() == wxID_OK)
 			theArchiveManager->openBaseResource(brap.getSelectedPath());
 

@@ -41,6 +41,7 @@ EXTERN_CVAR(Bool, show_start_page)
 EXTERN_CVAR(Bool, swap_epanel_bars)
 EXTERN_CVAR(Bool, context_submenus)
 EXTERN_CVAR(Bool, list_font_monospace)
+EXTERN_CVAR(Bool, elist_type_bgcol)
 
 
 /*******************************************************************
@@ -72,6 +73,10 @@ InterfacePrefsPanel::InterfacePrefsPanel(wxWindow* parent) : PrefsPanelBase(pare
 	cb_list_monospace = new wxCheckBox(this, -1, "Use monospaced font for lists");
 	sizer->Add(cb_list_monospace, 0, wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM, 4);
 
+	// Entry list background colour by type
+	cb_elist_bgcol = new wxCheckBox(this, -1, "Colour entry list item background by entry type");
+	sizer->Add(cb_elist_bgcol, 0, wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM, 4);
+
 	// Context menu submenus
 	cb_context_submenus = new wxCheckBox(this, -1, "Group related entry context menu items into submenus");
 	sizer->Add(cb_context_submenus, 0, wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM, 4);
@@ -83,21 +88,25 @@ InterfacePrefsPanel::InterfacePrefsPanel(wxWindow* parent) : PrefsPanelBase(pare
 	// Show startpage
 	cb_start_page = new wxCheckBox(this, -1, "Show Start Page on Startup");
 	sizer->Add(cb_start_page, 0, wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM, 4);
-
-
-	// Init controls
-	cb_size_as_string->SetValue(size_as_string);
-	cb_filter_dirs->SetValue(!elist_filter_dirs);
-	cb_list_monospace->SetValue(list_font_monospace);
-	cb_start_page->SetValue(show_start_page);
-	cb_swap_epanel_bars->SetValue(swap_epanel_bars);
-	cb_context_submenus->SetValue(context_submenus);
 }
 
 /* InterfacePrefsPanel::~InterfacePrefsPanel
  * InterfacePrefsPanel class destructor
  *******************************************************************/
 InterfacePrefsPanel::~InterfacePrefsPanel() {
+}
+
+/* InterfacePrefsPanel::init
+ * Initialises panel controls
+ *******************************************************************/
+void InterfacePrefsPanel::init() {
+	cb_size_as_string->SetValue(size_as_string);
+	cb_filter_dirs->SetValue(!elist_filter_dirs);
+	cb_list_monospace->SetValue(list_font_monospace);
+	cb_start_page->SetValue(show_start_page);
+	cb_swap_epanel_bars->SetValue(swap_epanel_bars);
+	cb_context_submenus->SetValue(context_submenus);
+	cb_elist_bgcol->SetValue(elist_type_bgcol);
 }
 
 /* InterfacePrefsPanel::applyPreferences
@@ -110,4 +119,5 @@ void InterfacePrefsPanel::applyPreferences() {
 	show_start_page = cb_start_page->GetValue();
 	swap_epanel_bars = cb_swap_epanel_bars->GetValue();
 	context_submenus = cb_context_submenus->GetValue();
+	elist_type_bgcol = cb_elist_bgcol->GetValue();
 }

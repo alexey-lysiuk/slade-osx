@@ -46,6 +46,7 @@
 #include "MapEditorWindow.h"
 #include "GameConfiguration.h"
 #include "NodeBuilders.h"
+#include "Lua.h"
 #include <wx/image.h>
 #include <wx/stdpaths.h>
 #include <wx/ffile.h>
@@ -74,6 +75,7 @@ string	dir_data = "";
 string	dir_user = "";
 string	dir_app = "";
 bool	exiting = false;
+string	current_action = "";
 CVAR(Bool, temp_use_appdir, false, CVAR_SAVE)
 CVAR(String, dir_last, "", CVAR_SAVE)
 
@@ -150,6 +152,11 @@ public:
 
 		// Setup stack trace string
 		string trace = S_FMT("Version: %s\n", CHR(Global::version));
+		if (current_action.IsEmpty())
+			trace += "No current action\n";
+		else
+			trace += S_FMT("Current action: %s", CHR(current_action));
+		trace += "\n";
 		trace += st.getTraceString();
 
 		// Add stack trace text area
@@ -321,7 +328,11 @@ void MainApp::initLogFile() {
 	wxLogMessage("SLADE - It's a Doom Editor");
 	wxLogMessage("Version %s", Global::version.c_str());
 	wxLogMessage("Written by Simon Judd, 2008-%s", year.c_str());
+#ifdef SFML_VERSION_MAJOR
+	wxLogMessage("Compiled with wxWidgets %i.%i.%i and SFML %i.%i", wxMAJOR_VERSION, wxMINOR_VERSION, wxRELEASE_NUMBER, SFML_VERSION_MAJOR, SFML_VERSION_MINOR);
+#else
 	wxLogMessage("Compiled with wxWidgets %i.%i.%i", wxMAJOR_VERSION, wxMINOR_VERSION, wxRELEASE_NUMBER);
+#endif
 	wxLogMessage("--------------------------------");
 }
 
@@ -380,6 +391,7 @@ void MainApp::initActions() {
 	new SAction("arch_check_duplicates", "Check Duplicate Entry Names", "", "Checks the archive for any entries sharing the same name");
 	new SAction("arch_check_duplicates2", "Check Duplicate Entry Content", "", "Checks the archive for any entries sharing the same data");
 	new SAction("arch_clean_iwaddupes", "Remove Entries Duplicated from IWAD", "", "Remove entries that are exact duplicates of entries from the base resource archive");
+	new SAction("arch_replace_maps", "Replace in Maps", "", "Tool to find and replace thing types, specials and textures in all maps");
 	new SAction("arch_entry_rename", "Rename", "t_rename", "Rename the selected entries");
 	new SAction("arch_entry_rename_each", "Rename Each", "t_renameeach", "Rename separately all the selected entries");
 	new SAction("arch_entry_delete", "Delete", "t_delete", "Delete the selected entries");
@@ -504,11 +516,14 @@ void MainApp::initActions() {
 	new SAction("mapw_sectormode_floor", "Floors", "t_sector_floor", "Edit sector floors", "", SAction::RADIO, -1, group_sector_mode);
 	new SAction("mapw_sectormode_ceiling", "Ceilings", "t_sector_ceiling", "Edit sector ceilings", "", SAction::RADIO, -1, group_sector_mode);
 	new SAction("mapw_line_changetexture", "Change Texture", "", "Change the currently selected or hilighted line texture(s)");
+	new SAction("mapw_line_changespecial", "Change Special", "", "Change the currently selected or hilighted line special");
 	new SAction("mapw_thing_changetype", "Change Type", "", "Change the currently selected or hilighted thing type(s)");
 	new SAction("mapw_sector_changetexture", "Change Texture", "", "Change the currently selected or hilighted sector texture(s)");
 	new SAction("mapw_item_properties", "Properties", "t_properties", "Edit the currently selected item's properties");
 	new SAction("mapw_script_save", "Save", "t_save", "Save changes to scripts");
 	new SAction("mapw_script_compile", "Compile", "t_compile", "Compile scripts");
+	new SAction("mapw_camera_set", "Move 3d Camera Here", "", "Set the current position of the 3d mode camera to the cursor position");
+	new SAction("mapw_clear_selection", "Clear Selection", "", "Clear the current selection, if any");
 }
 
 /* MainApp::OnInit
@@ -566,6 +581,9 @@ bool MainApp::OnInit() {
 		wxMessageBox("Unable to find slade.pk3, make sure it exists in the same directory as the SLADE executable", "Error", wxICON_ERROR);
 		return false;
 	}
+
+	// Init lua
+	Lua::init();
 
 	// Show splash screen
 	theSplashWindow->init();
@@ -677,6 +695,9 @@ int MainApp::OnExit() {
 			wxLogMessage("Warning: Could not clean up temporary file \"%s\"", CHR(filename));
 		files = temp.GetNext(&filename);
 	}
+
+	// Close lua
+	Lua::close();
 
 	return 0;
 }
@@ -875,8 +896,11 @@ void MainApp::onMenu(wxCommandEvent& e) {
 	}
 
 	// If action is valid, send to all action handlers
-	if (!action.IsEmpty())
+	if (!action.IsEmpty()) {
+		current_action = action;
 		doAction(action);
+		current_action = "";
+	}
 
 	// Otherwise, let something else handle it
 	else

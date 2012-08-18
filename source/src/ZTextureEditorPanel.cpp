@@ -207,6 +207,7 @@ wxPanel* ZTextureEditorPanel::createPatchControls(wxWindow* parent) {
 	// Add patches list
 	list_patches = new ListView(panel, -1);
 	list_patches->enableSizeUpdate(false);
+	list_patches->SetInitialSize(wxSize(100, -1));
 	framesizer->Add(list_patches, 1, wxEXPAND|wxALL, 4);
 
 	// Add patch buttons
@@ -288,11 +289,11 @@ wxPanel* ZTextureEditorPanel::createPatchControls(wxWindow* parent) {
 	gb_sizer->Add(spin_alpha, wxGBPosition(5, 1), wxDefaultSpan, wxEXPAND);
 
 	// Alpha Style
-	string styles[] = { "Copy", "Translucent", "Add", "Subtract", "ReverseSubtract", "Modulate", "CopyAlpha" };
-	choice_style = new wxChoice(panel, -1, wxDefaultPosition, wxDefaultSize, 7, styles);
+	string styles[] = { "Copy", "Translucent", "Add", "Subtract", "ReverseSubtract", "Modulate", "CopyAlpha", "CopyNewAlpha", "Overlay" };
+	choice_style = new wxChoice(panel, -1, wxDefaultPosition, wxDefaultSize, 9, styles);
 	choice_style->SetSelection(0);
-	gb_sizer->Add(new wxStaticText(panel, -1, "Alpha Style:"), wxGBPosition(5, 0), wxDefaultSpan, wxALIGN_CENTER_VERTICAL);
-	gb_sizer->Add(choice_style, wxGBPosition(6, 0), wxGBSpan(1, 2), wxEXPAND);
+	gb_sizer->Add(new wxStaticText(panel, -1, "Alpha Style:"), wxGBPosition(6, 0), wxDefaultSpan, wxALIGN_CENTER_VERTICAL);
+	gb_sizer->Add(choice_style, wxGBPosition(6, 1), wxGBSpan(1, 2), wxEXPAND);
 
 	frame = new wxStaticBox(panel, -1, "Patch Colour");
 	framesizer = new wxStaticBoxSizer(frame, wxVERTICAL);

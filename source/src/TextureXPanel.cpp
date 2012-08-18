@@ -969,13 +969,29 @@ bool TextureXPanel::modifyOffsets() {
 				ctex->setOffsetX(w * 0.5);
 				ctex->setOffsetY(h - 4);
 				break;
-			case 1: // Auto Offsets selected: Projectile
+			case 1: // Auto Offsets selected: Monster (GL-friendly)
+				ctex->setOffsetX(w * 0.5);
+				ctex->setOffsetY(h);
+				break;
+			case 2: // Auto Offsets selected: Projectile
 				ctex->setOffsetX(w * 0.5);
 				ctex->setOffsetY(h * 0.5);
 				break;
-			case 2: // Auto Offsets selected: Weapon
+			case 3: // Auto Offsets selected: Weapon
 				ctex->setOffsetX(-160 + (w * 0.5));
 				ctex->setOffsetY(-200 + h);
+				break;
+			case 4: // Auto Offsets selected: Weapon (Doom status bar)
+				ctex->setOffsetX(-160 + (w * 0.5));
+				ctex->setOffsetY(-200 + 32 + h);
+				break;
+			case 5: // Auto Offsets selected: Weapon (Heretic status bar)
+				ctex->setOffsetX(-160 + (w * 0.5));
+				ctex->setOffsetY(-200 + 42 + h);
+				break;
+			case 6: // Auto Offsets selected: Weapon (Hexen status bar)
+				ctex->setOffsetX(-160 + (w * 0.5));
+				ctex->setOffsetY(-200 + 38 + h);
 				break;
 			default: // Set Offsets selected
 				if (relative) {
@@ -1118,15 +1134,21 @@ void TextureXPanel::onTextureListKeyDown(wxKeyEvent& e) {
 			removeTexture();
 			return;
 		}
-	// Cut (Ctrl+X)
-	else if (e.GetModifiers() == wxMOD_CMD && e.GetKeyCode() == 'X') {
-		copy();
-		removeTexture();
-	}
 
-	// Paste (Ctrl+V)
-	else if (e.GetModifiers() == wxMOD_CMD && e.GetKeyCode() == 'V')
-		paste();
+		/*
+		// Cut (Ctrl+X)
+		else if (e.GetModifiers() == wxMOD_CMD && e.GetKeyCode() == 'X') {
+			copy();
+			removeTexture();
+			return;
+		}
+
+		// Paste (Ctrl+V)
+		else if (e.GetModifiers() == wxMOD_CMD && e.GetKeyCode() == 'V') {
+			paste();
+			return;
+		}
+		*/
 
 		// Paste
 		else if (name == "paste") {

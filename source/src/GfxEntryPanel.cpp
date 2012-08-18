@@ -106,6 +106,7 @@ public:
 		// Setup dialog size
 		SetInitialSize(wxSize(-1, -1));
 		SetMinSize(GetSize());
+		CenterOnParent();
 	}
 
 	rgba_t getColour() {
@@ -206,6 +207,7 @@ public:
 		// Setup dialog size
 		SetInitialSize(wxSize(-1, -1));
 		SetMinSize(GetSize());
+		CenterOnParent();
 
 		// Set values
 		label_amount->SetLabel("50% ");
@@ -744,7 +746,7 @@ bool GfxEntryPanel::handleAction(string id) {
 	else if (id == "pgfx_translate") {
 		// Create translation editor dialog
 		Palette8bit* pal = theMainWindow->getPaletteChooser()->getSelectedPalette();
-		TranslationEditorDialog ted(theMainWindow, pal, "Colour Remap", gfx_canvas->getImage());
+		TranslationEditorDialog ted(theMainWindow, pal, " Colour Remap", gfx_canvas->getImage());
 
 		// Create translation to edit
 		ted.openTranslation(prev_translation);
@@ -768,7 +770,7 @@ bool GfxEntryPanel::handleAction(string id) {
 	// Colourise
 	else if (id == "pgfx_colourise") {
 		Palette8bit* pal = theMainWindow->getPaletteChooser()->getSelectedPalette();
-		GfxColouriseDialog gcd(this, entry, pal);
+		GfxColouriseDialog gcd(theMainWindow, entry, pal);
 
 		// Show colourise dialog
 		if (gcd.ShowModal() == wxID_OK) {
@@ -788,7 +790,7 @@ bool GfxEntryPanel::handleAction(string id) {
 	// Tint
 	else if (id == "pgfx_tint") {
 		Palette8bit* pal = theMainWindow->getPaletteChooser()->getSelectedPalette();
-		GfxTintDialog gtd(this, entry, pal);
+		GfxTintDialog gtd(theMainWindow, entry, pal);
 
 		// Show tint dialog
 		if (gtd.ShowModal() == wxID_OK) {
