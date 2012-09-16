@@ -27,7 +27,10 @@ public:
 
 	bool	openScripts(ArchiveEntry* entry);
 	void	populateWordList();
+
 	bool	handleAction(string name);
+
+	void	onWordListActivate(wxCommandEvent& e);
 };
 
 #endif//__SCRIPT_EDITOR_PANEL_H__

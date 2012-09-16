@@ -248,6 +248,50 @@ public:
 };
 
 
+class GfxCropDialog : public wxDialog {
+private:
+	class CropCanvas : public OGLCanvas {
+	public:
+		CropCanvas(wxWindow* parent) : OGLCanvas(parent, -1) {}
+
+		void draw() {
+			drawCheckeredBackground();
+			SwapBuffers();
+		}
+	};
+
+	CropCanvas*	canvas_preview;
+
+public:
+	GfxCropDialog(wxWindow* parent, ArchiveEntry* entry, Palette8bit* pal)
+	: wxDialog(parent, -1, "Crop", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER) {
+		// Set dialog icon
+		wxIcon icon;
+		icon.CopyFromBitmap(getIcon("t_settings"));
+		SetIcon(icon);
+
+		// Setup main sizer
+		wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+		SetSizer(sizer);
+
+		// Add preview
+		canvas_preview = new CropCanvas(this);
+		sizer->Add(canvas_preview, 1, wxEXPAND|wxALL, 4);
+
+		// Add buttons
+		sizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxLEFT|wxRIGHT|wxBOTTOM, 4);
+
+		// Setup dialog size
+		SetInitialSize(wxSize(-1, -1));
+		SetMinSize(GetSize());
+		CenterOnParent();
+	}
+
+	~GfxCropDialog() {
+	}
+};
+
+
 /*******************************************************************
  * GFXENTRYPANEL CLASS FUNCTIONS
  *******************************************************************/
@@ -297,16 +341,18 @@ GfxEntryPanel::GfxEntryPanel(wxWindow* parent)
 	// Offsets
 	spin_xoffset = new wxSpinCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, SHRT_MIN, SHRT_MAX, 0);
 	spin_yoffset = new wxSpinCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, SHRT_MIN, SHRT_MAX, 0);
+	spin_xoffset->SetMinSize(wxSize(64, -1));
+	spin_yoffset->SetMinSize(wxSize(64, -1));
 	sizer_top->AddStretchSpacer();
 	sizer_top->Add(new wxStaticText(this, -1, "Offsets:"), 0, wxALIGN_CENTER_VERTICAL, 0);
-	sizer_top->Add(spin_xoffset, 0, wxEXPAND|wxLEFT|wxRIGHT, 4);
-	sizer_top->Add(spin_yoffset, 0, wxEXPAND|wxRIGHT, 4);
+	sizer_top->Add(spin_xoffset, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 4);
+	sizer_top->Add(spin_yoffset, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT, 4);
 
 	// Gfx (offset) type
 	string offset_types[] = { "Auto", "Graphic", "Sprite", "HUD" };
 	choice_offset_type = new wxChoice(this, -1, wxDefaultPosition, wxDefaultSize, 4, offset_types);
 	choice_offset_type->SetSelection(0);
-	sizer_top->Add(choice_offset_type, 0, wxEXPAND, 0);
+	sizer_top->Add(choice_offset_type, 0, wxALIGN_CENTER_VERTICAL, 0);
 
 	// Custom menu
 	menu_custom = new wxMenu();
@@ -315,24 +361,6 @@ GfxEntryPanel::GfxEntryPanel(wxWindow* parent)
 
 	// Custom toolbar
 	custom_toolbar_actions = "pgfx_mirror;pgfx_flip;pgfx_rotate;pgfx_translate;pgfx_colourise;pgfx_tint";
-	/*
-	 * theApp->getAction("pgfx_mirror")->addToMenu(custom);
-	theApp->getAction("pgfx_flip")->addToMenu(custom);
-	theApp->getAction("pgfx_rotate")->addToMenu(custom);
-	custom->AppendSeparator();
-	theApp->getAction("pgfx_translate")->addToMenu(custom);
-	theApp->getAction("pgfx_colourise")->addToMenu(custom);
-	theApp->getAction("pgfx_tint")->addToMenu(custom);
-	custom->AppendSeparator();
-	theApp->getAction("pgfx_alph")->addToMenu(custom);
-	theApp->getAction("pgfx_trns")->addToMenu(custom);
-	custom->AppendSeparator();
-	theApp->getAction("arch_gfx_exportpng")->addToMenu(custom);
-	theApp->getAction("pgfx_extract")->addToMenu(custom);
-	custom->AppendSeparator();
-	theApp->getAction("arch_gfx_addptable")->addToMenu(custom);
-	theApp->getAction("arch_gfx_addtexturex")->addToMenu(custom);
-	 */
 
 	// Bind Events
 	slider_zoom->Bind(wxEVT_COMMAND_SLIDER_UPDATED, &GfxEntryPanel::onZoomChanged, this);
@@ -807,6 +835,17 @@ bool GfxEntryPanel::handleAction(string id) {
 		}
 	}
 
+	// Crop
+	else if (id == "pgfx_crop") {
+		Palette8bit* pal = theMainWindow->getPaletteChooser()->getSelectedPalette();
+		GfxCropDialog gcd(theMainWindow, entry, pal);
+
+		// Show crop dialog
+		if (gcd.ShowModal() == wxID_OK) {
+			// stuff
+		}
+	}
+
 	// alPh/tRNS
 	else if (id == "pgfx_alph" || id == "pgfx_trns")
 		setModified();
@@ -838,6 +877,7 @@ bool GfxEntryPanel::fillCustomMenu(wxMenu * custom) {
 	theApp->getAction("pgfx_translate")->addToMenu(custom);
 	theApp->getAction("pgfx_colourise")->addToMenu(custom);
 	theApp->getAction("pgfx_tint")->addToMenu(custom);
+	theApp->getAction("pgfx_crop")->addToMenu(custom);
 	custom->AppendSeparator();
 	theApp->getAction("pgfx_alph")->addToMenu(custom);
 	theApp->getAction("pgfx_trns")->addToMenu(custom);

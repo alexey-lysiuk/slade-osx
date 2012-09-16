@@ -241,11 +241,14 @@ void MainWindow::setupLayout() {
 	theApp->getAction("main_exit")->addToMenu(fileMenu);
 	menu->Append(fileMenu, "&File");
 
-	// Editor menu
+	// Edit menu
 	wxMenu* editorMenu = new wxMenu("");
+	theApp->getAction("main_undo")->addToMenu(editorMenu);
+	theApp->getAction("main_redo")->addToMenu(editorMenu);
+	editorMenu->AppendSeparator();
 	theApp->getAction("main_setbra")->addToMenu(editorMenu);
 	theApp->getAction("main_preferences")->addToMenu(editorMenu);
-	menu->Append(editorMenu, "E&ditor");
+	menu->Append(editorMenu, "E&dit");
 
 	// View menu
 	wxMenu* viewMenu = new wxMenu("");
@@ -478,15 +481,16 @@ void MainWindow::openMapEditor(Archive* archive) {
 		if (!md.head)
 			return;
 
-		// Check selected game configuration is ok
-		if (!dlg.configMatchesMap(md))
-			wxMessageBox("Selected Game Configuration does not match the map format", "Error", wxICON_ERROR);
-		else {
-			// Attempt to open map
-			if (!theMapEditor->openMap(md)) {
-				theMapEditor->Hide();
-				wxMessageBox(S_FMT("Unable to open map %s: %s", CHR(md.name), CHR(Global::error)), "Invalid map error", wxICON_ERROR);
-			}
+		// Attempt to load selected game configuration
+		if (!theGameConfiguration->openConfig(dlg.selectedGame(), dlg.selectedPort())) {
+			wxMessageBox("An error occurred loading the game configuration, see the console log for details", "Error", wxICON_ERROR);
+			return;
+		}
+
+		// Attempt to open map
+		if (!theMapEditor->openMap(md)) {
+			theMapEditor->Hide();
+			wxMessageBox(S_FMT("Unable to open map %s: %s", CHR(md.name), CHR(Global::error)), "Invalid map error", wxICON_ERROR);
 		}
 	}
 }
@@ -508,10 +512,24 @@ bool MainWindow::handleAction(string id) {
 		return false;
 
 	// File->Exit
-	if (id == "main_exit")
+	if (id == "main_exit") {
 		Close();
+		return true;
+	}
 
-	// Editor->Set Base Resource Archive
+	// Edit->Undo
+	if (id == "main_undo") {
+		panel_archivemanager->undo();
+		return true;
+	}
+
+	// Edit->Redo
+	if (id == "main_redo") {
+		panel_archivemanager->redo();
+		return true;
+	}
+
+	// Edit->Set Base Resource Archive
 	if (id == "main_setbra") {
 		wxDialog dialog_ebr(this, -1, "Edit Base Resource Archives", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER);
 		BaseResourceArchivesPanel brap(&dialog_ebr);
@@ -531,7 +549,7 @@ bool MainWindow::handleAction(string id) {
 		return true;
 	}
 
-	// Editor->Preferences
+	// Edit->Preferences
 	if (id == "main_preferences") {
 		PreferencesDialog::openPreferences(this);
 

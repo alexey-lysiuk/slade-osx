@@ -108,11 +108,16 @@ public:
 	}
 
 	void OnStackFrame(const wxStackFrame& frame) {
-		string location = wxEmptyString;
+		string location = "[unknown location] ";
 		if (frame.HasSourceLocation())
 			location = S_FMT("(%s:%d) ", frame.GetFileName().c_str(), frame.GetLine());
 
-		string parameters = wxEmptyString;
+		wxUIntPtr address = wxPtrToUInt(frame.GetAddress());
+		string func_name = frame.GetName();
+		if (func_name.IsEmpty())
+			func_name = S_FMT("[unknown:%d]", address);
+
+		//string parameters = wxEmptyString;
 		/*
 		for (size_t a = 0; a < frame.GetParamCount(); a++) {
 			string type = wxEmptyString;
@@ -127,7 +132,7 @@ public:
 		}
 		*/
 
-		stack_trace.Append(S_FMT("%d: %s%s(%s)\n", frame.GetLevel(), location.c_str(), frame.GetName().c_str(), parameters.c_str()));
+		stack_trace.Append(S_FMT("%d: %s%s\n", frame.GetLevel(), CHR(location), CHR(func_name)));
 	}
 };
 
@@ -342,6 +347,8 @@ void MainApp::initLogFile() {
 void MainApp::initActions() {
 	// MainWindow
 	new SAction("main_exit", "E&xit", "t_exit", "Quit SLADE", "", 0, wxID_EXIT);
+	new SAction("main_undo", "Undo", "t_undo", "Undo", "Ctrl+Z");
+	new SAction("main_redo", "Redo", "t_redo", "Redo", "Ctrl+Y");
 	new SAction("main_setbra", "Set &Base Resource Archive", "e_archive", "Set the Base Resource Archive, to act as the program 'IWAD'");
 	new SAction("main_preferences", "&Preferences...", "t_settings", "Setup SLADE options and preferences", "", NORMAL, wxID_PREFERENCES);
 	new SAction("main_showam", "&Archive Manager", "e_archive", "Toggle the Archive Manager window", "Ctrl+1");
@@ -434,6 +441,7 @@ void MainApp::initActions() {
 	new SAction("pgfx_alph", "alPh Chunk", "", "Add/Remove alPh chunk to/from the PNG", "", SAction::CHECK);
 	new SAction("pgfx_trns", "tRNS Chunk", "", "Add/Remove tRNS chunk to/from the PNG", "", SAction::CHECK);
 	new SAction("pgfx_extract", "Extract All", "", "Extract all images in this entry to separate PNGs");
+	new SAction("pgfx_crop", "Crop", "t_settings", "Crop the graphic");
 
 	// ArchiveEntryList
 	new SAction("aelt_sizecol", "Size", "", "Show the size column", "", SAction::CHECK);
@@ -520,10 +528,13 @@ void MainApp::initActions() {
 	new SAction("mapw_thing_changetype", "Change Type", "", "Change the currently selected or hilighted thing type(s)");
 	new SAction("mapw_sector_changetexture", "Change Texture", "", "Change the currently selected or hilighted sector texture(s)");
 	new SAction("mapw_item_properties", "Properties", "t_properties", "Edit the currently selected item's properties");
-	new SAction("mapw_script_save", "Save", "t_save", "Save changes to scripts");
-	new SAction("mapw_script_compile", "Compile", "t_compile", "Compile scripts");
 	new SAction("mapw_camera_set", "Move 3d Camera Here", "", "Set the current position of the 3d mode camera to the cursor position");
 	new SAction("mapw_clear_selection", "Clear Selection", "", "Clear the current selection, if any");
+
+	// Script editor
+	new SAction("mapw_script_save", "Save", "t_save", "Save changes to scripts");
+	new SAction("mapw_script_compile", "Compile", "t_compile", "Compile scripts");
+	new SAction("mapw_script_jumpto", "Jump To...", "t_up", "Jump to a specific script/function");
 }
 
 /* MainApp::OnInit

@@ -31,6 +31,7 @@ private:
 	string				comment_end;	// The ending token for a block comment
 	string				preprocessor;	// The beginning token for a preprocessor directive
 	bool				case_sensitive;
+	vector<string>		jump_blocks;	// The keywords to search for when creating jump to list (eg. 'script')
 
 	// Keywords
 	vector<string>		keywords;
@@ -75,7 +76,11 @@ public:
 	string	getKeywordsList();
 	string	getConstantsList();
 	string	getFunctionsList();
-	string	getAutocompletionList();
+	string	getAutocompletionList(string start = "");
+
+	wxArrayString	getKeywordsSorted();
+	wxArrayString	getConstantsSorted();
+	wxArrayString	getFunctionsSorted();
 
 	string	getKeywordLink() { return k_lookup_url; }
 	string	getConstantLink() { return c_lookup_url; }
@@ -86,6 +91,9 @@ public:
 	bool	isFunction(string word);
 
 	TLFunction*	getFunction(string name);
+
+	unsigned	nJumpBlocks() { return jump_blocks.size(); }
+	string		jumpBlock(unsigned index) { return jump_blocks[index]; }
 
 	void	clearKeywords() { keywords.clear(); }
 	void	clearConstants() { constants.clear(); }

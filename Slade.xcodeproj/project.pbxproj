@@ -362,6 +362,7 @@
 		8AE3722E154D5B8900D88A7F /* libwx_osx_cocoau_adv-2.9.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AE3722D154D5B8900D88A7F /* libwx_osx_cocoau_adv-2.9.a */; };
 		8AE37233154D5BA000D88A7F /* libwx_osx_cocoau_aui-2.9.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AE37232154D5BA000D88A7F /* libwx_osx_cocoau_aui-2.9.a */; };
 		8AE87B26154BF66400A41E61 /* liblzma_slade.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A26CEA1154BEDA10079A63E /* liblzma_slade.a */; };
+		8AE987A51606064500118140 /* UndoRedo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AE987A31606064500118140 /* UndoRedo.cpp */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
 
@@ -991,6 +992,8 @@
 		8AE37229154D5B5200D88A7F /* libwx_osx_cocoau_propgrid-2.9.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libwx_osx_cocoau_propgrid-2.9.a"; path = "thirdparty/wxWidgets/lib/libwx_osx_cocoau_propgrid-2.9.a"; sourceTree = "<group>"; };
 		8AE3722D154D5B8900D88A7F /* libwx_osx_cocoau_adv-2.9.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libwx_osx_cocoau_adv-2.9.a"; path = "thirdparty/wxWidgets/lib/libwx_osx_cocoau_adv-2.9.a"; sourceTree = "<group>"; };
 		8AE37232154D5BA000D88A7F /* libwx_osx_cocoau_aui-2.9.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libwx_osx_cocoau_aui-2.9.a"; path = "thirdparty/wxWidgets/lib/libwx_osx_cocoau_aui-2.9.a"; sourceTree = "<group>"; };
+		8AE987A31606064500118140 /* UndoRedo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UndoRedo.cpp; path = src/UndoRedo.cpp; sourceTree = "<group>"; };
+		8AE987A41606064500118140 /* UndoRedo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UndoRedo.h; path = src/UndoRedo.h; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Slade.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Slade.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -1449,6 +1452,8 @@
 				8AD18F11154A8A9B00AB9C07 /* Tree.h */,
 				8AD18F12154A8A9B00AB9C07 /* UDMFProperty.cpp */,
 				8AD18F13154A8A9B00AB9C07 /* UDMFProperty.h */,
+				8AE987A31606064500118140 /* UndoRedo.cpp */,
+				8AE987A41606064500118140 /* UndoRedo.h */,
 				8AD18F14154A8A9B00AB9C07 /* VertexInfoOverlay.cpp */,
 				8AD18F15154A8A9B00AB9C07 /* VertexInfoOverlay.h */,
 				8AD18F16154A8A9B00AB9C07 /* VirtualListView.cpp */,
@@ -2109,9 +2114,11 @@
 				8AD18F6A154A8A9B00AB9C07 /* BrowserWindow.cpp in Sources */,
 				8AD18F6B154A8A9B00AB9C07 /* BSPArchive.cpp in Sources */,
 				8AD18F78154A8A9B00AB9C07 /* BZip2Archive.cpp in Sources */,
+				8A92003815A86BFB00F58CED /* CIEDeltaEquations.cpp in Sources */,
 				8AD18F79154A8A9B00AB9C07 /* cl_aui_notebook_art.cpp in Sources */,
 				8AD18F7A154A8A9B00AB9C07 /* Clipboard.cpp in Sources */,
 				8AD18F7C154A8A9B00AB9C07 /* CodePages.cpp in Sources */,
+				8A92003915A86BFB00F58CED /* ColorimetryPrefsPanel.cpp in Sources */,
 				8AD18F7D154A8A9B00AB9C07 /* ColourBox.cpp in Sources */,
 				8AD18F7E154A8A9B00AB9C07 /* ColourConfiguration.cpp in Sources */,
 				8AD18F7F154A8A9B00AB9C07 /* ColourPrefsPanel.cpp in Sources */,
@@ -2215,6 +2222,7 @@
 				8AD19007154A8A9B00AB9C07 /* ResourceManager.cpp in Sources */,
 				8AD19008154A8A9B00AB9C07 /* RffArchive.cpp in Sources */,
 				8AD19009154A8A9B00AB9C07 /* SAction.cpp in Sources */,
+				8A92003A15A86BFB00F58CED /* ScriptEditorPanel.cpp in Sources */,
 				8AD1900A154A8A9B00AB9C07 /* SectorBuilder.cpp in Sources */,
 				8AD1900B154A8A9B00AB9C07 /* SectorInfoOverlay.cpp in Sources */,
 				8AD1900C154A8A9B00AB9C07 /* SectorTextureOverlay.cpp in Sources */,
@@ -2252,6 +2260,7 @@
 				8AD1902C154A8A9B00AB9C07 /* TranslationEditorDialog.cpp in Sources */,
 				8AD1902D154A8A9B00AB9C07 /* Tree.cpp in Sources */,
 				8AD1902E154A8A9B00AB9C07 /* UDMFProperty.cpp in Sources */,
+				8AE987A51606064500118140 /* UndoRedo.cpp in Sources */,
 				8AD1902F154A8A9B00AB9C07 /* VertexInfoOverlay.cpp in Sources */,
 				8AD19030154A8A9B00AB9C07 /* VirtualListView.cpp in Sources */,
 				8AD19031154A8A9B00AB9C07 /* Wad2Archive.cpp in Sources */,
@@ -2264,9 +2273,6 @@
 				8AD19050154A8A9B00AB9C07 /* ancientzip.cpp in Sources */,
 				8AD19051154A8A9B00AB9C07 /* files.cpp in Sources */,
 				8AD19052154A8A9B00AB9C07 /* m_alloc.cpp in Sources */,
-				8A92003815A86BFB00F58CED /* CIEDeltaEquations.cpp in Sources */,
-				8A92003915A86BFB00F58CED /* ColorimetryPrefsPanel.cpp in Sources */,
-				8A92003A15A86BFB00F58CED /* ScriptEditorPanel.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
