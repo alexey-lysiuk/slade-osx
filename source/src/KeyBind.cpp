@@ -235,6 +235,7 @@ string KeyBind::keyName(int key) {
 	case WXK_WINDOWS_LEFT:		return "win_left";
 	case WXK_WINDOWS_RIGHT:		return "win_right";
 	case WXK_WINDOWS_MENU:		return "win_menu";
+	case WXK_PRINT:				return "printscrn";
 #ifdef __APPLE__
 	case WXK_COMMAND:			return "command";
 #else
@@ -398,6 +399,7 @@ void KeyBind::initBinds() {
 	addBind("map_edit_accept", keypress_t("return"), "Accept edit", group);
 	addBind("map_edit_cancel", keypress_t("escape"), "Cancel edit", group);
 	addBind("map_toggle_3d", keypress_t("Q"), "Toggle 3d mode", group);
+	addBind("map_screenshot", keypress_t("P", KPM_CTRL|KPM_SHIFT), "Take Screenshot", group);
 
 	// Map Editor 2D (me2d*)
 	group = "Map Editor 2D Mode";
@@ -438,6 +440,7 @@ void KeyBind::initBinds() {
 	addBind("me2d_line_change_texture", keypress_t("T", KPM_CTRL), "Change texture(s)", group);
 	addBind("me2d_line_flip", keypress_t("F"), "Flip line(s)", group);
 	addBind("me2d_line_flip_nosides", keypress_t("F", KPM_SHIFT), "Flip line(s) but not sides", group);
+	addBind("me2d_line_tag_edit", keypress_t("T", KPM_SHIFT), "Begin tag edit", group);
 
 	// Map Editor 2D Sectors mode (me2d_sector*)
 	group = "Map Editor 2D Sectors Mode";
@@ -474,6 +477,7 @@ void KeyBind::initBinds() {
 	addBind("me3d_release_mouse", keypress_t("tab"), "Release mouse cursor", group);
 	addBind("me3d_clear_selection", keypress_t("C"), "Clear selection", group);
 	addBind("me3d_toggle_things", keypress_t("T"), "Toggle thing display", group);
+	addBind("me3d_thing_style", keypress_t("T", KPM_SHIFT), "Cycle thing render style", group);
 	addBind("me3d_toggle_hilight", keypress_t("H"), "Toggle hilight", group);
 	addBind("me3d_copy_tex_type", keypress_t("C", KPM_CTRL), "Copy texture or thing type", group);
 	addBind("me3d_copy_tex_type", keypress_t("mouse3"));
@@ -527,6 +531,14 @@ void KeyBind::initBinds() {
 	addBind("me3d_flat_height_down", keypress_t("num_minus", KPM_SHIFT), "Height down 1", group);
 	addBind("me3d_flat_height_down", keypress_t("mwheeldown", KPM_SHIFT));
 
+	// Map Editor 3D Things (me3d_thing*)
+	group = "Map Editor 3D Mode Things";
+	addBind("me3d_thing_remove", keypress_t("delete"), "Remove", group);
+	addBind("me3d_thing_up8", keypress_t("num_8"), "Z up 8", group);
+	addBind("me3d_thing_up", keypress_t("num_up"), "Z up 1", group);
+	addBind("me3d_thing_down8", keypress_t("num_2"), "Z down 8", group);
+	addBind("me3d_thing_down", keypress_t("num_down"), "Z down 1", group);
+
 	// Set above keys as defaults
 	for (unsigned a = 0; a < keybinds.size(); a++) {
 		for (unsigned k = 0; k < keybinds[a].keys.size(); k++)
@@ -546,7 +558,7 @@ string KeyBind::writeBinds() {
 		ret += "\t";
 		ret += kb.name;
 
-		// '.' indicates no binds
+		// 'unbound' indicates no binds
 		if (kb.keys.size() == 0)
 			ret += " unbound";
 

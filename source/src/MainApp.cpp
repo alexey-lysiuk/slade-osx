@@ -353,6 +353,7 @@ void MainApp::initActions() {
 	new SAction("main_preferences", "&Preferences...", "t_settings", "Setup SLADE options and preferences", "", NORMAL, wxID_PREFERENCES);
 	new SAction("main_showam", "&Archive Manager", "e_archive", "Toggle the Archive Manager window", "Ctrl+1");
 	new SAction("main_showconsole", "&Console", "t_console", "Toggle the Console window", "Ctrl+2");
+	new SAction("main_showundohistory", "&Undo History", "t_undo", "Toggle the Undo History window", "Ctrl+3");
 	new SAction("main_onlinedocs", "Online &Documentation", "t_wiki", "View SLADE documentation online");
 	new SAction("main_about", "&About", "i_logo", "Informaton about SLADE", "", 0, wxID_ABOUT);
 
@@ -502,8 +503,11 @@ void MainApp::initActions() {
 
 	// Map Editor Window
 	new SAction("mapw_save", "&Save Map Changes", "t_save", "Save any changes to the current map", "Ctrl+S");
-	new SAction("mapw_saveas", "Save Map &As", "t_saveas", "Save the map to a new wad archive", "Ctrl+Shift+S");
+	new SAction("mapw_saveas", "Save Map &As...", "t_saveas", "Save the map to a new wad archive", "Ctrl+Shift+S");
 	new SAction("mapw_rename", "&Rename Map", "t_rename", "Rename the current map");
+	new SAction("mapw_convert", "Con&vert Map...", "t_convert", "Convert the current map to a different format");
+	new SAction("mapw_undo", "Undo", "t_undo", "Undo", "Ctrl+Z");
+	new SAction("mapw_redo", "Redo", "t_redo", "Redo", "Ctrl+Y");
 	new SAction("mapw_setbra", "Set &Base Resource Archive", "e_archive", "Set the Base Resource Archive, to act as the program 'IWAD'");
 	new SAction("mapw_preferences", "&Preferences...", "t_settings", "Setup SLADE options and preferences");
 	int group_mode = SAction::newGroup();
@@ -525,8 +529,11 @@ void MainApp::initActions() {
 	new SAction("mapw_sectormode_ceiling", "Ceilings", "t_sector_ceiling", "Edit sector ceilings", "", SAction::RADIO, -1, group_sector_mode);
 	new SAction("mapw_line_changetexture", "Change Texture", "", "Change the currently selected or hilighted line texture(s)");
 	new SAction("mapw_line_changespecial", "Change Special", "", "Change the currently selected or hilighted line special");
+	new SAction("mapw_line_tagedit", "Edit Tagged", "", "Select sectors/things to tag to this line's special");
 	new SAction("mapw_thing_changetype", "Change Type", "", "Change the currently selected or hilighted thing type(s)");
+	new SAction("mapw_thing_create", "Create Thing Here", "", "Creates a new thing at the cursor position");
 	new SAction("mapw_sector_changetexture", "Change Texture", "", "Change the currently selected or hilighted sector texture(s)");
+	new SAction("mapw_sector_changespecial", "Change Special", "", "Change the currently selected or hilighted sector special(s)");
 	new SAction("mapw_item_properties", "Properties", "t_properties", "Edit the currently selected item's properties");
 	new SAction("mapw_camera_set", "Move 3d Camera Here", "", "Set the current position of the 3d mode camera to the cursor position");
 	new SAction("mapw_clear_selection", "Clear Selection", "", "Clear the current selection, if any");
@@ -633,10 +640,12 @@ bool MainApp::OnInit() {
 
 	// Init actions
 	initActions();
+	theMainWindow;
 
 	// Init base resource
 	wxLogMessage("Loading base resource");
 	theArchiveManager->initBaseResource();
+	wxLogMessage("Base resource loaded");
 
 	// Show the main window
 	theMainWindow->Show(true);

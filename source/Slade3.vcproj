@@ -1073,6 +1073,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\SectorSpecialDialog.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\SectorSpecialDialog.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\ShapeDrawPanel.cpp"
 					>
 				</File>
@@ -1094,6 +1102,14 @@
 				</File>
 				<File
 					RelativePath=".\src\ThingTypeTreeView.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\UndoManagerHistoryPanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\UndoManagerHistoryPanel.h"
 					>
 				</File>
 				<Filter
@@ -1598,6 +1614,14 @@
 				</File>
 				<File
 					RelativePath=".\src\DatArchive.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\DiskArchive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\DiskArchive.h"
 					>
 				</File>
 				<File

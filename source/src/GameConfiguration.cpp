@@ -64,6 +64,7 @@ void GameConfiguration::setDefaults() {
 	light_levels.clear();
 	for (int a = 0; a < 4; a++)
 		map_formats[a] = false;
+	boom = false;
 }
 
 string GameConfiguration::udmfNamespace() {
@@ -367,7 +368,7 @@ bool GameConfiguration::portSupportsGame(unsigned port, string game) {
 }
 
 bool GameConfiguration::mapFormatSupported(int map_format, int game, int port) {
-	if (MAP_DOOM < 0 || MAP_UDMF > 3)
+	if (map_format < 0 || map_format > 3)
 		return false;
 
 	// Check port if one specified
@@ -861,7 +862,29 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 					continue;
 
 				long flag_val;
-				value->getName().ToLong(&flag_val);
+				string flag_name, flag_udmf;
+				
+				if (value->nValues() == 0) {
+					// Full definition
+					flag_name = value->getName();
+
+					for (unsigned v = 0; v < value->nChildren(); v++) {
+						ParseTreeNode* prop = (ParseTreeNode*)value->getChild(v);
+
+						if (S_CMPNOCASE(prop->getName(), "value"))
+							flag_val = prop->getIntValue();
+						else if (S_CMPNOCASE(prop->getName(), "udmf")) {
+							for (unsigned u = 0; u < prop->nValues(); u++)
+								flag_udmf += prop->getStringValue(u) + " ";
+							flag_udmf.RemoveLast(1);
+						}
+					}
+				}
+				else {
+					// Short definition
+					value->getName().ToLong(&flag_val);
+					flag_name = value->getStringValue();
+				}
 
 				// Check if the flag value already exists
 				bool exists = false;
@@ -875,7 +898,7 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 
 				// Add flag otherwise
 				if (!exists)
-					flags_line.push_back(flag_t(flag_val, value->getStringValue()));
+					flags_line.push_back(flag_t(flag_val, flag_name, flag_udmf));
 			}
 		}
 
@@ -889,9 +912,31 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 					continue;
 
 				long flag_val;
-				value->getName().ToLong(&flag_val);
+				string flag_name, flag_udmf;
+				
+				if (value->nValues() == 0) {
+					// Full definition
+					flag_name = value->getName();
 
-				// Check if the flag value already exists
+					for (unsigned v = 0; v < value->nChildren(); v++) {
+						ParseTreeNode* prop = (ParseTreeNode*)value->getChild(v);
+
+						if (S_CMPNOCASE(prop->getName(), "value"))
+							flag_val = prop->getIntValue();
+						else if (S_CMPNOCASE(prop->getName(), "udmf")) {
+							for (unsigned u = 0; u < prop->nValues(); u++)
+								flag_udmf += prop->getStringValue(u) + " ";
+							flag_udmf.RemoveLast(1);
+						}
+					}
+				}
+				else {
+					// Short definition
+					value->getName().ToLong(&flag_val);
+					flag_name = value->getStringValue();
+				}
+
+				// Check if the trigger value already exists
 				bool exists = false;
 				for (unsigned f = 0; f < triggers_line.size(); f++) {
 					if (triggers_line[f].flag == flag_val) {
@@ -901,9 +946,9 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 					}
 				}
 
-				// Add flag otherwise
+				// Add trigger otherwise
 				if (!exists)
-					triggers_line.push_back(flag_t(flag_val, value->getStringValue()));
+					triggers_line.push_back(flag_t(flag_val, flag_name, flag_udmf));
 			}
 		}
 
@@ -917,7 +962,29 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 					continue;
 
 				long flag_val;
-				value->getName().ToLong(&flag_val);
+				string flag_name, flag_udmf;
+				
+				if (value->nValues() == 0) {
+					// Full definition
+					flag_name = value->getName();
+
+					for (unsigned v = 0; v < value->nChildren(); v++) {
+						ParseTreeNode* prop = (ParseTreeNode*)value->getChild(v);
+
+						if (S_CMPNOCASE(prop->getName(), "value"))
+							flag_val = prop->getIntValue();
+						else if (S_CMPNOCASE(prop->getName(), "udmf")) {
+							for (unsigned u = 0; u < prop->nValues(); u++)
+								flag_udmf += prop->getStringValue(u) + " ";
+							flag_udmf.RemoveLast(1);
+						}
+					}
+				}
+				else {
+					// Short definition
+					value->getName().ToLong(&flag_val);
+					flag_name = value->getStringValue();
+				}
 
 				// Check if the flag value already exists
 				bool exists = false;
@@ -931,7 +998,7 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 
 				// Add flag otherwise
 				if (!exists)
-					flags_thing.push_back(flag_t(flag_val, value->getStringValue()));
+					flags_thing.push_back(flag_t(flag_val, flag_name, flag_udmf));
 			}
 		}
 
@@ -1422,9 +1489,9 @@ bool GameConfiguration::openConfig(string game, string port) {
 		}
 	}
 
-	wxFile test("full.cfg", wxFile::write);
+	/*wxFile test("full.cfg", wxFile::write);
 	test.Write(full_config);
-	test.Close();
+	test.Close();*/
 
 	// Read fully built configuration
 	bool ok = true;
@@ -1927,7 +1994,7 @@ string GameConfiguration::sectorTypeName(int type, int map_format) {
 				gen_flags.push_back("Secret");
 
 			// Friction
-			if (type & 2056)
+			if (type & 2048)
 				gen_flags.push_back("Friction Enabled");
 
 			// Pushers/Pullers
@@ -1963,6 +2030,169 @@ string GameConfiguration::sectorTypeName(int type, int map_format) {
 		name += S_FMT(" + %s", CHR(gen_flags[a]));
 
 	return name;
+}
+
+//vector<string> GameConfiguration::allSectorTypeNames() {
+//	vector<string> ret;
+//	for (unsigned a = 0; a < sector_types.size(); a++)
+//		ret.push_back(sector_types[a].name);
+//	return ret;
+//}
+
+int GameConfiguration::sectorTypeByName(string name) {
+	for (unsigned a = 0; a < sector_types.size(); a++) {
+		if (sector_types[a].name == name)
+			return sector_types[a].type;
+	}
+
+	return 0;
+}
+
+int GameConfiguration::baseSectorType(int type, int map_format) {
+	// No type
+	if (type == 0)
+		return 0;
+
+	// Strip boom flags depending on map format
+	if (map_format == MAP_DOOM && type >= 32)
+		return type & 31;
+	else if (type >= 256)
+		return type & 255;
+
+	// No flags
+	return type;
+}
+
+int GameConfiguration::sectorBoomDamage(int type, int map_format) {
+	// No type
+	if (type == 0)
+		return 0;
+
+	// Doom format
+	if (map_format == MAP_DOOM && type >= 32) {
+		if ((type & 96) == 96)
+			return 3;
+		else if (type & 32)
+			return 1;
+		else if (type & 64)
+			return 2;
+	}
+
+	// Hexen format
+	else if (type >= 256) {
+		if ((type & 768) == 768)
+			return 3;
+		else if (type & 256)
+			return 1;
+		else if (type & 512)
+			return 2;
+	}
+
+	// No damage
+	return 0;
+}
+
+bool GameConfiguration::sectorBoomSecret(int type, int map_format) {
+	// No type
+	if (type == 0)
+		return false;
+
+	// Doom format
+	if (map_format == MAP_DOOM && type >= 32 && type & 128)
+		return true;
+
+	// Hexen format
+	else if (type >= 256 && type & 1024)
+		return true;
+
+	// Not secret
+	return false;
+}
+
+bool GameConfiguration::sectorBoomFriction(int type, int map_format) {
+	// No type
+	if (type == 0)
+		return false;
+
+	// Doom format
+	if (map_format == MAP_DOOM && type >= 32 && type & 256)
+		return true;
+
+	// Hexen format
+	else if (type >= 256 && type & 2048)
+		return true;
+
+	// Friction disabled
+	return false;
+}
+
+bool GameConfiguration::sectorBoomPushPull(int type, int map_format) {
+	// No type
+	if (type == 0)
+		return false;
+
+	// Doom format
+	if (map_format == MAP_DOOM && type >= 32 && type & 512)
+		return true;
+
+	// Hexen format
+	else if (type >= 256 && type & 4096)
+		return true;
+
+	// Pusher/Puller disabled
+	return false;
+}
+
+int GameConfiguration::boomSectorType(int base, int damage, bool secret, bool friction, bool pushpull, int map_format) {
+	int fulltype = base;
+
+	// Doom format
+	if (map_format == MAP_DOOM) {
+		// Damage
+		if (damage == 1)
+			fulltype += 32;
+		else if (damage == 2)
+			fulltype += 64;
+		else if (damage == 3)
+			fulltype += 96;
+
+		// Secret
+		if (secret)
+			fulltype += 128;
+
+		// Friction
+		if (friction)
+			fulltype += 256;
+
+		// Pusher/Puller
+		if (pushpull)
+			fulltype += 512;
+	}
+
+	// Hexen format
+	else {
+		// Damage
+		if (damage == 1)
+			fulltype += 256;
+		else if (damage == 2)
+			fulltype += 512;
+		else if (damage == 3)
+			fulltype += 768;
+
+		// Secret
+		if (secret)
+			fulltype += 1024;
+
+		// Friction
+		if (friction)
+			fulltype += 2048;
+
+		// Pusher/Puller
+		if (pushpull)
+			fulltype += 4096;
+	}
+
+	return fulltype;
 }
 
 string GameConfiguration::getDefaultString(int type, string property) {

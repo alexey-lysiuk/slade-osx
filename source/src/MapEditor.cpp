@@ -11,6 +11,8 @@
 #include "MapCanvas.h"
 #include "MapObjectPropsPanel.h"
 #include "SectorBuilder.h"
+#include "Clipboard.h"
+#include "UndoRedo.h"
 
 double grid_sizes[] = { 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 };
 
@@ -18,6 +20,7 @@ EXTERN_CVAR(Int, shapedraw_sides)
 EXTERN_CVAR(Int, shapedraw_shape)
 EXTERN_CVAR(Bool, shapedraw_centered)
 EXTERN_CVAR(Bool, shapedraw_lockratio)
+
 
 MapEditor::MapEditor() {
 	// Init variables
@@ -32,11 +35,14 @@ MapEditor::MapEditor() {
 	copy_sector = NULL;
 	link_3d_light = true;
 	link_3d_offset = true;
+	undo_manager = new UndoManager();
+	current_tag = 0;
 }
 
 MapEditor::~MapEditor() {
 	if (copy_thing) delete copy_thing;
 	if (copy_sector) delete copy_sector;
+	delete undo_manager;
 }
 
 double MapEditor::gridSize() {
@@ -177,148 +183,7 @@ bool MapEditor::updateHilight(fpoint2_t mouse_pos, double dist_scale) {
 
 	// Update tagged lists if the hilight changed
 	if (current != hilight_item) {
-		// Clear tagged lists
-		tagged_sectors.clear();
-		tagged_lines.clear();
-		tagged_things.clear();
-
-		tagging_lines.clear();
-		tagging_things.clear();
-
-		// Special
-		if (hilight_item >= 0) {
-			// Gather affecting objects
-			int type, tag = 0;
-			if (edit_mode == MODE_LINES) { 
-				type = SLADEMap::LINEDEFS;
-				tag = map.getLine(hilight_item)->intProperty("id");
-			} else if (edit_mode == MODE_THINGS) {
-				type = SLADEMap::THINGS;
-				tag = map.getThing(hilight_item)->intProperty("id");
-			} else if (edit_mode == MODE_SECTORS) {
-				type = SLADEMap::SECTORS;
-				tag = map.getSector(hilight_item)->intProperty("id");
-			}
-			if (tag) {
-				map.getTaggingLinesById(tag, type, tagging_lines);
-				map.getTaggingThingsById(tag, type, tagging_things);
-			}
-
-			// Gather affected objects
-			if (edit_mode == MODE_LINES || edit_mode == MODE_THINGS) {
-				MapSector* back = NULL;
-				MapSector* front = NULL;
-				int needs_tag, tag, arg2, arg3, arg4, arg5;
-				// Line specials have front and possibly back sectors
-				if (edit_mode == MODE_LINES) {
-					MapLine* line = map.getLine(hilight_item);
-					if (line->s2()) back = line->s2()->getSector();
-					if (line->s1()) front = line->s1()->getSector();
-					needs_tag = theGameConfiguration->actionSpecial(line->intProperty("special"))->needsTag();
-					tag = line->intProperty("arg0");
-					arg2 = line->intProperty("arg1");
-					arg3 = line->intProperty("arg2");
-					arg4 = line->intProperty("arg3");
-					arg5 = line->intProperty("arg4");
-
-					// Hexen and UDMF things can have specials too
-				} else /* edit_mode == MODE_THINGS */ {
-					MapThing* thing = map.getThing(hilight_item);
-					needs_tag = theGameConfiguration->actionSpecial(thing->intProperty("special"))->needsTag();
-					tag = thing->intProperty("arg0");
-					arg2 = thing->intProperty("arg1");
-					arg3 = thing->intProperty("arg2");
-					arg4 = thing->intProperty("arg3");
-					arg5 = thing->intProperty("arg4");
-				}
-
-				// Sector tag
-				if (needs_tag == AS_TT_SECTOR ||
-					needs_tag == AS_TT_SECTOR_AND_BACK && tag > 0)
-					map.getSectorsByTag(tag, tagged_sectors);
-
-				// Backside sector (for local doors)
-				else if ((needs_tag == AS_TT_SECTOR_BACK || needs_tag == AS_TT_SECTOR_AND_BACK) && back)
-					tagged_sectors.push_back(back);
-
-				// Sector tag *or* backside sector (for zdoom local doors)
-				else if (needs_tag == AS_TT_SECTOR_OR_BACK) {
-					if (tag > 0)
-						map.getSectorsByTag(tag, tagged_sectors);
-					else if (back)
-						tagged_sectors.push_back(back);
-				}
-
-				// Thing ID
-				else if (needs_tag == AS_TT_THING)
-					map.getThingsById(tag, tagged_things);
-
-				// Line ID
-				else if (needs_tag == AS_TT_LINE)
-					map.getLinesById(tag, tagged_lines);
-
-				// ZDoom quirkiness
-				else if (needs_tag) {
-					switch (needs_tag) {
-					case AS_TT_1THING_2SECTOR:
-					case AS_TT_1THING_3SECTOR:
-					case AS_TT_1SECTOR_2THING:
-						{
-							int thingtag = (needs_tag == AS_TT_1SECTOR_2THING) ? arg2 : tag;
-							int sectag = (needs_tag == AS_TT_1SECTOR_2THING) ? tag :
-								(needs_tag == AS_TT_1THING_2SECTOR) ? arg2 : arg3;
-							if ((thingtag | sectag) == 0)
-								break;
-							else if (thingtag == 0)
-								map.getSectorsByTag(sectag, tagged_sectors);
-							else if (sectag == 0)
-								map.getThingsById(thingtag, tagged_things);
-							else // neither thingtag nor sectag are 0
-								map.getThingsByIdInSectorTag(thingtag, sectag, tagged_things);
-						}	break;
-					case AS_TT_1THING_2THING_3THING:
-						map.getThingsById(arg3, tagged_things);
-					case AS_TT_1THING_2THING:
-						map.getThingsById(arg2, tagged_things);
-					case AS_TT_1THING_4THING:
-						map.getThingsById(tag, tagged_things);
-					case AS_TT_4THING:
-						if (needs_tag == AS_TT_1THING_4THING || needs_tag == AS_TT_4THING)
-							map.getThingsById(arg4, tagged_things);
-						break;
-					case AS_TT_5THING:
-						map.getThingsById(arg5, tagged_things);
-						break;
-					case AS_TT_LINE_NEGATIVE:
-						map.getLinesById(abs(tag), tagged_lines);
-						break;
-					case AS_TT_1LINEID_2LINE:
-						map.getLinesById(arg2, tagged_lines);
-						break;
-					case AS_TT_1LINE_2SECTOR:
-						map.getLinesById(tag, tagged_lines);
-						map.getSectorsByTag(arg2, tagged_sectors);
-						break;
-					case AS_TT_1SECTOR_2THING_3THING_5THING:
-						if (arg5) map.getThingsById(arg5, tagged_things);
-						map.getThingsById(arg3, tagged_things);
-					case AS_TT_1SECTOR_2SECTOR_3SECTOR_4SECTOR:
-						if (arg4) map.getSectorsByTag(arg4, tagged_sectors);
-						if (arg3) map.getSectorsByTag(arg3, tagged_sectors);
-					case AS_TT_1SECTOR_2SECTOR:
-						if (arg2) map.getSectorsByTag(arg2, tagged_sectors);
-						if (tag ) map.getSectorsByTag(tag , tagged_sectors);
-						break;
-					case AS_TT_SECTOR_2IS3_LINE:
-						if (arg2 == 3) map.getLinesById(tag, tagged_lines);
-						else map.getSectorsByTag(tag, tagged_sectors);
-						break;
-					default:
-						break;
-					}
-				}
-			}
-		}
+		updateTagged();
 	}
 
 	// Update map object properties panel if the hilight changed
@@ -333,6 +198,151 @@ bool MapEditor::updateHilight(fpoint2_t mouse_pos, double dist_scale) {
 	}
 
 	return current != hilight_item;
+}
+
+void MapEditor::updateTagged() {
+	// Clear tagged lists
+	tagged_sectors.clear();
+	tagged_lines.clear();
+	tagged_things.clear();
+
+	tagging_lines.clear();
+	tagging_things.clear();
+
+	// Special
+	if (hilight_item >= 0) {
+		// Gather affecting objects
+		int type, tag = 0;
+		if (edit_mode == MODE_LINES) { 
+			type = SLADEMap::LINEDEFS;
+			tag = map.getLine(hilight_item)->intProperty("id");
+		} else if (edit_mode == MODE_THINGS) {
+			type = SLADEMap::THINGS;
+			tag = map.getThing(hilight_item)->intProperty("id");
+		} else if (edit_mode == MODE_SECTORS) {
+			type = SLADEMap::SECTORS;
+			tag = map.getSector(hilight_item)->intProperty("id");
+		}
+		if (tag) {
+			map.getTaggingLinesById(tag, type, tagging_lines);
+			map.getTaggingThingsById(tag, type, tagging_things);
+		}
+
+		// Gather affected objects
+		if (edit_mode == MODE_LINES || edit_mode == MODE_THINGS) {
+			MapSector* back = NULL;
+			MapSector* front = NULL;
+			int needs_tag, tag, arg2, arg3, arg4, arg5;
+			// Line specials have front and possibly back sectors
+			if (edit_mode == MODE_LINES) {
+				MapLine* line = map.getLine(hilight_item);
+				if (line->s2()) back = line->s2()->getSector();
+				if (line->s1()) front = line->s1()->getSector();
+				needs_tag = theGameConfiguration->actionSpecial(line->intProperty("special"))->needsTag();
+				tag = line->intProperty("arg0");
+				arg2 = line->intProperty("arg1");
+				arg3 = line->intProperty("arg2");
+				arg4 = line->intProperty("arg3");
+				arg5 = line->intProperty("arg4");
+
+				// Hexen and UDMF things can have specials too
+			} else /* edit_mode == MODE_THINGS */ {
+				MapThing* thing = map.getThing(hilight_item);
+				needs_tag = theGameConfiguration->actionSpecial(thing->intProperty("special"))->needsTag();
+				tag = thing->intProperty("arg0");
+				arg2 = thing->intProperty("arg1");
+				arg3 = thing->intProperty("arg2");
+				arg4 = thing->intProperty("arg3");
+				arg5 = thing->intProperty("arg4");
+			}
+
+			// Sector tag
+			if (needs_tag == AS_TT_SECTOR ||
+				needs_tag == AS_TT_SECTOR_AND_BACK && tag > 0)
+				map.getSectorsByTag(tag, tagged_sectors);
+
+			// Backside sector (for local doors)
+			else if ((needs_tag == AS_TT_SECTOR_BACK || needs_tag == AS_TT_SECTOR_AND_BACK) && back)
+				tagged_sectors.push_back(back);
+
+			// Sector tag *or* backside sector (for zdoom local doors)
+			else if (needs_tag == AS_TT_SECTOR_OR_BACK) {
+				if (tag > 0)
+					map.getSectorsByTag(tag, tagged_sectors);
+				else if (back)
+					tagged_sectors.push_back(back);
+			}
+
+			// Thing ID
+			else if (needs_tag == AS_TT_THING)
+				map.getThingsById(tag, tagged_things);
+
+			// Line ID
+			else if (needs_tag == AS_TT_LINE)
+				map.getLinesById(tag, tagged_lines);
+
+			// ZDoom quirkiness
+			else if (needs_tag) {
+				switch (needs_tag) {
+				case AS_TT_1THING_2SECTOR:
+				case AS_TT_1THING_3SECTOR:
+				case AS_TT_1SECTOR_2THING:
+					{
+						int thingtag = (needs_tag == AS_TT_1SECTOR_2THING) ? arg2 : tag;
+						int sectag = (needs_tag == AS_TT_1SECTOR_2THING) ? tag :
+							(needs_tag == AS_TT_1THING_2SECTOR) ? arg2 : arg3;
+						if ((thingtag | sectag) == 0)
+							break;
+						else if (thingtag == 0)
+							map.getSectorsByTag(sectag, tagged_sectors);
+						else if (sectag == 0)
+							map.getThingsById(thingtag, tagged_things);
+						else // neither thingtag nor sectag are 0
+							map.getThingsByIdInSectorTag(thingtag, sectag, tagged_things);
+					}	break;
+				case AS_TT_1THING_2THING_3THING:
+					map.getThingsById(arg3, tagged_things);
+				case AS_TT_1THING_2THING:
+					map.getThingsById(arg2, tagged_things);
+				case AS_TT_1THING_4THING:
+					map.getThingsById(tag, tagged_things);
+				case AS_TT_4THING:
+					if (needs_tag == AS_TT_1THING_4THING || needs_tag == AS_TT_4THING)
+						map.getThingsById(arg4, tagged_things);
+					break;
+				case AS_TT_5THING:
+					map.getThingsById(arg5, tagged_things);
+					break;
+				case AS_TT_LINE_NEGATIVE:
+					map.getLinesById(abs(tag), tagged_lines);
+					break;
+				case AS_TT_1LINEID_2LINE:
+					map.getLinesById(arg2, tagged_lines);
+					break;
+				case AS_TT_1LINE_2SECTOR:
+					map.getLinesById(tag, tagged_lines);
+					map.getSectorsByTag(arg2, tagged_sectors);
+					break;
+				case AS_TT_1SECTOR_2THING_3THING_5THING:
+					if (arg5) map.getThingsById(arg5, tagged_things);
+					map.getThingsById(arg3, tagged_things);
+				case AS_TT_1SECTOR_2SECTOR_3SECTOR_4SECTOR:
+					if (arg4) map.getSectorsByTag(arg4, tagged_sectors);
+					if (arg3) map.getSectorsByTag(arg3, tagged_sectors);
+				case AS_TT_1SECTOR_2SECTOR:
+					if (arg2) map.getSectorsByTag(arg2, tagged_sectors);
+					if (tag ) map.getSectorsByTag(tag , tagged_sectors);
+					break;
+				case AS_TT_SECTOR_2IS3_LINE:
+					if (arg2 == 3) map.getLinesById(tag, tagged_lines);
+					else map.getSectorsByTag(tag, tagged_sectors);
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
 }
 
 void MapEditor::selectionUpdated() {
@@ -685,22 +695,36 @@ void MapEditor::getSelectedVertices(vector<MapVertex*>& list) {
 }
 
 void MapEditor::getSelectedLines(vector<MapLine*>& list) {
-	if (edit_mode != MODE_LINES)
-		return;
+	if (edit_mode == MODE_LINES) {
+		// Multiple selection
+		if (selection.size() > 1) {
+			for (unsigned a = 0; a < selection.size(); a++)
+				list.push_back(map.getLine(selection[a]));
+		}
 
-	// Multiple selection
-	if (selection.size() > 1) {
-		for (unsigned a = 0; a < selection.size(); a++)
-			list.push_back(map.getLine(selection[a]));
+		// Single selection
+		else if (selection.size() == 1)
+			list.push_back(map.getLine(selection[0]));
+
+		// No selection (use hilight)
+		else if (hilight_item >= 0)
+			list.push_back(map.getLine(hilight_item));
 	}
+	else if (edit_mode == MODE_SECTORS) {
+		// Get selected sectors
+		vector<MapSector*> sectors;
+		getSelectedSectors(sectors);
 
-	// Single selection
-	else if (selection.size() == 1)
-		list.push_back(map.getLine(selection[0]));
-
-	// No selection (use hilight)
-	else if (hilight_item >= 0)
-		list.push_back(map.getLine(hilight_item));
+		// Add lines of selected sectors
+		for (unsigned a = 0; a < sectors.size(); a++) {
+			vector<MapLine*> seclines;
+			sectors[a]->getLines(seclines);
+			for (unsigned b = 0; b < seclines.size(); b++) {
+				if (std::find(list.begin(), list.end(), seclines[b]) == list.end())
+					list.push_back(seclines[b]);
+			}
+		}
+	}
 }
 
 void MapEditor::getSelectedSectors(vector<MapSector*>& list) {
@@ -951,16 +975,21 @@ void MapEditor::doMove(fpoint2_t mouse_pos) {
 }
 
 void MapEditor::endMove(bool accept) {
+	long move_time = theApp->runTimer();
+
 	// Move depending on edit mode
 	if (edit_mode == MODE_THINGS && accept) {
 		// Move things
+		undo_manager->beginRecord("Move Things");
 		for (unsigned a = 0; a < move_items.size(); a++) {
 			MapThing* t = map.getThing(move_items[a]);
 			map.moveThing(move_items[a], t->xPos() + move_vec.x, t->yPos() + move_vec.y);
 		}
+		undo_manager->endRecord(true);
 	}
 	else if (accept) {
 		// Any other edit mode we're technically moving vertices
+		undo_manager->beginRecord("Move Vertices");
 
 		// Get list of vertices being moved
 		bool* move_verts = new bool[map.nVertices()];
@@ -988,6 +1017,7 @@ void MapEditor::endMove(bool accept) {
 
 		// Move vertices
 		vector<fpoint2_t> merge_points;
+		vector<unsigned> moved_lines;
 		for (unsigned a = 0; a < map.nVertices(); a++) {
 			if (!move_verts[a])
 				continue;
@@ -1001,6 +1031,33 @@ void MapEditor::endMove(bool accept) {
 			MapVertex* v = map.mergeVerticesPoint(merge_points[a].x, merge_points[a].y);
 			if (v) map.splitLinesAt(v, 1);
 		}
+
+		// Split lines overlapping vertices
+		for (unsigned a = 0; a < map.nLines(); a++) {
+			MapLine* line = map.getLine(a);
+			if (line->modifiedTime() >= move_time) {
+				MapVertex* split = map.lineCrossVertex(line->x1(), line->y1(), line->x2(), line->y2());
+				if (split) {
+					map.splitLine(a, split->getIndex());
+					a = 0;
+				}
+			}
+		}
+
+		// Merge lines
+		for (unsigned a = 0; a < map.nLines(); a++) {
+			if (map.getLine(a)->modifiedTime() >= move_time) {
+				if (map.mergeLine(a) > 0) {
+					map.getLine(a)->clearUnneededTextures();
+					a = 0;
+				}
+			}
+		}
+
+		// Remove any resulting zero-length lines
+		map.removeZeroLengthLines();
+
+		undo_manager->endRecord(true);
 	}
 
 	// Un-filter objects
@@ -1012,14 +1069,11 @@ void MapEditor::endMove(bool accept) {
 	// Clear moving items
 	move_items.clear();
 
-	// Remove any resulting zero-length lines
-	map.removeZeroLengthLines();
-
 	// Update map item indices
 	map.refreshIndices();
 }
 
-void MapEditor::copyProperties() {
+void MapEditor::copyProperties(MapObject* object) {
 	// Do nothing if no selection or hilight
 	if (selection.size() == 0 && hilight_item < 0)
 		return;
@@ -1037,7 +1091,8 @@ void MapEditor::copyProperties() {
 			copy_sector->copy(map.getSector(hilight_item));
 
 		// Editor message
-		addEditorMessage("Copied sector properties");
+		if (!object)
+			addEditorMessage("Copied sector properties");
 	}
 
 	// Things mode
@@ -1046,16 +1101,22 @@ void MapEditor::copyProperties() {
 		if (!copy_thing)
 			copy_thing = new MapThing(NULL);
 
-		// Copy selection/hilight properties
-		if (selection.size() > 0)
-			copy_thing->copy(map.getThing(selection[0]));
-		else if (hilight_item >= 0)
-			copy_thing->copy(map.getThing(hilight_item));
-		else
-			return;
+		// Copy given object properties (if any)
+		if (object && object->getObjType() == MOBJ_THING)
+			copy_thing->copy(object);
+		else {
+			// Otherwise copy selection/hilight properties
+			if (selection.size() > 0)
+				copy_thing->copy(map.getThing(selection[0]));
+			else if (hilight_item >= 0)
+				copy_thing->copy(map.getThing(hilight_item));
+			else
+				return;
+		}
 
 		// Editor message
-		addEditorMessage("Copied thing properties");
+		if (!object)
+			addEditorMessage("Copied thing properties");
 	}
 }
 
@@ -1351,6 +1412,94 @@ void MapEditor::thingQuickAngle(fpoint2_t mouse_pos) {
 	// Go through selection
 	for (unsigned a = 0; a < selection.size(); a++)
 		map.getThing(selection[a])->setAnglePoint(mouse_pos);
+}
+
+int MapEditor::beginTagEdit() {
+	// Check lines mode
+	if (edit_mode != MODE_LINES)
+		return 0;
+
+	// Get selected lines
+	vector<MapLine*> lines;
+	getSelectedLines(lines);
+	if (lines.size() == 0)
+		return 0;
+
+	// Get current tag
+	int tag = lines[0]->intProperty("arg0");
+	if (tag == 0)
+		tag = map.findUnusedSectorTag();
+	current_tag = tag;
+
+	// Clear tagged lists
+	tagged_lines.clear();
+	tagged_sectors.clear();
+	tagged_things.clear();
+
+	// Sector tag (for now, 2 will be thing id tag)
+	for (unsigned a = 0; a < map.nSectors(); a++) {
+		MapSector* sector = map.getSector(a);
+		if (sector->intProperty("id") == current_tag)
+			tagged_sectors.push_back(sector);
+	}
+	return 1;
+}
+
+void MapEditor::tagSectorAt(double x, double y) {
+	int index = map.sectorAt(x, y);
+	if (index < 0)
+		return;
+
+	MapSector* sector = map.getSector(index);
+	for (unsigned a = 0; a < tagged_sectors.size(); a++) {
+		// Check if already tagged
+		if (tagged_sectors[a] == sector) {
+			// Un-tag
+			tagged_sectors[a] = tagged_sectors.back();
+			tagged_sectors.pop_back();
+			addEditorMessage(S_FMT("Untagged sector %d", sector->getIndex()));
+			return;
+		}
+	}
+
+	// Tag
+	tagged_sectors.push_back(sector);
+	addEditorMessage(S_FMT("Tagged sector %d", sector->getIndex()));
+}
+
+void MapEditor::endTagEdit(bool accept) {
+	// Get selected lines
+	vector<MapLine*> lines;
+	getSelectedLines(lines);
+
+	if (accept) {
+		// Clear sector tags
+		for (unsigned a = 0; a < map.nSectors(); a++) {
+			MapSector* sector = map.getSector(a);
+			if (sector->intProperty("id") == current_tag)
+				sector->setIntProperty("id", 0);
+		}
+
+		// If nothing selected, clear line tags
+		if (tagged_sectors.size() == 0)
+			current_tag = 0;
+
+		// Set line tags (in case of multiple selection)
+		for (unsigned a = 0; a < lines.size(); a++)
+			lines[a]->setIntProperty("arg0", current_tag);
+
+		// Set sector tags
+		for (unsigned a = 0; a < tagged_sectors.size(); a++)
+			tagged_sectors[a]->setIntProperty("id", current_tag);
+
+		// Editor message
+		if (tagged_sectors.size() == 0)
+			addEditorMessage("Cleared tags");
+		else
+			addEditorMessage(S_FMT("Set tag %d", current_tag));
+	}
+	else
+		addEditorMessage("Tag edit cancelled");
 }
 
 void MapEditor::createObject(double x, double y) {
@@ -1899,7 +2048,7 @@ void MapEditor::endLineDraw(bool apply) {
 
 			// Set middle texture if needed
 			if (side == line->s1() && !line->s2() && side->stringProperty("texturemiddle") == "-") {
-				wxLogMessage("midtex");
+				//wxLogMessage("midtex");
 				// Find adjacent texture (any)
 				string tex = map.getAdjacentLineTexture(line->v1());
 				if (tex == "-")
@@ -1913,10 +2062,73 @@ void MapEditor::endLineDraw(bool apply) {
 				side->setStringProperty("texturemiddle", tex);
 			}
 		}
+
+		// Remove any extra sectors
+		map.removeDetachedSectors();
 	}
 
 	// Clear draw points
 	draw_points.clear();
+}
+
+void MapEditor::copy() {
+	// Can't copy/paste vertices (no point)
+	if (edit_mode == MODE_VERTICES) {
+		//addEditorMessage("Copy/Paste not supported for vertices");
+		return;
+	}
+
+	// Clear current clipboard contents
+	theClipboard->clear();
+
+	// Copy lines
+	if (edit_mode == MODE_LINES || edit_mode == MODE_SECTORS) {
+		// Get selected lines
+		vector<MapLine*> lines;
+		getSelectedLines(lines);
+
+		// Add to clipboard
+		MapArchClipboardItem* c = new MapArchClipboardItem();
+		c->addLines(lines);
+		theClipboard->addItem(c);
+
+		// Editor message
+		addEditorMessage(S_FMT("Copied %s", CHR(c->getInfo())));
+	}
+
+	// Copy things
+	else if (edit_mode == MODE_THINGS) {
+		// Get selected things
+		vector<MapThing*> things;
+		getSelectedThings(things);
+
+		// Add to clipboard
+		MapThingsClipboardItem* c = new MapThingsClipboardItem();
+		c->addThings(things);
+		theClipboard->addItem(c);
+
+		// Editor message
+		addEditorMessage(S_FMT("Copied %s", CHR(c->getInfo())));
+	}
+}
+
+void MapEditor::paste(fpoint2_t mouse_pos) {
+	// Go through clipboard items
+	for (unsigned a = 0; a < theClipboard->nItems(); a++) {
+		// Map architecture
+		if (theClipboard->getItem(a)->getType() == CLIPBOARD_MAP_ARCH) {
+			MapArchClipboardItem* p = (MapArchClipboardItem*)theClipboard->getItem(a);
+			p->pasteToMap(&map, mouse_pos);
+			addEditorMessage(S_FMT("Pasted %s", CHR(p->getInfo())));
+		}
+
+		// Things
+		else if (theClipboard->getItem(a)->getType() == CLIPBOARD_MAP_THINGS) {
+			MapThingsClipboardItem* p = (MapThingsClipboardItem*)theClipboard->getItem(a);
+			p->pasteToMap(&map, mouse_pos);
+			addEditorMessage(S_FMT("Pasted %s", CHR(p->getInfo())));
+		}
+	}
 }
 
 bool MapEditor::wallMatches(MapSide* side, uint8_t part, string tex) {
@@ -2528,11 +2740,11 @@ void MapEditor::toggleUnpegged3d(bool lower) {
 		// Toggle flag
 		if (lower) {
 			bool unpegged = theGameConfiguration->lineBasicFlagSet("dontpegbottom", line, theMapEditor->currentMapDesc().format);
-			theGameConfiguration->setLineBasicFlag("dontpegbottom", line, !unpegged);
+			theGameConfiguration->setLineBasicFlag("dontpegbottom", line, map.currentFormat(), !unpegged);
 		}
 		else {
 			bool unpegged = theGameConfiguration->lineBasicFlagSet("dontpegtop", line, theMapEditor->currentMapDesc().format);
-			theGameConfiguration->setLineBasicFlag("dontpegtop", line, !unpegged);
+			theGameConfiguration->setLineBasicFlag("dontpegtop", line, map.currentFormat(), !unpegged);
 		}
 	}
 
@@ -2670,6 +2882,35 @@ void MapEditor::paste3d(int type) {
 	}
 }
 
+void MapEditor::changeThingZ3d(int amount) {
+	// Ignore for doom format
+	if (map.currentFormat() == MAP_DOOM)
+		return;
+
+	// Go through 3d selection
+	for (unsigned a = 0; a < selection_3d.size(); a++) {
+		// Check if thing
+		if (selection_3d[a].type == SEL_THING) {
+			MapThing* thing = map.getThing(selection_3d[a].index);
+			if (thing) {
+				// Change z height
+				double z = thing->intProperty("height");
+				z += amount;
+				thing->setIntProperty("height", z);
+			}
+		}
+	}
+}
+
+void MapEditor::deleteThing3d() {
+	// Go through 3d selection
+	for (unsigned a = 0; a < selection_3d.size(); a++) {
+		// Check if thing
+		if (selection_3d[a].type == SEL_THING)
+			map.removeThing(selection_3d[a].index);
+	}
+}
+
 string MapEditor::getEditorMessage(int index) {
 	// Check index
 	if (index < 0 || index >= (int)editor_messages.size())
@@ -2715,6 +2956,7 @@ string MapEditor::getModeString() {
 bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 	// --- General keybinds ---
 
+	bool handled = true;
 	if (edit_mode != MODE_3D) {
 		// Increment grid
 		if (key == "me2d_grid_inc")
@@ -2745,18 +2987,17 @@ bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 			else
 				addEditorMessage("Unlocked hilight");
 		}
-	}
 
-	// --- Line mode keybinds ---
-	if (key.StartsWith("me2d_line") && edit_mode == MODE_LINES) {
-		// Split line
-		if (key == "me2d_line_split")	splitLine(position.x, position.y);
+		// Copy
+		else if (key == "copy")
+			copy();
+
 		else
-			return false;
+			handled = false;
 	}
 
 	// --- Sector mode keybinds ---
-	else if (key.StartsWith("me2d_sector") && edit_mode == MODE_SECTORS) {
+	if (key.StartsWith("me2d_sector") && edit_mode == MODE_SECTORS) {
 		// Height changes
 		if		(key == "me2d_sector_floor_up8")	changeSectorHeight(8, true, false);
 		else if (key == "me2d_sector_floor_up")		changeSectorHeight(1, true, false);
@@ -2851,6 +3092,12 @@ bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 		else if	(key == "me3d_flat_height_down8")	changeSectorHeight3d(-8);
 		else if	(key == "me3d_flat_height_down")	changeSectorHeight3d(-1);
 
+		// Thing height changes
+		else if (key == "me3d_thing_up")	changeThingZ3d(1);
+		else if (key == "me3d_thing_up8")	changeThingZ3d(8);
+		else if (key == "me3d_thing_down")	changeThingZ3d(-1);
+		else if (key == "me3d_thing_down8")	changeThingZ3d(-8);
+
 		// Auto-align
 		else if (key == "me3d_wall_autoalign_x")
 			autoAlignX3d(hilight_3d);
@@ -2866,13 +3113,16 @@ bool MapEditor::handleKeyBind(string key, fpoint2_t position) {
 		// Toggle upper unpegged
 		else if (key == "me3d_wall_unpeg_upper")
 			toggleUnpegged3d(false);
+
+		// Remove thing
+		else if (key == "me3d_thing_remove")
+			deleteThing3d();
+
+		else
+			return false;
 	}
 
-	// Not handled
-	else
-		return false;
-
-	return true;
+	return handled;
 }
 
 void MapEditor::updateDisplay() {

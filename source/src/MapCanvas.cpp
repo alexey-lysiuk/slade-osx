@@ -49,6 +49,8 @@
 #include "LineTextureOverlay.h"
 #include "SectorBuilder.h"
 #include "ActionSpecialTreeView.h"
+#include "Clipboard.h"
+#include "SectorSpecialDialog.h"
 
 
 /*******************************************************************
@@ -82,6 +84,7 @@ EXTERN_CVAR(Int, vertex_size)
 EXTERN_CVAR(Bool, vertex_round)
 EXTERN_CVAR(Float, render_max_dist)
 EXTERN_CVAR(Int, render_3d_things)
+EXTERN_CVAR(Int, render_3d_things_style)
 EXTERN_CVAR(Int, render_3d_hilight)
 
 
@@ -590,6 +593,40 @@ void MapCanvas::drawLineDrawLines() {	// Best function name ever
 	glEnd();
 }
 
+void MapCanvas::drawPasteLines() {
+	// Get clipboard item
+	MapArchClipboardItem* c = NULL;
+	for (unsigned a = 0; a < theClipboard->nItems(); a++) {
+		if (theClipboard->getItem(a)->getType() == CLIPBOARD_MAP_ARCH) {
+			c = (MapArchClipboardItem*)theClipboard->getItem(a);
+			break;
+		}
+	}
+
+	if (!c)
+		return;
+
+	// Get lines
+	vector<MapLine*> lines;
+	c->getLines(lines);
+
+	// Get line draw colour
+	rgba_t col = ColourConfiguration::getColour("map_linedraw");
+	col.set_gl();
+
+	// Draw
+	fpoint2_t pos = mouse_pos_m;
+	pos.x = editor->snapToGrid(pos.x);
+	pos.y = editor->snapToGrid(pos.y);
+	glLineWidth(2.0f);
+	glBegin(GL_LINES);
+	for (unsigned a = 0; a < lines.size(); a++) {
+		glVertex2d(pos.x + lines[a]->x1(), pos.y + lines[a]->y1());
+		glVertex2d(pos.x + lines[a]->x2(), pos.y + lines[a]->y2());
+	}
+	glEnd();
+}
+
 /* MapCanvas::draw
  * Draw the 2d map
  *******************************************************************/
@@ -717,7 +754,7 @@ void MapCanvas::drawMap2d() {
 
 
 	// Draw tagged sectors/lines/things if needed
-	if (!overlayActive() && mouse_state == MSTATE_NORMAL) {
+	if (!overlayActive() && mouse_state == MSTATE_NORMAL || mouse_state == MSTATE_TAG_SECTORS || mouse_state == MSTATE_TAG_THINGS) {
 		if (editor->taggedSectors().size() > 0)
 			renderer_2d->renderTaggedFlats(editor->taggedSectors(), anim_flash_level);
 		if (editor->taggedLines().size() > 0)
@@ -772,6 +809,25 @@ void MapCanvas::drawMap2d() {
 	for (unsigned a = 0; a < animations.size(); a++) {
 		if (!animations[a]->mode3d())
 			animations[a]->draw();
+	}
+
+	// Draw paste objects if needed
+	if (mouse_state == MSTATE_PASTE) {
+
+		if (editor->editMode() == MapEditor::MODE_THINGS) {
+			// Get clipboard item
+			for (unsigned a = 0; a < theClipboard->nItems(); a++) {
+				ClipboardItem* item = theClipboard->getItem(a);
+				if (item->getType() == CLIPBOARD_MAP_THINGS) {
+					vector<MapThing*> things;
+					((MapThingsClipboardItem*)item)->getThings(things);
+					fpoint2_t pos(editor->snapToGrid(mouse_pos_m.x), editor->snapToGrid(mouse_pos_m.y));
+					renderer_2d->renderPasteThings(things, pos);
+				}
+			}
+		}
+		else
+			drawPasteLines();
 	}
 
 	// Draw moving stuff if needed
@@ -1546,8 +1602,10 @@ void MapCanvas::changeThingType() {
 
 	// Open type browser
 	ThingTypeBrowser browser(theMapEditor, type);
-	if (browser.ShowModal() == wxID_OK)
+	if (browser.ShowModal() == wxID_OK) {
 		editor->changeThingType(browser.getSelectedType());
+		editor->copyProperties(selection[0]);
+	}
 
 	// Unlock hilight if needed
 	editor->lockHilight(hl_lock);
@@ -1718,51 +1776,50 @@ void MapCanvas::onKeyBindPress(string name) {
 		}
 	}
 
+	// Screenshot
+#ifdef USE_SFML_RENDERWINDOW
+	else if (name == "map_screenshot") {
+		// Capture shot
+		sf::Image shot = capture();
+		
+		// Remove alpha
+		// sf::Image kinda sucks, shouldn't have to do it like this
+		for (unsigned x = 0; x < shot.getSize().x; x++) {
+			for (unsigned y = 0; y < shot.getSize().y; y++) {
+				sf::Color col = shot.getPixel(x, y);
+				shot.setPixel(x, y, sf::Color(col.r, col.g, col.b, 255));
+			}
+		}
+
+		// Save to file
+		wxDateTime date;
+		date.SetToCurrent();
+		string timestamp = date.FormatISOCombined('-');
+		timestamp.Replace(":", "");
+		string filename = S_FMT("sladeshot-%s.png", CHR(timestamp));
+		shot.saveToFile(CHR(appPath(filename, DIR_APP)));
+
+		// Editor message
+		editor->addEditorMessage(S_FMT("Screenshot taken (%s)", CHR(filename)));
+	}
+#endif
+
+	// Send to editor first
+	if (editor->handleKeyBind(name, mouse_pos_m))
+		return;
+
 	// Handle keybinds depending on mode
 	if (editor->editMode() == MapEditor::MODE_3D)
 		keyBinds3d(name);
-	else
+	else {
+		keyBinds2dView(name);
 		keyBinds2d(name);
+	}
 }
 
-void MapCanvas::keyBinds2d(string name) {
-	// Check if line drawing mode is active
-	if (mouse_state == MSTATE_LINE_DRAW) {
-		// Accept line draw
-		if (name == "map_edit_accept") {
-			mouse_state = MSTATE_NORMAL;
-			editor->endLineDraw();
-		}
-
-		// Cancel line draw
-		else if (name == "map_edit_cancel") {
-			mouse_state = MSTATE_NORMAL;
-			editor->endLineDraw(false);
-		}
-	}
-
-	// Vertices mode
-	if (name == "me2d_mode_vertices" && mouse_state == MSTATE_NORMAL)
-		changeEditMode(MapEditor::MODE_VERTICES);
-
-	// Lines mode
-	else if (name == "me2d_mode_lines" && mouse_state == MSTATE_NORMAL)
-		changeEditMode(MapEditor::MODE_LINES);
-
-	// Sectors mode
-	else if (name == "me2d_mode_sectors" && mouse_state == MSTATE_NORMAL)
-		changeEditMode(MapEditor::MODE_SECTORS);
-
-	// Things mode
-	else if (name == "me2d_mode_things" && mouse_state == MSTATE_NORMAL)
-		changeEditMode(MapEditor::MODE_THINGS);
-
-	// 3d mode
-	else if (name == "me2d_mode_3d" && mouse_state == MSTATE_NORMAL)
-		changeEditMode(MapEditor::MODE_3D);
-
+void MapCanvas::keyBinds2dView(string name) {
 	// Pan left
-	else if (name == "me2d_left")
+	if (name == "me2d_left")
 		pan(-128/view_scale, 0);
 
 	// Pan right
@@ -1812,142 +1869,251 @@ void MapCanvas::keyBinds2d(string name) {
 		editor->clearHilight();
 		SetCursor(wxCURSOR_SIZING);
 	}
+}
 
-	// Cycle flat type
-	else if (name == "me2d_flat_type") {
-		flat_drawtype = flat_drawtype + 1;
-		if (flat_drawtype > 2)
-			flat_drawtype = 0;
+void MapCanvas::keyBinds2d(string name) {
+	// --- Line Drawing ---
+	if (mouse_state == MSTATE_LINE_DRAW) {
+		// Accept line draw
+		if (name == "map_edit_accept") {
+			mouse_state = MSTATE_NORMAL;
+			editor->endLineDraw();
+		}
 
-		// Editor message and toolbar update
-		switch (flat_drawtype) {
-		case 0: editor->addEditorMessage("Flats: None"); theApp->toggleAction("mapw_flat_none"); break;
-		case 1: editor->addEditorMessage("Flats: Untextured"); theApp->toggleAction("mapw_flat_untextured"); break;
-		case 2: editor->addEditorMessage("Flats: Textured"); theApp->toggleAction("mapw_flat_textured"); break;
-		default: break;
-		};
-
-		theMapEditor->refreshToolBar();
+		// Cancel line draw
+		else if (name == "map_edit_cancel") {
+			mouse_state = MSTATE_NORMAL;
+			editor->endLineDraw(false);
+		}
 	}
 
-	// Move items (toggle)
-	else if (name == "me2d_move") {
-		if (mouse_state == MSTATE_NORMAL) {
-			if (editor->beginMove(mouse_pos_m)) {
-				mouse_state = MSTATE_MOVE;
-				renderer_2d->forceUpdate();
-			}
+	// --- Paste ---
+	else if (mouse_state == MSTATE_PASTE) {
+		// Accept paste
+		if (name == "map_edit_accept") {
+			mouse_state = MSTATE_NORMAL;
+			fpoint2_t pos(editor->snapToGrid(mouse_pos_m.x), editor->snapToGrid(mouse_pos_m.y));
+			editor->paste(pos);
 		}
-		else if (mouse_state == MSTATE_MOVE) {
+
+		// Cancel paste
+		else if (name == "map_edit_cancel")
+			mouse_state = MSTATE_NORMAL;
+	}
+
+	// --- Tag edit ---
+	else if (mouse_state == MSTATE_TAG_SECTORS) {
+		// Accept
+		if (name == "map_edit_accept") {
+			mouse_state = MSTATE_NORMAL;
+			editor->endTagEdit(true);
+		}
+		
+		// Cancel
+		else if (name == "map_edit_cancel") {
+			mouse_state = MSTATE_NORMAL;
+			editor->endTagEdit(false);
+		}
+	}
+	else if (mouse_state == MSTATE_TAG_THINGS) {
+		// Accept
+		if (name == "map_edit_accept") {
+			mouse_state = MSTATE_NORMAL;
+			editor->endTagEdit(true);
+		}
+		
+		// Cancel
+		else if (name == "map_edit_cancel") {
+			mouse_state = MSTATE_NORMAL;
+			editor->endTagEdit(false);
+		}
+	}
+
+	// --- Moving ---
+	else if (mouse_state == MSTATE_MOVE) {
+		// Move toggle
+		if (name == "me2d_move") {
 			editor->endMove();
 			mouse_state = MSTATE_NORMAL;
 			renderer_2d->forceUpdate();
 		}
-	}
 
-	// Split line
-	else if (name == "me2d_split_line" && mouse_state == MSTATE_NORMAL)
-		editor->splitLine(mouse_pos_m.x, mouse_pos_m.y, 16/view_scale);
-
-	// Change line texture
-	else if (name == "me2d_line_change_texture" && editor->editMode() == MapEditor::MODE_LINES && mouse_state == MSTATE_NORMAL) {
-		// Get selection
-		vector<MapLine*> selection;
-		editor->getSelectedLines(selection);
-
-		// Open line texture overlay if anything is selected
-		if (selection.size() > 0) {
-			if (overlay_current) delete overlay_current;
-			LineTextureOverlay* lto = new LineTextureOverlay();
-			lto->openLines(selection);
-			overlay_current = lto;
-		}
-	}
-
-	// Flip line
-	else if (name == "me2d_line_flip" && mouse_state == MSTATE_NORMAL)
-		editor->flipLines();
-
-	// Flip line (no sides)
-	else if (name == "me2d_line_flip_nosides" && mouse_state == MSTATE_NORMAL)
-		editor->flipLines(false);
-
-	// Begin line drawing
-	else if (name == "me2d_begin_linedraw" && mouse_state == MSTATE_NORMAL) {
-		draw_state = DSTATE_LINE;
-		mouse_state = MSTATE_LINE_DRAW;
-	}
-
-	// Begin shape drawing
-	else if (name == "me2d_begin_shapedraw" && mouse_state == MSTATE_NORMAL) {
-		draw_state = DSTATE_SHAPE_ORIGIN;
-		mouse_state = MSTATE_LINE_DRAW;
-	}
-
-	// Create object
-	else if (name == "me2d_create_object" && mouse_state == MSTATE_NORMAL) {
-		// If in lines mode, begin line drawing
-		if (editor->editMode() == MapEditor::MODE_LINES) {
-			draw_state = DSTATE_LINE;
-			mouse_state = MSTATE_LINE_DRAW;
-		}
-		else
-			editor->createObject(mouse_pos_m.x, mouse_pos_m.y);
-	}
-
-	// Delete object
-	else if (name == "me2d_delete_object" && mouse_state == MSTATE_NORMAL)
-		editor->deleteObject();
-
-	// Copy properties
-	else if (name == "me2d_copy_properties" && mouse_state == MSTATE_NORMAL)
-		editor->copyProperties();
-
-	// Paste properties
-	else if (name == "me2d_paste_properties" && mouse_state == MSTATE_NORMAL)
-		editor->pasteProperties();
-
-
-	// --- Things mode keys ---
-
-	// Change type
-	else if (name == "me2d_thing_change_type" && editor->editMode() == MapEditor::MODE_THINGS && mouse_state == MSTATE_NORMAL)
-		changeThingType();
-
-	// Quick angle
-	else if (name == "me2d_thing_quick_angle" && editor->editMode() == MapEditor::MODE_THINGS && mouse_state == MSTATE_NORMAL) {
-		if (mouse_state == MSTATE_NORMAL)
-			mouse_state = MSTATE_THING_ANGLE;
-	}
-
-	// Change sector texture
-	else if (name == "me2d_sector_change_texture" && editor->editMode() == MapEditor::MODE_SECTORS && mouse_state == MSTATE_NORMAL)
-		changeSectorTexture();
-
-
-	// --- Accept/cancel keys (for special states) ---
-
-	else if (name == "map_edit_accept") {
 		// Accept move
-		if (mouse_state == MSTATE_MOVE) {
+		else if (name == "map_edit_accept") {
 			editor->endMove();
 			mouse_state = MSTATE_NORMAL;
 			renderer_2d->forceUpdate();
 		}
-	}
 
-	else if (name == "map_edit_cancel") {
 		// Cancel move
-		if (mouse_state == MSTATE_MOVE) {
+		else if (name == "map_edit_cancel") {
 			editor->endMove(false);
 			mouse_state = MSTATE_NORMAL;
 			renderer_2d->forceUpdate();
 		}
 	}
 
-	// Not handled here, send to editor
-	else if (mouse_state == MSTATE_NORMAL)
-		editor->handleKeyBind(name, mouse_pos_m);
+	// --- Normal mouse state ---
+	else if (mouse_state == MSTATE_NORMAL) {
+
+		// --- All edit modes ---
+
+		// Vertices mode
+		if (name == "me2d_mode_vertices")
+			changeEditMode(MapEditor::MODE_VERTICES);
+
+		// Lines mode
+		else if (name == "me2d_mode_lines")
+			changeEditMode(MapEditor::MODE_LINES);
+
+		// Sectors mode
+		else if (name == "me2d_mode_sectors")
+			changeEditMode(MapEditor::MODE_SECTORS);
+
+		// Things mode
+		else if (name == "me2d_mode_things")
+			changeEditMode(MapEditor::MODE_THINGS);
+
+		// 3d mode
+		else if (name == "me2d_mode_3d")
+			changeEditMode(MapEditor::MODE_3D);
+
+		// Cycle flat type
+		else if (name == "me2d_flat_type") {
+			flat_drawtype = flat_drawtype + 1;
+			if (flat_drawtype > 2)
+				flat_drawtype = 0;
+
+			// Editor message and toolbar update
+			switch (flat_drawtype) {
+			case 0: editor->addEditorMessage("Flats: None"); theApp->toggleAction("mapw_flat_none"); break;
+			case 1: editor->addEditorMessage("Flats: Untextured"); theApp->toggleAction("mapw_flat_untextured"); break;
+			case 2: editor->addEditorMessage("Flats: Textured"); theApp->toggleAction("mapw_flat_textured"); break;
+			default: break;
+			};
+
+			theMapEditor->refreshToolBar();
+		}
+
+		// Move items (toggle)
+		else if (name == "me2d_move") {
+			if (editor->beginMove(mouse_pos_m)) {
+				mouse_state = MSTATE_MOVE;
+				renderer_2d->forceUpdate();
+			}
+		}
+
+		// Split line
+		else if (name == "me2d_split_line")
+			editor->splitLine(mouse_pos_m.x, mouse_pos_m.y, 16/view_scale);
+
+		// Begin line drawing
+		else if (name == "me2d_begin_linedraw") {
+			draw_state = DSTATE_LINE;
+			mouse_state = MSTATE_LINE_DRAW;
+		}
+
+		// Begin shape drawing
+		else if (name == "me2d_begin_shapedraw") {
+			draw_state = DSTATE_SHAPE_ORIGIN;
+			mouse_state = MSTATE_LINE_DRAW;
+		}
+
+		// Create object
+		else if (name == "me2d_create_object") {
+			// If in lines mode, begin line drawing
+			if (editor->editMode() == MapEditor::MODE_LINES) {
+				draw_state = DSTATE_LINE;
+				mouse_state = MSTATE_LINE_DRAW;
+			}
+			else
+				editor->createObject(mouse_pos_m.x, mouse_pos_m.y);
+		}
+
+		// Delete object
+		else if (name == "me2d_delete_object")
+			editor->deleteObject();
+
+		// Copy properties
+		else if (name == "me2d_copy_properties")
+			editor->copyProperties();
+
+		// Paste properties
+		else if (name == "me2d_paste_properties")
+			editor->pasteProperties();
+
+		// Paste object(s)
+		else if (name == "paste") {
+			// Check if any data is copied
+			ClipboardItem* item = NULL;
+			for (unsigned a = 0; a < theClipboard->nItems(); a++) {
+				if (theClipboard->getItem(a)->getType() == CLIPBOARD_MAP_ARCH ||
+					theClipboard->getItem(a)->getType() == CLIPBOARD_MAP_THINGS) {
+					item = theClipboard->getItem(a);
+					break;
+				}
+			}
+
+			// Begin paste if appropriate data exists
+			if (item)
+				mouse_state = MSTATE_PASTE;
+		}
+
+
+		// --- Lines edit mode ---
+		if (editor->editMode() == MapEditor::MODE_LINES) {
+			// Change line texture
+			if (name == "me2d_line_change_texture") {
+				// Get selection
+				vector<MapLine*> selection;
+				editor->getSelectedLines(selection);
+
+				// Open line texture overlay if anything is selected
+				if (selection.size() > 0) {
+					if (overlay_current) delete overlay_current;
+					LineTextureOverlay* lto = new LineTextureOverlay();
+					lto->openLines(selection);
+					overlay_current = lto;
+				}
+			}
+
+			// Flip line
+			else if (name == "me2d_line_flip")
+				editor->flipLines();
+
+			// Flip line (no sides)
+			else if (name == "me2d_line_flip_nosides")
+				editor->flipLines(false);
+
+			// Edit line tags
+			else if (name == "me2d_line_tag_edit") {
+				if (editor->beginTagEdit() > 0)
+					mouse_state = MSTATE_TAG_SECTORS;
+			}
+		}
+
+
+		// --- Things edit mode ---
+		else if (editor->editMode() == MapEditor::MODE_THINGS) {
+			// Change type
+			if (name == "me2d_thing_change_type")
+				changeThingType();
+
+			// Quick angle
+			else if (name == "me2d_thing_quick_angle") {
+				if (mouse_state == MSTATE_NORMAL)
+					mouse_state = MSTATE_THING_ANGLE;
+			}
+		}
+
+		
+		// --- Sectors edit mode ---
+		else if (editor->editMode() == MapEditor::MODE_SECTORS) {
+			// Change sector texture
+			if (name == "me2d_sector_change_texture")
+				changeSectorTexture();
+		}
+	}
 }
 
 void MapCanvas::keyBinds3d(string name) {
@@ -1988,14 +2154,32 @@ void MapCanvas::keyBinds3d(string name) {
 	else if (name == "me3d_toggle_things") {
 		// Change thing display type
 		render_3d_things = render_3d_things + 1;
-		if (render_3d_things > 1)
+		if (render_3d_things > 2)
 			render_3d_things = 0;
 
 		// Editor message
 		if (render_3d_things == 0)
 			editor->addEditorMessage("Things disabled");
+		else if (render_3d_things == 1)
+			editor->addEditorMessage("Things enabled: All");
 		else
-			editor->addEditorMessage("Things enabled: Sprites");
+			editor->addEditorMessage("Things enabled: Decorations only");
+	}
+
+	// Change thing render style
+	else if (name == "me3d_thing_style") {
+		// Change thing display style
+		render_3d_things_style = render_3d_things_style + 1;
+		if (render_3d_things_style > 2)
+			render_3d_things_style = 0;
+
+		// Editor message
+		if (render_3d_things_style == 0)
+			editor->addEditorMessage("Thing render style: Sprites only");
+		else if (render_3d_things_style == 1)
+			editor->addEditorMessage("Thing render style: Sprites + Ground boxes");
+		else
+			editor->addEditorMessage("Thing render style: Sprites + Full boxes");
 	}
 
 	// Toggle hilight
@@ -2153,6 +2337,9 @@ bool MapCanvas::handleAction(string id) {
 			panel_props->applyChanges();
 			renderer_2d->forceUpdate(fade_lines);
 			Refresh();
+
+			if (editor->editMode() == MapEditor::MODE_THINGS)
+				editor->copyProperties(list[0]);
 		}
 		return true;
 	}
@@ -2192,6 +2379,16 @@ bool MapCanvas::handleAction(string id) {
 				renderer_2d->forceUpdate();
 			}
 		}
+
+		return true;
+	}
+
+	// Tag to
+	else if (id == "mapw_line_tagedit") {
+		int type = editor->beginTagEdit();
+		if (type > 0)
+			mouse_state = MSTATE_TAG_SECTORS;
+		return true;
 	}
 
 	// --- Thing context menu ---
@@ -2202,12 +2399,38 @@ bool MapCanvas::handleAction(string id) {
 		return true;
 	}
 
+	// Create thing
+	else if (id == "mapw_thing_create") {
+		editor->createThing(mouse_downpos_m.x, mouse_downpos_m.y);
+		return true;
+	}
+
 	// --- Sector context menu ---
 
 	// Change sector texture
 	else if (id == "mapw_sector_changetexture") {
 		changeSectorTexture();
 		return true;
+	}
+
+	// Change sector special
+	else if (id == "mapw_sector_changespecial") {
+		// Get selection
+		vector<MapSector*> selection;
+		editor->getSelectedSectors(selection);
+
+		// Open sector special selection dialog
+		if (selection.size() > 0) {
+			SectorSpecialDialog dlg(this);
+			int map_format = editor->getMap().currentFormat();
+			dlg.setup(selection[0]->intProperty("special"), map_format);
+			if (dlg.ShowModal() == wxID_OK) {
+				// Set specials of selected sectors
+				int special = dlg.getSelectedSpecial(map_format);
+				for (unsigned a = 0; a < selection.size(); a++)
+					selection[a]->setIntProperty("special", special);
+			}
+		}
 	}
 
 	// Not handled here
@@ -2263,6 +2486,21 @@ void MapCanvas::onKeyDown(wxKeyEvent& e) {
 			else
 				sbuilder.traceSector(&(editor->getMap()), line, false);
 		}
+	}
+	if (e.GetKeyCode() == WXK_F5) {
+		// Get nearest line
+		int nearest = editor->getMap().nearestLine(mouse_pos_m.x, mouse_pos_m.y, 999999);
+		MapLine* line = editor->getMap().getLine(nearest);
+
+		// Get sectors
+		MapSector* sec1 = editor->getMap().getLineSideSector(line, true);
+		MapSector* sec2 = editor->getMap().getLineSideSector(line, false);
+		int i1 = -1;
+		int i2 = -1;
+		if (sec1) i1 = sec1->getIndex();
+		if (sec2) i2 = sec2->getIndex();
+
+		editor->addEditorMessage(S_FMT("Front %d Back %d", i1, i2));
 	}
 
 	if (e.GetKeyCode() == WXK_F5 && editor->editMode() == MapEditor::MODE_SECTORS) {
@@ -2352,6 +2590,19 @@ void MapCanvas::onMouseDown(wxMouseEvent& e) {
 				}
 			}
 		}
+
+		// Paste state, accept paste
+		else if (mouse_state == MSTATE_PASTE) {
+			fpoint2_t pos(editor->snapToGrid(mouse_pos_m.x), editor->snapToGrid(mouse_pos_m.y));
+			editor->paste(pos);
+			mouse_state = MSTATE_NORMAL;
+		}
+
+		// Sector tagging state
+		else if (mouse_state == MSTATE_TAG_SECTORS) {
+			editor->tagSectorAt(mouse_pos_m.x, mouse_pos_m.y);
+		}
+
 		else if (mouse_state == MSTATE_NORMAL) {
 			// Begin box selection if shift is held down, otherwise toggle selection on hilighted object
 			if (e.ShiftDown())
@@ -2447,6 +2698,11 @@ void MapCanvas::onMouseUp(wxMouseEvent& e) {
 			renderer_2d->forceUpdate();
 		}
 
+		// Paste state, cancel paste
+		else if (mouse_state == MSTATE_PASTE) {
+			mouse_state = MSTATE_NORMAL;
+		}
+
 		else if (mouse_state == MSTATE_NORMAL) {
 			// Context menu
 			wxMenu menu_context;
@@ -2454,23 +2710,34 @@ void MapCanvas::onMouseUp(wxMouseEvent& e) {
 			// Set 3d camera
 			theApp->getAction("mapw_camera_set")->addToMenu(&menu_context);
 
-			// Map object stuff
-			if ((editor->selectionSize() > 0 || editor->hilightItem() >= 0)) {
-				menu_context.AppendSeparator();
-
-				// Mode-specific
-				if (editor->editMode() == MapEditor::MODE_LINES) {
+			// Mode-specific
+			bool object_selected = (editor->selectionSize() > 0 || editor->hilightItem() >= 0);
+			if (editor->editMode() == MapEditor::MODE_LINES) {
+				if (object_selected) {
+					menu_context.AppendSeparator();
 					theApp->getAction("mapw_line_changetexture")->addToMenu(&menu_context);
 					theApp->getAction("mapw_line_changespecial")->addToMenu(&menu_context);
+					theApp->getAction("mapw_line_tagedit")->addToMenu(&menu_context);
 				}
-				else if (editor->editMode() == MapEditor::MODE_THINGS)
-					theApp->getAction("mapw_thing_changetype")->addToMenu(&menu_context);
-				else if (editor->editMode() == MapEditor::MODE_SECTORS)
-					theApp->getAction("mapw_sector_changetexture")->addToMenu(&menu_context);
-
-				// Properties
-				theApp->getAction("mapw_item_properties")->addToMenu(&menu_context);
 			}
+			else if (editor->editMode() == MapEditor::MODE_THINGS) {
+				menu_context.AppendSeparator();
+
+				if (object_selected)
+					theApp->getAction("mapw_thing_changetype")->addToMenu(&menu_context);
+
+				theApp->getAction("mapw_thing_create")->addToMenu(&menu_context);
+			}
+			else if (editor->editMode() == MapEditor::MODE_SECTORS) {
+				if (object_selected) {
+					theApp->getAction("mapw_sector_changetexture")->addToMenu(&menu_context);
+					theApp->getAction("mapw_sector_changespecial")->addToMenu(&menu_context);
+				}
+			}
+
+			// Properties
+			if (object_selected)
+				theApp->getAction("mapw_item_properties")->addToMenu(&menu_context);
 
 			PopupMenu(&menu_context);
 		}

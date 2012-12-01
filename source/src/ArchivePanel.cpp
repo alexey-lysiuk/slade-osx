@@ -1227,6 +1227,7 @@ bool ArchivePanel::gfxConvert() {
 
 	// Hide splash window
 	theSplashWindow->hide();
+	theActivePanel->callRefresh();
 
 	return true;
 }
@@ -1279,6 +1280,7 @@ bool ArchivePanel::gfxRemap() {
 		// Finish recording undo level
 		undo_manager->endRecord(true);
 	}
+	theActivePanel->callRefresh();
 
 	return true;
 }
@@ -1304,6 +1306,7 @@ bool ArchivePanel::gfxModifyOffsets() {
 		undo_manager->recordUndoStep(new EntryDataUS(selection[a]));
 		EntryOperations::modifyGfxOffsets(selection[a], mod.getAlignType(), mod.getOffset(), mod.xOffChange(), mod.yOffChange(), mod.relativeOffset());
 	}
+	theActivePanel->callRefresh();
 
 	// Finish recording undo level
 	undo_manager->endRecord(true);
@@ -1447,6 +1450,7 @@ bool ArchivePanel::palConvert() {
 		dest[i] = ((dest[i] << 2) | (dest[i] >> 4));
 	}
 	pal6bit->importMem(dest, pal6bit->getSize());
+	theActivePanel->callRefresh();
 	delete[] dest;
 	return true;
 }
@@ -1499,7 +1503,8 @@ bool ArchivePanel::dSndWavConvert() {
 		bool worked = false;
 		MemChunk wav;
 		// Convert Doom Sound -> WAV if the entry is Doom Sound format
-		if (selection[a]->getType()->getFormat() == "snd_doom")
+		if (selection[a]->getType()->getFormat() == "snd_doom" ||
+			selection[a]->getType()->getFormat() == "snd_doom_mac")
 			worked = Conversions::doomSndToWav(selection[a]->getMCData(), wav);
 		// Or Jaguar Doom sound format
 		else if (selection[a]->getType()->getFormat() == "snd_jaguar")
@@ -2210,6 +2215,7 @@ void ArchivePanel::onEntryListRightClick(wxListEvent& e) {
 		if (!dsnd_selected) {
 			if (selection[a]->getType()->getFormat() == "snd_doom" ||
 				selection[a]->getType()->getFormat() == "snd_wolf" ||
+				selection[a]->getType()->getFormat() == "snd_doom_mac" ||
 				selection[a]->getType()->getFormat() == "snd_jaguar" ||
 				selection[a]->getType()->getFormat() == "snd_bloodsfx" ||
 				selection[a]->getType()->getFormat() == "snd_voc")
@@ -2499,6 +2505,9 @@ void ArchivePanel::onEntryListActivated(wxListEvent& e) {
 			if (!dlg.configMatchesMap(info))
 				wxMessageBox("Selected Game Configuration does not match the map format", "Error", wxICON_ERROR);
 			else {
+				// Load game configuration
+				theGameConfiguration->openConfig(dlg.selectedGame(), dlg.selectedPort());
+
 				// Attempt to open map
 				if (theMapEditor->openMap(info))
 					theMapEditor->Show();
@@ -2697,3 +2706,97 @@ CONSOLE_COMMAND(palconv, 0) {
 		meep->reloadCurrentPanel();
 	}
 }
+
+CONSOLE_COMMAND(palconv64, 0) {
+	ArchivePanel * meep = CH::getCurrentArchivePanel();
+	if (meep)
+	{
+		// Get the entry index of the last selected list item
+		ArchiveEntry* pal = meep->currentEntry();
+		const uint8_t * source = pal->getData(true);
+		uint8_t * dest = new uint8_t[(pal->getSize() / 2) * 3];
+		for (size_t i = 0; i < pal->getSize() / 2; ++i)
+		{
+			uint8_t r, g, b;
+			uint16_t col = READ_B16(source, 2*i);
+			r = (col & 0xF800) >> 8;
+			g = (col & 0x07C0) >> 3;
+			b = (col & 0x003E) << 2;
+			dest[(3*i)+0] = r;
+			dest[(3*i)+1] = g;
+			dest[(3*i)+2] = b;
+		}
+		pal->importMem(dest, (pal->getSize()/2)*3);
+		theActivePanel->callRefresh();
+		delete[] dest;
+	}
+}
+
+CONSOLE_COMMAND(palconvpsx, 0) {
+	ArchivePanel * meep = CH::getCurrentArchivePanel();
+	if (meep)
+	{
+		// Get the entry index of the last selected list item
+		ArchiveEntry* pal = meep->currentEntry();
+		const uint8_t * source = pal->getData(true);
+		uint8_t * dest = new uint8_t[(pal->getSize() / 2) * 3];
+		for (size_t i = 0; i < pal->getSize() / 2; ++i)
+		{
+			// A1 B5 G5 R5, LE
+			uint8_t a, r, g, b;
+			uint16_t col = READ_L16(source, 2*i);
+			a = (col & 0x8000) >> 15;
+			b = (col & 0x7C00) >> 10;
+			g = (col & 0x03E0) >>  5;
+			r = (col & 0x001F);
+			r = (r << 3) | (r >> 2);
+			g = (g << 3) | (g >> 2);
+			b = (b << 3) | (b >> 2);
+			dest[(3*i)+0] = r;
+			dest[(3*i)+1] = g;
+			dest[(3*i)+2] = b;
+		}
+		pal->importMem(dest, (pal->getSize()/2)*3);
+		theActivePanel->callRefresh();
+		delete[] dest;
+	}
+}
+
+CONSOLE_COMMAND(vertex32x, 0) {
+	ArchivePanel * meep = CH::getCurrentArchivePanel();
+	if (meep)
+	{
+		// Get the entry index of the last selected list item
+		ArchiveEntry* v32x = meep->currentEntry();
+		const uint8_t * source = v32x->getData(true);
+		uint8_t * dest = new uint8_t[v32x->getSize() / 2];
+		for (size_t i = 0; i < v32x->getSize() / 4; ++i)
+		{
+			dest[2*i+0] = source[4*i+1];
+			dest[2*i+1] = source[4*i+0];
+		}
+		v32x->importMem(dest, v32x->getSize()/2);
+		theActivePanel->callRefresh();
+		delete[] dest;
+	}
+}
+
+CONSOLE_COMMAND(vertexpsx, 0) {
+	ArchivePanel * meep = CH::getCurrentArchivePanel();
+	if (meep)
+	{
+		// Get the entry index of the last selected list item
+		ArchiveEntry* vpsx = meep->currentEntry();
+		const uint8_t * source = vpsx->getData(true);
+		uint8_t * dest = new uint8_t[vpsx->getSize() / 2];
+		for (size_t i = 0; i < vpsx->getSize() / 4; ++i)
+		{
+			dest[2*i+0] = source[4*i+2];
+			dest[2*i+1] = source[4*i+3];
+		}
+		vpsx->importMem(dest, vpsx->getSize()/2);
+		theActivePanel->callRefresh();
+		delete[] dest;
+	}
+}
+

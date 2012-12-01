@@ -168,7 +168,9 @@ public:
 	void	getTaggingLinesById(int id, int type, vector<MapLine*>& list);
 
 	// Info
-	string	getAdjacentLineTexture(MapVertex* vertex, int tex_part = 255);
+	string		getAdjacentLineTexture(MapVertex* vertex, int tex_part = 255);
+	MapSector*	getLineSideSector(MapLine* line, bool front = true);
+	int			findUnusedSectorTag();
 
 	// Creation
 	MapVertex*	createVertex(double x, double y, double split_dist = -1);
@@ -186,6 +188,8 @@ public:
 	void		moveThing(unsigned thing, double nx, double ny);
 	void		splitLinesAt(MapVertex* vertex, double split_dist = 0);
 	bool		setLineSector(unsigned line, unsigned sector, bool front = true);
+	void		splitLinesByLine(MapLine* split_line);
+	int			mergeLine(unsigned line);
 
 	// Checks
 	void	mapOpenChecks();
@@ -193,6 +197,10 @@ public:
 	int		removeDetachedSides();
 	int		removeDetachedSectors();
 	int		removeZeroLengthLines();
+
+	// Convert
+	bool	convertToHexen();
+	bool	convertToUDMF();
 };
 
 #endif //__SLADEMAP_H__

@@ -9,18 +9,18 @@ TODO List ---------------------------------------------------------------
 
 --- Bugs ---
 - Gfx doesn't update after being converted
-- No handling for when a line is moved to overlap another
 - Map editor should use PLAYPAL from resource chain on 'existing/global'
-- 3d mode textures need to update with MapTextureManager, somehow
 
 
 --- Map Editor ---
 - Checks:
+	- When error is found, zoom/scroll to the error in question and bring up fullscreen overlay
+		asking whether to fix or not (and possibly fix options)
 	- Missing textures
 	- Specials with 0 tag that require a tag
 	- Invalid sector references (maybe not, shouldn't really happen)
-- Non-power-of-two textures (where simply expanding the texture canvas to 128x128 won't work)
-	- Will probably have to implement some kind of resize for this (perhaps FreeImage can do it nicely?)
+	- Intersecting lines
+	- Overlapping lines
 - 3d mode
 	- Auto-align Y
 	- Thing z height editing
@@ -28,19 +28,19 @@ TODO List ---------------------------------------------------------------
 	- Flat offset/scale editing (udmf+zdoom)
 	- Better vis checking
 	- (Z)MAPINFO parsing for sky texture
-	- Thing boxes (might not bother with full boxes unless I add game-accurate 'height' property to thing configurations)
-	- Preferences dialog page
 - Editing:
 	- Proper UDMF/Hexen/Doom64 Map saving (BEHAVIOR, SCRIPTS, DIALOGUE, LIGHTS, MACROS, etc.)
 	- Generalised sector and line specials
 	- Rotate/scale objects ('edit' mode similar to db2 would be nice, perhaps not a mode though)
-	- Light increments should probably be defined in game configs (8 for zdoom, 16 for others)
-	- Copy+paste sectors/lines
+	- Proper split/merge checks on paste lines
+	- Sector specials selection dialog for property list
+	- Find new tag (/ use last tag)
 - Script editor
 - Better UDMF property handling, proper support for unknown properties read with the map
 - (Possibly) better line/thing flag handling
 - 'Tag edit' mode
 - Optimise Polygon2D splitting somehow, it creates many unneeded splits
+- Undo/Redo for map editor stuff
 
 
 --- Minor Problems/Annoyances ---
@@ -86,8 +86,6 @@ TODO List ---------------------------------------------------------------
 	- opened archives are either used as resources or not
 	- when searching for patches etc, resource archives are searched, then base resource archive
 	- archive list on archive manager panel could have 'resource' checkboxes for each list item
-- Undo/Redo system
-	- Should be general enough to be used by the map editor also
 - Different icon sets
 - Better backup system
 - More drag-and-drop support
@@ -126,7 +124,7 @@ To keep track of resource editor changes (in case I decide to release a 3.0.3 af
 - In the gfx conversion dialog, the transparent colour can now be set by left-clicking on the current preview image
 - Multiple entry name filters can now be entered (separated by commas) eg: "MAP01, MAP02"
 - Implemented basic 'remove unused textures' and 'remove unused patches' actions
-- Added mp3 and module playback
+- Added mp3 and tracker module playback
 - Changed the browser to use a proper font for item names
 - Browser background changed to the checkered texture used in most other gfx views (optional)
 - Added 'zoom' slider to the browser window
@@ -181,8 +179,6 @@ Conversion dialog:
 
 --- General ---
 - Support for LZMA, Bzip2 and zip formats other than store and deflate
-- Mass research & replace of map elements (thing numbers, texture or flat names) across a map or all the maps of an archive
-	- Mostly done, still needs UDMF implementation and a solid UI for selecting maps to change, what to replace, and with what.
 
 
 

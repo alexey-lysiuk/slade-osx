@@ -141,6 +141,7 @@
     <ClCompile Include="src\Compression.cpp" />
     <ClCompile Include="src\Conversions.cpp" />
     <ClCompile Include="src\DatArchive.cpp" />
+    <ClCompile Include="src\DiskArchive.cpp" />
     <ClCompile Include="src\DockPanel.cpp" />
     <ClCompile Include="src\Drawing.cpp" />
     <ClCompile Include="src\EditingPrefsPanel.cpp" />
@@ -279,6 +280,7 @@
     <ClCompile Include="src\ScriptEditorPanel.cpp" />
     <ClCompile Include="src\SectorBuilder.cpp" />
     <ClCompile Include="src\SectorInfoOverlay.cpp" />
+    <ClCompile Include="src\SectorSpecialDialog.cpp" />
     <ClCompile Include="src\SectorTextureOverlay.cpp" />
     <ClCompile Include="src\SFileDialog.cpp" />
     <ClCompile Include="src\sfMod\sfMod.cpp" />
@@ -304,6 +306,7 @@
     <ClCompile Include="src\TranslationEditorDialog.cpp" />
     <ClCompile Include="src\Tree.cpp" />
     <ClCompile Include="src\UDMFProperty.cpp" />
+    <ClCompile Include="src\UndoManagerHistoryPanel.cpp" />
     <ClCompile Include="src\UndoRedo.cpp" />
     <ClCompile Include="src\VertexInfoOverlay.cpp" />
     <ClCompile Include="src\VirtualListView.cpp" />
@@ -411,6 +414,7 @@
     <ClInclude Include="src\ConsoleHelpers.h" />
     <ClInclude Include="src\Conversions.h" />
     <ClInclude Include="src\DatArchive.h" />
+    <ClInclude Include="src\DiskArchive.h" />
     <ClInclude Include="src\DockPanel.h" />
     <ClInclude Include="src\Drawing.h" />
     <ClInclude Include="src\EditingPrefsPanel.h" />
@@ -545,6 +549,7 @@
     <ClInclude Include="src\ScriptEditorPanel.h" />
     <ClInclude Include="src\SectorBuilder.h" />
     <ClInclude Include="src\SectorInfoOverlay.h" />
+    <ClInclude Include="src\SectorSpecialDialog.h" />
     <ClInclude Include="src\SectorTextureOverlay.h" />
     <ClInclude Include="src\SFileDialog.h" />
     <ClInclude Include="src\sfMod\modplug.h" />
@@ -578,6 +583,7 @@
     <ClInclude Include="src\TranslationEditorDialog.h" />
     <ClInclude Include="src\Tree.h" />
     <ClInclude Include="src\UDMFProperty.h" />
+    <ClInclude Include="src\UndoManagerHistoryPanel.h" />
     <ClInclude Include="src\UndoRedo.h" />
     <ClInclude Include="src\VertexInfoOverlay.h" />
     <ClInclude Include="src\VirtualListView.h" />

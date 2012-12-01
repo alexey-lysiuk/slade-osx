@@ -168,6 +168,9 @@
 		8A56932A154EE51E000DF3CE /* libmodplug_slade.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A5692CD154EE4AC000DF3CE /* libmodplug_slade.a */; };
 		8A569354154EE835000DF3CE /* InputPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A569352154EE835000DF3CE /* InputPrefsPanel.cpp */; };
 		8A6320CC1568E9770058EB1D /* InfoOverlay3d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A6320CA1568E9770058EB1D /* InfoOverlay3d.cpp */; };
+		8A64A074166A604200C762DA /* DiskArchive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A64A06E166A604200C762DA /* DiskArchive.cpp */; };
+		8A64A075166A604200C762DA /* SectorSpecialDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A64A070166A604200C762DA /* SectorSpecialDialog.cpp */; };
+		8A64A076166A604200C762DA /* UndoManagerHistoryPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A64A072166A604200C762DA /* UndoManagerHistoryPanel.cpp */; };
 		8A92003815A86BFB00F58CED /* CIEDeltaEquations.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003215A86BFB00F58CED /* CIEDeltaEquations.cpp */; };
 		8A92003915A86BFB00F58CED /* ColorimetryPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003415A86BFB00F58CED /* ColorimetryPrefsPanel.cpp */; };
 		8A92003A15A86BFB00F58CED /* ScriptEditorPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003615A86BFB00F58CED /* ScriptEditorPanel.cpp */; };
@@ -527,6 +530,12 @@
 		8A569353154EE835000DF3CE /* InputPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InputPrefsPanel.h; path = src/InputPrefsPanel.h; sourceTree = "<group>"; };
 		8A6320CA1568E9770058EB1D /* InfoOverlay3d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InfoOverlay3d.cpp; path = src/InfoOverlay3d.cpp; sourceTree = "<group>"; };
 		8A6320CB1568E9770058EB1D /* InfoOverlay3d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InfoOverlay3d.h; path = src/InfoOverlay3d.h; sourceTree = "<group>"; };
+		8A64A06E166A604200C762DA /* DiskArchive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DiskArchive.cpp; path = src/DiskArchive.cpp; sourceTree = "<group>"; };
+		8A64A06F166A604200C762DA /* DiskArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DiskArchive.h; path = src/DiskArchive.h; sourceTree = "<group>"; };
+		8A64A070166A604200C762DA /* SectorSpecialDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SectorSpecialDialog.cpp; path = src/SectorSpecialDialog.cpp; sourceTree = "<group>"; };
+		8A64A071166A604200C762DA /* SectorSpecialDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectorSpecialDialog.h; path = src/SectorSpecialDialog.h; sourceTree = "<group>"; };
+		8A64A072166A604200C762DA /* UndoManagerHistoryPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UndoManagerHistoryPanel.cpp; path = src/UndoManagerHistoryPanel.cpp; sourceTree = "<group>"; };
+		8A64A073166A604200C762DA /* UndoManagerHistoryPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UndoManagerHistoryPanel.h; path = src/UndoManagerHistoryPanel.h; sourceTree = "<group>"; };
 		8A92003215A86BFB00F58CED /* CIEDeltaEquations.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CIEDeltaEquations.cpp; path = src/CIEDeltaEquations.cpp; sourceTree = "<group>"; };
 		8A92003315A86BFB00F58CED /* CIEDeltaEquations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CIEDeltaEquations.h; path = src/CIEDeltaEquations.h; sourceTree = "<group>"; };
 		8A92003415A86BFB00F58CED /* ColorimetryPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ColorimetryPrefsPanel.cpp; path = src/ColorimetryPrefsPanel.cpp; sourceTree = "<group>"; };
@@ -1182,6 +1191,8 @@
 				8AD18DBA154A8A9A00AB9C07 /* DatArchive.h */,
 				8AD18DBB154A8A9A00AB9C07 /* DefaultEntryPanel.cpp */,
 				8AD18DBC154A8A9A00AB9C07 /* DefaultEntryPanel.h */,
+				8A64A06E166A604200C762DA /* DiskArchive.cpp */,
+				8A64A06F166A604200C762DA /* DiskArchive.h */,
 				8AD18DBD154A8A9A00AB9C07 /* DockPanel.cpp */,
 				8AD18DBE154A8A9A00AB9C07 /* DockPanel.h */,
 				8AD18DBF154A8A9A00AB9C07 /* Drawing.cpp */,
@@ -1376,6 +1387,8 @@
 				8AD18EC1154A8A9B00AB9C07 /* SectorBuilder.h */,
 				8AD18EC2154A8A9B00AB9C07 /* SectorInfoOverlay.cpp */,
 				8AD18EC3154A8A9B00AB9C07 /* SectorInfoOverlay.h */,
+				8A64A070166A604200C762DA /* SectorSpecialDialog.cpp */,
+				8A64A071166A604200C762DA /* SectorSpecialDialog.h */,
 				8AD18EC4154A8A9B00AB9C07 /* SectorTextureOverlay.cpp */,
 				8AD18EC5154A8A9B00AB9C07 /* SectorTextureOverlay.h */,
 				8AD18EC6154A8A9B00AB9C07 /* SFileDialog.cpp */,
@@ -1452,6 +1465,8 @@
 				8AD18F11154A8A9B00AB9C07 /* Tree.h */,
 				8AD18F12154A8A9B00AB9C07 /* UDMFProperty.cpp */,
 				8AD18F13154A8A9B00AB9C07 /* UDMFProperty.h */,
+				8A64A072166A604200C762DA /* UndoManagerHistoryPanel.cpp */,
+				8A64A073166A604200C762DA /* UndoManagerHistoryPanel.h */,
 				8AE987A31606064500118140 /* UndoRedo.cpp */,
 				8AE987A41606064500118140 /* UndoRedo.h */,
 				8AD18F14154A8A9B00AB9C07 /* VertexInfoOverlay.cpp */,
@@ -2131,6 +2146,7 @@
 				8AD18F86154A8A9B00AB9C07 /* CVar.cpp in Sources */,
 				8AD18F87154A8A9B00AB9C07 /* DatArchive.cpp in Sources */,
 				8AD18F88154A8A9B00AB9C07 /* DefaultEntryPanel.cpp in Sources */,
+				8A64A074166A604200C762DA /* DiskArchive.cpp in Sources */,
 				8AD18F89154A8A9B00AB9C07 /* DockPanel.cpp in Sources */,
 				8AD18F8A154A8A9B00AB9C07 /* Drawing.cpp in Sources */,
 				8AD18F8B154A8A9B00AB9C07 /* EditingPrefsPanel.cpp in Sources */,
@@ -2225,6 +2241,7 @@
 				8A92003A15A86BFB00F58CED /* ScriptEditorPanel.cpp in Sources */,
 				8AD1900A154A8A9B00AB9C07 /* SectorBuilder.cpp in Sources */,
 				8AD1900B154A8A9B00AB9C07 /* SectorInfoOverlay.cpp in Sources */,
+				8A64A075166A604200C762DA /* SectorSpecialDialog.cpp in Sources */,
 				8AD1900C154A8A9B00AB9C07 /* SectorTextureOverlay.cpp in Sources */,
 				8AD1900D154A8A9B00AB9C07 /* SFileDialog.cpp in Sources */,
 				8AD1900E154A8A9B00AB9C07 /* sfMod.cpp in Sources */,
@@ -2260,6 +2277,7 @@
 				8AD1902C154A8A9B00AB9C07 /* TranslationEditorDialog.cpp in Sources */,
 				8AD1902D154A8A9B00AB9C07 /* Tree.cpp in Sources */,
 				8AD1902E154A8A9B00AB9C07 /* UDMFProperty.cpp in Sources */,
+				8A64A076166A604200C762DA /* UndoManagerHistoryPanel.cpp in Sources */,
 				8AE987A51606064500118140 /* UndoRedo.cpp in Sources */,
 				8AD1902F154A8A9B00AB9C07 /* VertexInfoOverlay.cpp in Sources */,
 				8AD19030154A8A9B00AB9C07 /* VirtualListView.cpp in Sources */,

@@ -133,8 +133,13 @@ ArchiveManagerPanel::ArchiveManagerPanel(wxWindow *parent, wxAuiNotebook* nb_arc
 	refreshRecentFileList();
 
 	// Create/setup file browser tab
-	file_browser = new WMFileBrowser(notebook_tabs, this, -1);
-	notebook_tabs->AddPage(file_browser, _("File Browser"));
+	// I'm commenting this out for the moment because it suddenly started making
+	// SLADE freeze for me before initialization could complete. It might explain
+	// some of the weird bug reports I've seen, with the application starting then 
+	// seemingly disappearing silently (though still running if you look at the 
+	// task manager). Since it calls wx components, it'll be hard to investigate.
+	//file_browser = new WMFileBrowser(notebook_tabs, this, -1);
+	//notebook_tabs->AddPage(file_browser, _("File Browser"));
 
 	// Create/setup bookmarks tab
 	wxPanel *panel_bm = new wxPanel(notebook_tabs);
@@ -527,10 +532,10 @@ void ArchiveManagerPanel::openTab(Archive* archive) {
 		else if (archive->getType() == ARCHIVE_ZIP)
 			icon = "e_zip";
 
+		wp->SetName("archive");
 		notebook_archives->AddPage(wp, archive->getFilename(false), false);
 		notebook_archives->SetSelection(notebook_archives->GetPageCount() - 1);
 		notebook_archives->SetPageBitmap(notebook_archives->GetPageCount() - 1, getIcon(icon));
-		wp->SetName("archive");
 		wp->addMenus();
 		wp->Show(true);
 		wp->SetFocus();
@@ -1202,7 +1207,7 @@ void ArchiveManagerPanel::openSelection() {
 		theArchiveManager->openArchive(selected_archives[a]);
 }
 
-/* ArchiveManagerPanel::openSelection
+/* ArchiveManagerPanel::removeSelection
  * Remove the currently selected archive(s) from the recent file list
  *******************************************************************/
 void ArchiveManagerPanel::removeSelection() {

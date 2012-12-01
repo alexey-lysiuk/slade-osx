@@ -3,10 +3,11 @@
 #define __MAP_RENDERER_3D_H__
 
 #include "MapEditor.h"
+#include "ListenerAnnouncer.h"
 
 class GLTexture;
 class Polygon2D;
-class MapRenderer3D {
+class MapRenderer3D : public Listener {
 public:
 	// Structs
 	enum {
@@ -27,6 +28,7 @@ public:
 
 		// Thing flags
 		ICON	= 4,
+		DRAWN	= 8,
 	};
 	struct gl_vertex_t {
 		float x, y, z;
@@ -58,6 +60,7 @@ public:
 		ThingType*	type;
 		MapSector*	sector;
 		float		z;
+		float		height;
 		GLTexture*	sprite;
 		long		updated_time;
 
@@ -158,6 +161,9 @@ public:
 	// Hilight
 	selection_3d_t	determineHilight();
 	void			renderHilight(selection_3d_t hilight, float alpha = 1.0f);
+
+	// Listener stuff
+	void	onAnnouncement(Announcer* announcer, string event_name, MemChunk& event_data);
 
 private:
 	SLADEMap*	map;

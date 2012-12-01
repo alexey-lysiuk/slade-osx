@@ -40,13 +40,6 @@
 
 SLADEMap::SLADEMap() {
 	// Init variables
-	/*
-	this->i_lines = false;
-	this->i_sides = false;
-	this->i_sectors = false;
-	this->i_vertices = false;
-	this->i_things = false;
-	*/
 	this->geometry_updated = 0;
 	this->position_frac = false;
 }
@@ -2034,8 +2027,8 @@ bool SLADEMap::removeSide(unsigned index) {
 		l->side2 = NULL;
 
 	// Set appropriate line flags
-	theGameConfiguration->setLineBasicFlag("blocking", l, true);
-	theGameConfiguration->setLineBasicFlag("twosided", l, false);
+	theGameConfiguration->setLineBasicFlag("blocking", l, current_format, true);
+	theGameConfiguration->setLineBasicFlag("twosided", l, current_format, false);
 
 	// Remove the side
 	delete sides[index];
@@ -2606,6 +2599,55 @@ string SLADEMap::getAdjacentLineTexture(MapVertex* vertex, int tex_part) {
 	return tex;
 }
 
+MapSector* SLADEMap::getLineSideSector(MapLine* line, bool front) {
+	// Get mid and direction points
+	fpoint2_t mid = line->midPoint();
+	fpoint2_t dir = line->frontVector();
+	if (front)
+		dir = mid - dir;
+	else
+		dir = mid + dir;
+
+	// Find closest line intersecting front/back vector
+	double dist;
+	double min_dist = 99999999;
+	int index = -1;
+	for (unsigned a = 0; a < lines.size(); a++) {
+		if (lines[a] == line)
+			continue;
+
+		dist = MathStuff::distanceRayLine(mid, dir, lines[a]->x1(), lines[a]->y1(), lines[a]->x2(), lines[a]->y2());
+		if (dist < min_dist && dist > 0) {
+			min_dist = dist;
+			index = a;
+		}
+	}
+
+	// If any intersection found, check what side of the intersected line this is on
+	// and return the appropriate sector
+	if (index >= 0) {
+		MapLine* l = lines[index];
+		if (MathStuff::lineSide(mid.x, mid.y, l->x1(), l->y1(), l->x2(), l->y2()) >= 0)
+			return l->frontSector();
+		else
+			return l->backSector();
+	}
+
+	return NULL;
+}
+
+int SLADEMap::findUnusedSectorTag() {
+	int tag = 1;
+	for (unsigned a = 0; a < sectors.size(); a++) {
+		if (sectors[a]->intProperty("id") == tag) {
+			tag++;
+			a = 0;
+		}
+	}
+
+	return tag;
+}
+
 MapVertex* SLADEMap::createVertex(double x, double y, double split_dist) {
 	// Round position to integral if fractional positions are disabled
 	if (!position_frac) {
@@ -2757,12 +2799,16 @@ void SLADEMap::moveVertex(unsigned vertex, double nx, double ny) {
 	MapVertex* v = vertices[vertex];
 	v->x = nx;
 	v->y = ny;
+	long time = theApp->runTimer();
+	v->modified_time = time;
 
 	// Reset all attached lines' geometry info
-	for (unsigned a = 0; a < v->connected_lines.size(); a++)
+	for (unsigned a = 0; a < v->connected_lines.size(); a++) {
 		v->connected_lines[a]->resetInternals();
+		v->connected_lines[a]->modified_time = time;
+	}
 
-	geometry_updated = theApp->runTimer();
+	geometry_updated = time;
 }
 
 void SLADEMap::mergeVertices(unsigned vertex1, unsigned vertex2) {
@@ -2884,6 +2930,7 @@ void SLADEMap::splitLine(unsigned line, unsigned vertex) {
 	MapLine* nl = new MapLine(v, v2, s1, s2, this);
 	nl->copy(l);
 	nl->index = lines.size();
+	nl->modified_time = theApp->runTimer();
 	lines.push_back(nl);
 
 	// Update x-offsets
@@ -2948,8 +2995,8 @@ bool SLADEMap::setLineSector(unsigned line, unsigned sector, bool front) {
 
 		// Set appropriate line flags
 		bool twosided = (lines[line]->side1 && lines[line]->side2);
-		theGameConfiguration->setLineBasicFlag("blocking", lines[line], !twosided);
-		theGameConfiguration->setLineBasicFlag("twosided", lines[line], twosided);
+		theGameConfiguration->setLineBasicFlag("blocking", lines[line], current_format, !twosided);
+		theGameConfiguration->setLineBasicFlag("twosided", lines[line], current_format, twosided);
 
 		return true;
 	}
@@ -2959,6 +3006,74 @@ bool SLADEMap::setLineSector(unsigned line, unsigned sector, bool front) {
 
 		return false;
 	}
+}
+
+void SLADEMap::splitLinesByLine(MapLine* split_line) {
+	double ix, iy;
+	double x1 = split_line->x1();
+	double y1 = split_line->y1();
+	double x2 = split_line->x2();
+	double y2 = split_line->y2();
+
+	for (unsigned a = 0; a < lines.size(); a++) {
+		if (lines[a] == split_line)
+			continue;
+
+		if (MathStuff::linesIntersect(x1, y1, x2, y2, lines[a]->x1(), lines[a]->y1(), lines[a]->x2(), lines[a]->y2(), ix, iy)) {
+			MapVertex* v = createVertex(ix, iy, 0.9);
+			//splitLine(a, v->getIndex());
+		}
+	}
+}
+
+int SLADEMap::mergeLine(unsigned line) {
+	// Check index
+	if (line >= lines.size())
+		return 0;
+
+	MapLine* ml = lines[line];
+	MapVertex* v1 = lines[line]->vertex1;
+	MapVertex* v2 = lines[line]->vertex2;
+
+	// Go through lines connected to first vertex
+	int merged = 0;
+	for (unsigned a = 0; a < v1->connected_lines.size(); a++) {
+		MapLine* l = v1->connected_lines[a];
+		if (l == ml)
+			continue;
+
+		// Check overlap
+		if ((l->vertex1 == v1 && l->vertex2 == v2) ||
+			(l->vertex2 == v1 && l->vertex1 == v2)) {
+			// Remove line
+			removeLine(l);
+			a--;
+			merged++;
+		}
+	}
+
+	// Correct sector references
+	if (merged > 0) {
+		// Front side
+		MapSector* s1 = getLineSideSector(ml, true);
+		if (s1)
+			setLineSector(ml->getIndex(), s1->getIndex(), true);
+		else if (ml->s1())
+			removeSide(ml->s1());
+
+		// Back side
+		MapSector* s2 = getLineSideSector(ml, false);
+		if (s2)
+			setLineSector(ml->getIndex(), s2->getIndex(), false);
+		else if (ml->s2())
+			removeSide(ml->s2());
+
+		// Flip if needed
+		if (!ml->s1() && ml->s2())
+			ml->flip();
+	}
+
+	return merged;
 }
 
 void SLADEMap::mapOpenChecks() {
@@ -3025,4 +3140,51 @@ int SLADEMap::removeZeroLengthLines() {
 	}
 
 	return count;
+}
+
+bool SLADEMap::convertToHexen() {
+	// Already hexen format
+	if (current_format == MAP_HEXEN)
+		return true;
+	return false;
+}
+
+bool SLADEMap::convertToUDMF() {
+	// Already UDMF format
+	if (current_format == MAP_UDMF)
+		return true;
+
+	if (current_format == MAP_HEXEN) {
+		// Line_SetIdentification special, set line id
+		for (unsigned a = 0; a < lines.size(); a++) {
+			if (lines[a]->intProperty("special") == 121) {
+				int id = lines[a]->intProperty("arg0");
+
+				// id high byte
+				int hi = lines[a]->intProperty("arg4");
+				id = (hi*256) + id;
+
+				// flags
+				int flags = lines[a]->intProperty("arg1");
+				if (flags & 1) lines[a]->setBoolProperty("zoneboundary", true);
+				if (flags & 2) lines[a]->setBoolProperty("jumpover", true);
+				if (flags & 4) lines[a]->setBoolProperty("blockfloaters", true);
+				if (flags & 8) lines[a]->setBoolProperty("clipmidtex", true);
+				if (flags & 16) lines[a]->setBoolProperty("wrapmidtex", true);
+				if (flags & 32) lines[a]->setBoolProperty("midtex3d", true);
+				if (flags & 64) lines[a]->setBoolProperty("checkswitchrange", true);
+
+				lines[a]->setIntProperty("special", 0);
+				lines[a]->setIntProperty("id", id);
+				lines[a]->setIntProperty("arg0", 0);
+			}
+		}
+	}
+	else return false;
+
+	// flags
+
+	// Set format
+	current_format = MAP_UDMF;
+	return true;
 }
