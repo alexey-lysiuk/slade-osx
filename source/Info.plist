@@ -26,5 +26,123 @@
 	<true/>
 	<key>CFBundleVersion</key>
 	<string>3.1.0</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Blood RFF File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>rff</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Build GRP File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>grp</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>CD/HD File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>cd</string>
+				<string>hd</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Dark Forces File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>gob</string>
+				<string>ldf</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Data File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>dat</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Decent HOG File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>hog</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Doom WAD File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>wad</string>
+				<string>rts</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Library File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>lib</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Nerve Software Disk File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>disk</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Quake PAK File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>pak</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Resource File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>resource</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Wolfenstein 3D File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>wl1</string>
+				<string>wl3</string>
+				<string>wl6</string>
+				<string>sd1</string>
+				<string>sd2</string>
+				<string>sd3</string>
+				<string>sod</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>ZIP File</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>jdf</string>
+				<string>pk3</string>
+				<string>zip</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
