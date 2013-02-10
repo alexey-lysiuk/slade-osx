@@ -140,6 +140,7 @@
 			<array>
 				<string>jdf</string>
 				<string>pk3</string>
+				<string>pke</string>
 				<string>zip</string>
 			</array>
 		</dict>
