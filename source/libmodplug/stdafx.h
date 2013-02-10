@@ -79,6 +79,7 @@ typedef uint8_t BYTE;
 typedef uint8_t* LPBYTE;
 typedef bool BOOL;
 typedef char* LPSTR;
+typedef char* LPWSTR;
 typedef void* LPVOID;
 typedef uint16_t* LPWORD;
 typedef const char* LPCSTR;
