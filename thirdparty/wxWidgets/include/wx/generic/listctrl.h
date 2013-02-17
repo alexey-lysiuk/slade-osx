@@ -3,7 +3,7 @@
 // Purpose:     Generic list control
 // Author:      Robert Roebling
 // Created:     01/02/97
-// RCS-ID:      $Id: listctrl.h 71039 2012-03-29 00:10:53Z VZ $
+// RCS-ID:      $Id: listctrl.h 73239 2012-12-22 02:33:23Z VZ $
 // Copyright:   (c) 1998 Robert Roebling and Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -144,6 +144,8 @@ public:
     void RefreshItem(long item);
     void RefreshItems(long itemFrom, long itemTo);
 
+    virtual void EnableBellOnNoMatch(bool on = true);
+
 #if WXWIN_COMPATIBILITY_2_6
     // obsolete, don't use
     wxDEPRECATED( int GetItemSpacing( bool isSmall ) const );
@@ -226,9 +228,6 @@ protected:
 
     // return the icon for the given item and column.
     virtual int OnGetItemColumnImage(long item, long column) const;
-
-    // return the attribute for the item (may return NULL if none)
-    virtual wxListItemAttr *OnGetItemAttr(long item) const;
 
     // it calls our OnGetXXX() functions
     friend class WXDLLIMPEXP_FWD_CORE wxListMainWindow;

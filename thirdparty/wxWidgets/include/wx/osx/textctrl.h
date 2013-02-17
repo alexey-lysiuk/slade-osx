@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: textctrl.h 70355 2012-01-15 15:54:53Z SC $
+// RCS-ID:      $Id: textctrl.h 72993 2012-11-20 12:49:03Z VZ $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////

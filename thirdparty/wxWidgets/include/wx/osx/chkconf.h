@@ -4,7 +4,7 @@
  * Author:      Vadim Zeitlin
  * Modified by:
  * Created:     2005-04-05 (extracted from wx/chkconf.h)
- * RCS-ID:      $Id: chkconf.h 71102 2012-04-05 18:40:11Z VZ $
+ * RCS-ID:      $Id: chkconf.h 71513 2012-05-20 20:29:22Z VZ $
  * Copyright:   (c) 2005 Vadim Zeitlin <vadim@wxwidgets.org>
  * Licence:     wxWindows licence
  */
@@ -13,13 +13,6 @@
 
 #ifndef _WX_OSX_CHKCONF_H_
 #define _WX_OSX_CHKCONF_H_
-
-
-#if wxUSE_STACKWALKER
-    /* not supported under Mac */
-#   undef wxUSE_STACKWALKER
-#   define wxUSE_STACKWALKER 0
-#endif /* wxUSE_STACKWALKER */
 
 /*
  * check graphics context option, must be on for every os x platform

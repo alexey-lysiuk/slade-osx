@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: wxprec.h 71102 2012-04-05 18:40:11Z VZ $
+// RCS-ID:      $Id: wxprec.h 73290 2012-12-28 16:03:03Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -40,11 +40,13 @@
 #include "wx/chartype.h"
 
 // include standard Windows headers
-#if defined(__WXMSW__)
+#if defined(__WINDOWS__)
     #include "wx/msw/wrapwin.h"
+    #include "wx/msw/private.h"
+#endif
+#if defined(__WXMSW__)
     #include "wx/msw/wrapcctl.h"
     #include "wx/msw/wrapcdlg.h"
-    #include "wx/msw/private.h"
     #include "wx/msw/missing.h"
 #endif
 

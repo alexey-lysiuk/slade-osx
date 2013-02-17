@@ -16,10 +16,10 @@
 #endif /* __cplusplus */
 
 /* fill in with the string wxGetOsDescription() will return */
-#define WXWIN_OS_DESCRIPTION "Darwin 11.3.0 x86_64"
+#define WXWIN_OS_DESCRIPTION "Darwin 12.2.1 x86_64"
 
 /* the installation location prefix from configure */
-#define wxINSTALL_PREFIX "/usr/local"
+#define wxINSTALL_PREFIX "/Volumes/Storage/Work/wxWidgets/_inst"
 
 /* Define to `int' if <sys/types.h> doesn't define.  */
 /* #undef gid_t */
@@ -68,6 +68,9 @@
 
 /* Define this if your version of GTK+ is greater than 2.18 */
 /* #undef __WXGTK218__ */
+
+/* Define this if your version of GTK+ is >= 3.0 */
+/* #undef __WXGTK3__ */
 
 /* Define this if you want to use GPE features */
 /* #undef __WXGPE__ */
@@ -203,6 +206,7 @@
 
 #define wxUSE_PRINTF_POS_PARAMS 1
 
+#define wxUSE_COMPILER_TLS 1
 
 
 #define wxUSE_STL 0
@@ -253,7 +257,7 @@
 
 #define wxUSE_STOPWATCH 1
 
-#define wxUSE_FSWATCHER 1
+#define wxUSE_FSWATCHER     0
 
 #define wxUSE_CONFIG 1
 
@@ -630,7 +634,7 @@
 #define wxUSE_SELECT_DISPATCHER 1
 #define wxUSE_EPOLL_DISPATCHER 0
 
-#define wxUSE_UNICODE_UTF8 1
+#define wxUSE_UNICODE_UTF8 0
 #define wxUSE_UTF8_LOCALE_ONLY 0
 
 /*
@@ -820,6 +824,14 @@
  */
 #define wxUSE_LIBHILDON2 0
 /*
+ * Use libnotify library.
+ */
+#define wxUSE_LIBNOTIFY 0
+/*
+ * Use libnotify 0.7+ API.
+ */
+#define wxUSE_LIBNOTIFY_0_7 0
+/*
  * Use libXpm
  */
 #define wxHAVE_LIB_XPM 0
@@ -996,25 +1008,25 @@
 #define HAVE_USLEEP 1
 
 /* Define if you have wcscasecmp() function  */
-/* #undef HAVE_WCSCASECMP */
+#define HAVE_WCSCASECMP 1
 
 /* Define if you have wcsncasecmp() function  */
-/* #undef HAVE_WCSNCASECMP */
+#define HAVE_WCSNCASECMP 1
 
 /* Define if you have wcslen function  */
 #define HAVE_WCSLEN 1
 
 /* Define if you have wcsdup function  */
-/* #undef HAVE_WCSDUP */
+#define HAVE_WCSDUP 1
 
 /* Define if you have wcsftime() function  */
 #define HAVE_WCSFTIME 1
 
 /* Define if you have strnlen() function */
-/* #undef HAVE_STRNLEN */
+#define HAVE_STRNLEN 1
 
 /* Define if you have wcsnlen() function */
-/* #undef HAVE_WCSNLEN */
+#define HAVE_WCSNLEN 1
 
 /* Define if you have wcstoull() and wcstoll() */
 /* #undef HAVE_WCSTOULL */
@@ -1026,10 +1038,10 @@
 #define SIZEOF_INT 4
 
 /* The number of bytes in a pointer.  */
-#define SIZEOF_VOID_P 8
+#define SIZEOF_VOID_P 4
 
 /* The number of bytes in a long.  */
-#define SIZEOF_LONG 8
+#define SIZEOF_LONG 4
 
 /* The number of bytes in a long long.  */
 #define SIZEOF_LONG_LONG 8
@@ -1038,7 +1050,7 @@
 #define SIZEOF_SHORT 2
 
 /* The number of bytes in a size_t.  */
-#define SIZEOF_SIZE_T 8
+#define SIZEOF_SIZE_T 4
 
 /* Define if size_t on your machine is the same type as unsigned int. */
 /* #undef wxSIZE_T_IS_UINT */
@@ -1128,7 +1140,7 @@
 #define HAVE_UNSETENV 1
 
 /* Define if you have the <X11/XKBlib.h> header file.  */
-#define HAVE_X11_XKBLIB_H 1
+/* #undef HAVE_X11_XKBLIB_H */
 
 /* Define if you have the <X11/extensions/xf86vmode.h> header file.  */
 /* #undef HAVE_X11_EXTENSIONS_XF86VMODE_H */
@@ -1214,6 +1226,9 @@
 /* Define if you have the <sys/select.h> header file.  */
 #define HAVE_SYS_SELECT_H 1
 
+/* Define if you have abi::__forced_unwind in your <cxxabi.h>. */
+/* #undef HAVE_ABI_FORCEDUNWIND */
+
 /* Define if fdopen is available.  */
 #define HAVE_FDOPEN 1
 
@@ -1226,6 +1241,9 @@
 /* Define if getgrgid_r is available. */
 #define HAVE_GETGRGID_R 1
 
+/* Define if setpriority() is available. */
+#define HAVE_SETPRIORITY 1
+
 /* Define if locale_t is available */
 #define HAVE_LOCALE_T 1
 
@@ -1233,7 +1251,7 @@
 /* #undef wxHAS_INOTIFY */
 
 /* Define if you have kqueu_xxx() functions. */
-#define wxHAS_KQUEUE 1
+/* #undef wxHAS_KQUEUE */
 
 /* -------------------------------------------------------------------------
    Win32 adjustments section

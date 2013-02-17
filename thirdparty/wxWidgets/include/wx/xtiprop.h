@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by: Francesco Montorsi
 // Created:     27/07/03
-// RCS-ID:      $Id: xtiprop.h 70398 2012-01-19 09:50:46Z SC $
+// RCS-ID:      $Id: xtiprop.h 71625 2012-06-01 11:01:24Z VZ $
 // Copyright:   (c) 1997 Julian Smart
 //              (c) 2003 Stefan Csomor
 // Licence:     wxWindows licence
@@ -536,13 +536,13 @@ class WXDLLIMPEXP_FWD_BASE wxStringToAnyHashMap : public wxStringToAnyHashMapBas
         &_accessor##pname, flags, help, group  );
 
 #define wxEVENT_PROPERTY( name, eventType, eventClass )                               \
-    static wxEventSourceTypeInfo _typeInfo##name( eventType, CLASSINFO( eventClass ) );  \
+    static wxEventSourceTypeInfo _typeInfo##name( eventType, wxCLASSINFO( eventClass ) );  \
     static wxPropertyInfo _propertyInfo##name( first,class_t::GetClassInfoStatic(),   \
         wxT(#name), &_typeInfo##name, NULL, wxAny() );
 
 #define wxEVENT_RANGE_PROPERTY( name, eventType, lastEventType, eventClass )          \
     static wxEventSourceTypeInfo _typeInfo##name( eventType, lastEventType,              \
-                                               CLASSINFO( eventClass ) );             \
+                                               wxCLASSINFO( eventClass ) );             \
     static wxPropertyInfo _propertyInfo##name( first, class_t::GetClassInfoStatic(),  \
         wxT(#name), &_typeInfo##name, NULL, wxAny() );
 

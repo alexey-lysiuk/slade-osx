@@ -3,7 +3,7 @@
 // Purpose:     generic wxSearchCtrl class
 // Author:      Vince Harron
 // Created:     2006-02-19
-// RCS-ID:      $Id: srchctlg.h 68911 2011-08-27 12:13:23Z VZ $
+// RCS-ID:      $Id: srchctlg.h 72581 2012-09-30 20:35:10Z VZ $
 // Copyright:   Vince Harron
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -219,7 +219,7 @@ protected:
     virtual wxBitmap RenderSearchBitmap( int x, int y, bool renderDrop );
     virtual wxBitmap RenderCancelBitmap( int x, int y );
 
-    virtual void OnSearchButton( wxCommandEvent& event );
+    void OnCancelButton( wxCommandEvent& event );
 
     void OnSetFocus( wxFocusEvent& event );
     void OnSize( wxSizeEvent& event );

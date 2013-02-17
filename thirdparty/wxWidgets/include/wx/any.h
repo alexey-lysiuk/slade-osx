@@ -4,7 +4,7 @@
 // Author:      Jaakko Salli
 // Modified by:
 // Created:     07/05/2009
-// RCS-ID:      $Id: any.h 66621 2011-01-07 17:22:59Z SC $
+// RCS-ID:      $Id: any.h 73280 2012-12-28 00:44:01Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -912,6 +912,8 @@ public:
     WXANY_IMPLEMENT_INT_EQ_OP(wxLongLong_t, wxULongLong_t)
 #endif
 
+    wxGCC_WARNING_SUPPRESS(float-equal)
+
     bool operator==(float value) const
     {
         if ( !wxAnyValueTypeImpl<float>::IsSameClass(m_type) )
@@ -931,6 +933,8 @@ public:
             static_cast<double>
                 (wxAnyValueTypeImpl<double>::GetValue(m_buffer));
     }
+
+    wxGCC_WARNING_RESTORE(float-equal)
 
     bool operator==(bool value) const
     {

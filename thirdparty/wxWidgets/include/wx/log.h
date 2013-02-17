@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     29/01/98
-// RCS-ID:      $Id: log.h 70796 2012-03-04 00:29:31Z VZ $
+// RCS-ID:      $Id: log.h 72421 2012-09-01 22:38:40Z VZ $
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -1437,7 +1437,7 @@ WXDLLIMPEXP_BASE const wxChar* wxSysErrorMsg(unsigned long nErrCode = 0);
         else                                                                  \
             wxMAKE_LOGGER(Status).MaybeStore(wxLOG_KEY_FRAME).Log
 
-    #define wxVLogStatus(format, argptr) \
+    #define wxVLogStatus \
         wxMAKE_LOGGER(Status).MaybeStore(wxLOG_KEY_FRAME).LogV
 #endif // wxUSE_GUI
 

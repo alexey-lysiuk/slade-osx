@@ -4,7 +4,7 @@
 // Author:      Jaakko Salli
 // Modified by:
 // Created:     Apr-30-2006
-// RCS-ID:      $Id: odcombo.h 68460 2011-07-30 11:30:08Z VZ $
+// RCS-ID:      $Id: odcombo.h 72955 2012-11-14 13:48:23Z VZ $
 // Copyright:   (c) Jaakko Salli
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -354,6 +354,10 @@ protected:
 
     // Callback for item width, or -1 for default/undetermined
     virtual wxCoord OnMeasureItemWidth( size_t item ) const;
+
+    // override base implementation so we can return the size for the
+    // largest item
+    virtual wxSize DoGetBestSize() const;
 
     // Callback for background drawing. Flags are same as with
     // OnDrawItem.

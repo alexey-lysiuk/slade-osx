@@ -4,7 +4,7 @@
 // Author:      Evgeniy Tarassov, Vadim Zeitlin
 // Modified by:
 // Created:     2005-09-15
-// RCS-ID:      $Id: treebook.h 68810 2011-08-21 14:08:49Z VZ $
+// RCS-ID:      $Id: treebook.h 71435 2012-05-15 10:03:57Z VZ $
 // Copyright:   (c) 2005 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,6 +17,7 @@
 #if wxUSE_TREEBOOK
 
 #include "wx/bookctrl.h"
+#include "wx/containr.h"
 #include "wx/treectrl.h"        // for wxArrayTreeItemIds
 
 typedef wxWindow wxTreebookPage;
@@ -27,7 +28,7 @@ class WXDLLIMPEXP_FWD_CORE wxTreeEvent;
 // wxTreebook
 // ----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxTreebook : public wxBookCtrlBase
+class WXDLLIMPEXP_CORE wxTreebook : public wxNavigationEnabled<wxBookCtrlBase>
 {
 public:
     // Constructors and such
@@ -229,7 +230,7 @@ private:
 // ----------------------------------------------------------------------------
 
 // wxTreebookEvent is obsolete and defined for compatibility only
-typedef wxBookCtrlEvent wxTreebookEvent;
+#define wxTreebookEvent wxBookCtrlEvent
 typedef wxBookCtrlEventFunction wxTreebookEventFunction;
 #define wxTreebookEventHandler(func) wxBookCtrlEventHandler(func)
 

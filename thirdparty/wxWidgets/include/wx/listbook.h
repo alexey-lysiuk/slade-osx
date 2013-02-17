@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     19.08.03
-// RCS-ID:      $Id: listbook.h 68810 2011-08-21 14:08:49Z VZ $
+// RCS-ID:      $Id: listbook.h 72340 2012-08-15 11:34:46Z VZ $
 // Copyright:   (c) 2003 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,6 +17,7 @@
 #if wxUSE_LISTBOOK
 
 #include "wx/bookctrl.h"
+#include "wx/containr.h"
 
 class WXDLLIMPEXP_FWD_CORE wxListView;
 class WXDLLIMPEXP_FWD_CORE wxListEvent;
@@ -36,7 +37,7 @@ wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_COMMAND_LISTBOOK_PAGE_CHANGING
 // wxListbook
 // ----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxListbook : public wxBookCtrlBase
+class WXDLLIMPEXP_CORE wxListbook : public wxNavigationEnabled<wxBookCtrlBase>
 {
 public:
     wxListbook() { }
@@ -87,9 +88,8 @@ protected:
     wxBookCtrlEvent* CreatePageChangingEvent() const;
     void MakeChangedEvent(wxBookCtrlEvent &event);
 
-    // get flags for different list control modes
-    long GetListCtrlIconViewFlags() const;
-    long GetListCtrlReportViewFlags() const;
+    // Get the correct wxListCtrl flags to use depending on our own flags.
+    long GetListCtrlFlags() const;
 
     // event handlers
     void OnListSelected(wxListEvent& event);

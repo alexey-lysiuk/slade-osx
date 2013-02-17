@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor (adapted from Robert Roebling's gtk port)
 // Modified by:
 // Created:     10/21/99
-// RCS-ID:      $Id: dataobj.h 67254 2011-03-20 00:14:35Z DS $
+// RCS-ID:      $Id: dataobj.h 71915 2012-07-01 15:46:26Z SC $
 // Copyright:   (c) 1998, 1999 Vadim Zeitlin, Robert Roebling
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,6 +31,10 @@ public:
     // returns true if any of the accepted formats of this dataobj is in the pasteboard
     bool HasDataInPasteboard( void * pasteboardRef );
     bool GetFromPasteboard( void * pasteboardRef );
+    
+#if wxOSX_USE_COCOA
+    virtual void AddSupportedTypes( void* cfarray);
+#endif
 };
 
 #endif // _WX_MAC_DATAOBJ_H_

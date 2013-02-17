@@ -3,7 +3,7 @@
 // Purpose:     wxHeaderCtrlBase class: interface of wxHeaderCtrl
 // Author:      Vadim Zeitlin
 // Created:     2008-12-01
-// RCS-ID:      $Id: headerctrl.h 70940 2012-03-19 12:53:21Z VZ $
+// RCS-ID:      $Id: headerctrl.h 71896 2012-06-30 20:59:46Z RD $
 // Copyright:   (c) 2008 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -210,6 +210,10 @@ protected:
     // indices after the number of columns changed
     void DoResizeColumnIndices(wxArrayInt& colIndices, unsigned int count);
 
+protected:
+    // this window doesn't look nice with the border so don't use it by default
+    virtual wxBorder GetDefaultBorder() const { return wxBORDER_NONE; }
+
 private:
     // methods implementing our public API and defined in platform-specific
     // implementations
@@ -222,8 +226,6 @@ private:
     virtual void DoSetColumnsOrder(const wxArrayInt& order) = 0;
     virtual wxArrayInt DoGetColumnsOrder() const = 0;
 
-    // this window doesn't look nice with the border so don't use it by default
-    virtual wxBorder GetDefaultBorder() const { return wxBORDER_NONE; }
 
     // event handlers
     void OnSeparatorDClick(wxHeaderCtrlEvent& event);

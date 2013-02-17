@@ -4,7 +4,7 @@
 // Author:      Peter Cawley
 // Modified by:
 // Created:     2009-07-01
-// RCS-ID:      $Id: buttonbar.h 70181 2011-12-29 22:05:39Z VZ $
+// RCS-ID:      $Id: buttonbar.h 72950 2012-11-14 00:16:16Z VZ $
 // Copyright:   (C) Peter Cawley
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -81,8 +81,7 @@ public:
                 const wxBitmap& bitmap_disabled = wxNullBitmap,
                 const wxBitmap& bitmap_small_disabled = wxNullBitmap,
                 wxRibbonButtonKind kind = wxRIBBON_BUTTON_NORMAL,
-                const wxString& help_string = wxEmptyString,
-                wxObject* client_data = NULL);
+                const wxString& help_string = wxEmptyString);
 
     virtual wxRibbonButtonBarButtonBase* InsertButton(
                 size_t pos,
@@ -122,10 +121,18 @@ public:
                 const wxBitmap& bitmap_disabled = wxNullBitmap,
                 const wxBitmap& bitmap_small_disabled = wxNullBitmap,
                 wxRibbonButtonKind kind = wxRIBBON_BUTTON_NORMAL,
-                const wxString& help_string = wxEmptyString,
-                wxObject* client_data = NULL);
+                const wxString& help_string = wxEmptyString);
+
+    void SetItemClientObject(wxRibbonButtonBarButtonBase* item, wxClientData* data);
+    wxClientData* GetItemClientObject(const wxRibbonButtonBarButtonBase* item) const;
+    void SetItemClientData(wxRibbonButtonBarButtonBase* item, void* data);
+    void* GetItemClientData(const wxRibbonButtonBarButtonBase* item) const;
 
     virtual size_t GetButtonCount() const;
+    virtual wxRibbonButtonBarButtonBase *GetItem(size_t n) const;
+    virtual wxRibbonButtonBarButtonBase *GetItemById(int id) const;
+    virtual int GetItemId(wxRibbonButtonBarButtonBase *button) const;
+
 
     virtual bool Realize();
     virtual void ClearButtons();
@@ -133,10 +140,17 @@ public:
     virtual void EnableButton(int button_id, bool enable = true);
     virtual void ToggleButton(int button_id, bool checked);
 
+    virtual wxRibbonButtonBarButtonBase *GetActiveItem() const;
+    virtual wxRibbonButtonBarButtonBase *GetHoveredItem() const;
+
     virtual void SetArtProvider(wxRibbonArtProvider* art);
     virtual bool IsSizingContinuous() const;
 
     virtual wxSize GetMinSize() const;
+
+    void SetShowToolTipsForDisabled(bool show);
+    bool GetShowToolTipsForDisabled() const;
+
 protected:
     friend class wxRibbonButtonBarEvent;
     virtual wxSize DoGetBestSize() const;
@@ -176,6 +190,7 @@ protected:
     int m_current_layout;
     bool m_layouts_valid;
     bool m_lock_active_state;
+    bool m_show_tooltips_for_disabled;
 
 #ifndef SWIG
     DECLARE_CLASS(wxRibbonButtonBar)
@@ -188,25 +203,30 @@ class WXDLLIMPEXP_RIBBON wxRibbonButtonBarEvent : public wxCommandEvent
 public:
     wxRibbonButtonBarEvent(wxEventType command_type = wxEVT_NULL,
                        int win_id = 0,
-                       wxRibbonButtonBar* bar = NULL)
+                       wxRibbonButtonBar* bar = NULL,
+                       wxRibbonButtonBarButtonBase* button = NULL)
         : wxCommandEvent(command_type, win_id)
-        , m_bar(bar)
+        , m_bar(bar), m_button(button)
     {
     }
 #ifndef SWIG
     wxRibbonButtonBarEvent(const wxRibbonButtonBarEvent& e) : wxCommandEvent(e)
     {
         m_bar = e.m_bar;
+        m_button = e.m_button;
     }
 #endif
     wxEvent *Clone() const { return new wxRibbonButtonBarEvent(*this); }
 
     wxRibbonButtonBar* GetBar() {return m_bar;}
+    wxRibbonButtonBarButtonBase *GetButton() { return m_button; }
     void SetBar(wxRibbonButtonBar* bar) {m_bar = bar;}
+    void SetButton(wxRibbonButtonBarButtonBase* button) { m_button = button; }
     bool PopupMenu(wxMenu* menu);
 
 protected:
     wxRibbonButtonBar* m_bar;
+    wxRibbonButtonBarButtonBase *m_button;
 
 #ifndef SWIG
 private:

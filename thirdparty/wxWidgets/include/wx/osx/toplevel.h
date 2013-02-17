@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     20.09.01
-// RCS-ID:      $Id: toplevel.h 70295 2012-01-08 14:52:47Z VZ $
+// RCS-ID:      $Id: toplevel.h 72323 2012-08-11 13:16:56Z SC $
 // Copyright:   (c) 2001 Stefan Csomor
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,6 +74,9 @@ public:
     virtual void SetTitle( const wxString& title);
     virtual wxString GetTitle() const;
 
+    virtual void SetLabel(const wxString& label) { SetTitle( label ); }
+    virtual wxString GetLabel() const            { return GetTitle(); }
+    
     virtual void OSXSetModified(bool modified);
     virtual bool OSXIsModified() const;
 

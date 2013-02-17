@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     19.08.03
-// RCS-ID:      $Id: bookctrl.h 69082 2011-09-14 08:24:06Z SJL $
+// RCS-ID:      $Id: bookctrl.h 72406 2012-08-30 20:21:29Z VZ $
 // Copyright:   (c) 2003 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,7 +95,7 @@ public:
     virtual size_t GetPageCount() const { return m_pages.size(); }
 
     // get the panel which represents the given page
-    wxWindow *GetPage(size_t n) const { return m_pages[n]; }
+    virtual wxWindow *GetPage(size_t n) const { return m_pages[n]; }
 
     // get the current page or NULL if none
     wxWindow *GetCurrentPage() const
@@ -275,6 +275,11 @@ protected:
     // event, usually by just calling SetEventType() on it
     virtual void MakeChangedEvent(wxBookCtrlEvent& WXUNUSED(event))
         { wxFAIL_MSG(wxT("Override this function!")); }
+
+
+    // The derived class also may override the following method, also called
+    // from DoSetSelection(), to show/hide pages differently.
+    virtual void DoShowPage(wxWindow* page, bool show) { page->Show(show); }
 
 
     // Should we accept NULL page pointers in Add/InsertPage()?

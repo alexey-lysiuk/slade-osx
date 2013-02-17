@@ -4,7 +4,7 @@
 // Author:      Peter Cawley
 // Modified by:
 // Created:     2009-05-23
-// RCS-ID:      $Id: bar.h 69559 2011-10-27 21:10:30Z VZ $
+// RCS-ID:      $Id: bar.h 72495 2012-09-15 23:19:59Z VZ $
 // Copyright:   (C) Peter Cawley
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,15 +28,26 @@ enum wxRibbonBarOption
     wxRIBBON_BAR_SHOW_PANEL_EXT_BUTTONS = 1 << 3,
     wxRIBBON_BAR_SHOW_PANEL_MINIMISE_BUTTONS = 1 << 4,
     wxRIBBON_BAR_ALWAYS_SHOW_TABS = 1 << 5,
+    wxRIBBON_BAR_SHOW_TOGGLE_BUTTON = 1 << 6,
+    wxRIBBON_BAR_SHOW_HELP_BUTTON = 1 << 7,
 
     wxRIBBON_BAR_DEFAULT_STYLE =  wxRIBBON_BAR_FLOW_HORIZONTAL
                                 | wxRIBBON_BAR_SHOW_PAGE_LABELS
-                                | wxRIBBON_BAR_SHOW_PANEL_EXT_BUTTONS,
+                                | wxRIBBON_BAR_SHOW_PANEL_EXT_BUTTONS
+                                | wxRIBBON_BAR_SHOW_TOGGLE_BUTTON
+                                | wxRIBBON_BAR_SHOW_HELP_BUTTON,
 
     wxRIBBON_BAR_FOLDBAR_STYLE =  wxRIBBON_BAR_FLOW_VERTICAL
                                 | wxRIBBON_BAR_SHOW_PAGE_ICONS
                                 | wxRIBBON_BAR_SHOW_PANEL_EXT_BUTTONS
                                 | wxRIBBON_BAR_SHOW_PANEL_MINIMISE_BUTTONS
+};
+
+enum wxRibbonDisplayMode
+{
+    wxRIBBON_BAR_PINNED,
+    wxRIBBON_BAR_MINIMIZED,
+    wxRIBBON_BAR_EXPANDED
 };
 
 class WXDLLIMPEXP_RIBBON wxRibbonBarEvent : public wxNotifyEvent
@@ -80,6 +91,8 @@ public:
     int minimum_width;
     bool active;
     bool hovered;
+    bool highlight;
+    bool shown;
 };
 
 #ifndef SWIG
@@ -113,7 +126,20 @@ public:
     bool SetActivePage(wxRibbonPage* page);
     int GetActivePage() const;
     wxRibbonPage* GetPage(int n);
+    size_t GetPageCount() const;
     bool DismissExpandedPanel();
+    int GetPageNumber(wxRibbonPage* page) const;
+
+    void DeletePage(size_t n);
+    void ClearPages();
+
+    bool IsPageShown(size_t page) const;
+    void ShowPage(size_t page, bool show = true);
+    void HidePage(size_t page) { ShowPage(page, false); }
+
+    bool IsPageHighlighted(size_t page) const;
+    void AddPageHighlight(size_t page, bool highlight = true);
+    void RemovePageHighlight(size_t page) { AddPageHighlight(page, false); }
 
     void ShowPanels(bool show = true);
     void HidePanels() { ShowPanels(false); }
@@ -125,12 +151,19 @@ public:
     long GetWindowStyleFlag() const;
     virtual bool Realize();
 
+    // Implementation only.
+    bool IsToggleButtonHovered() const { return m_toggle_button_hovered; }
+    bool IsHelpButtonHovered() const { return m_help_button_hovered; }
+
+    void HideIfExpanded();
+
 protected:
     friend class wxRibbonPage;
 
     virtual wxSize DoGetBestSize() const;
     wxBorder GetDefaultBorder() const { return wxBORDER_NONE; }
     wxRibbonPageTabInfo* HitTestTabs(wxPoint position, int* index = NULL);
+    void HitTestRibbonButton(const wxRect& rect, const wxPoint& position, bool &hover_flag);
 
     void CommonInit(long style);
     void AddPage(wxRibbonPage *page);
@@ -154,10 +187,13 @@ protected:
     void OnMouseLeave(wxMouseEvent& evt);
     void OnMouseDoubleClick(wxMouseEvent& evt);
     void DoMouseButtonCommon(wxMouseEvent& evt, wxEventType tab_event_type);
+    void OnKillFocus(wxFocusEvent& evt);
 
     wxRibbonPageTabInfoArray m_pages;
     wxRect m_tab_scroll_left_button_rect;
     wxRect m_tab_scroll_right_button_rect;
+    wxRect m_toggle_button_rect;
+    wxRect m_help_button_rect;
     long m_flags;
     int m_tabs_total_width_ideal;
     int m_tabs_total_width_minimum;
@@ -171,6 +207,11 @@ protected:
     int m_tab_scroll_right_button_state;
     bool m_tab_scroll_buttons_shown;
     bool m_arePanelsShown;
+    bool m_bar_hovered;
+    bool m_toggle_button_hovered;
+    bool m_help_button_hovered;
+
+    wxRibbonDisplayMode m_ribbon_state;
 
 #ifndef SWIG
     DECLARE_CLASS(wxRibbonBar)
@@ -187,6 +228,8 @@ wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_RIBBON, wxEVT_COMMAND_RIBBONBAR_TAB_MIDDLE_
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_RIBBON, wxEVT_COMMAND_RIBBONBAR_TAB_RIGHT_DOWN, wxRibbonBarEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_RIBBON, wxEVT_COMMAND_RIBBONBAR_TAB_RIGHT_UP, wxRibbonBarEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_RIBBON, wxEVT_COMMAND_RIBBONBAR_TAB_LEFT_DCLICK, wxRibbonBarEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_RIBBON, wxEVT_COMMAND_RIBBONBAR_TOGGLED, wxRibbonBarEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_RIBBON, wxEVT_COMMAND_RIBBONBAR_HELP_CLICKED, wxRibbonBarEvent);
 
 typedef void (wxEvtHandler::*wxRibbonBarEventFunction)(wxRibbonBarEvent&);
 
@@ -207,6 +250,10 @@ typedef void (wxEvtHandler::*wxRibbonBarEventFunction)(wxRibbonBarEvent&);
     wx__DECLARE_EVT1(wxEVT_COMMAND_RIBBONBAR_TAB_RIGHT_UP, winid, wxRibbonBarEventHandler(fn))
 #define EVT_RIBBONBAR_TAB_LEFT_DCLICK(winid, fn) \
     wx__DECLARE_EVT1(wxEVT_COMMAND_RIBBONBAR_TAB_LEFT_DCLICK, winid, wxRibbonBarEventHandler(fn))
+#define EVT_RIBBONBAR_TOGGLED(winid, fn) \
+    wx__DECLARE_EVT1(wxEVT_COMMAND_RIBBONBAR_TOGGLED, winid, wxRibbonBarEventHandler(fn))
+#define EVT_RIBBONBAR_HELP_CLICK(winid, fn) \
+    wx__DECLARE_EVT1(wxEVT_COMMAND_RIBBONBAR_HELP_CLICKED, winid, wxRibbonBarEventHandler(fn))
 #else
 
 // wxpython/swig event work
@@ -217,6 +264,8 @@ typedef void (wxEvtHandler::*wxRibbonBarEventFunction)(wxRibbonBarEvent&);
 %constant wxEventType wxEVT_COMMAND_RIBBONBAR_TAB_RIGHT_DOWN;
 %constant wxEventType wxEVT_COMMAND_RIBBONBAR_TAB_RIGHT_UP;
 %constant wxEventType wxEVT_COMMAND_RIBBONBAR_TAB_LEFT_DCLICK;
+%constant wxEventType wxEVT_COMMAND_RIBBONBAR_TOGGLED;
+%constant wxEventType wxEVT_COMMAND_RIBBONBAR_HELP_CLICKED;
 
 %pythoncode {
     EVT_RIBBONBAR_PAGE_CHANGED = wx.PyEventBinder( wxEVT_COMMAND_RIBBONBAR_PAGE_CHANGED, 1 )
@@ -226,6 +275,8 @@ typedef void (wxEvtHandler::*wxRibbonBarEventFunction)(wxRibbonBarEvent&);
     EVT_RIBBONBAR_TAB_RIGHT_DOWN = wx.PyEventBinder( wxEVT_COMMAND_RIBBONBAR_TAB_RIGHT_DOWN, 1 )
     EVT_RIBBONBAR_TAB_RIGHT_UP = wx.PyEventBinder( wxEVT_COMMAND_RIBBONBAR_TAB_RIGHT_UP, 1 )
     EVT_RIBBONBAR_TAB_LEFT_DCLICK = wx.PyEventBinder( wxEVT_COMMAND_RIBBONBAR_TAB_LEFT_DCLICK, 1 )
+    EVT_RIBBONBAR_TOGGLED = wx.PyEventBinder( wxEVT_COMMAND_RIBBONBAR_TOGGLED, 1 )
+    EVT_RIBBONBAR_HELP_CLICK = wx.PyEventBinder( wxEVT_COMMAND_RIBBONBAR_HELP_CLICKED, 1 )
 }
 #endif
 

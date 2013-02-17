@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (c) Karsten Ballueder
-// RCS-ID:      $Id: treectrl.h 70345 2012-01-15 01:05:28Z VZ $
+// RCS-ID:      $Id: treectrl.h 72638 2012-10-07 22:42:02Z VZ $
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -348,6 +348,10 @@ public:
         // end editing and accept or discard the changes to item label
     virtual void EndEditLabel(const wxTreeItemId& item,
                               bool discardChanges = false) = 0;
+
+        // Enable or disable beep when incremental match doesn't find any item.
+        // Only implemented in the generic version currently.
+    virtual void EnableBellOnNoMatch(bool WXUNUSED(on) = true) { }
 
     // sorting
     // -------

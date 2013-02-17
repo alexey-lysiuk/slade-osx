@@ -4,13 +4,17 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: dirdlg.h 67896 2011-06-09 00:28:28Z SC $
+// RCS-ID:      $Id: dirdlg.h 72814 2012-10-29 01:20:26Z VZ $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
 #ifndef _WX_DIRDLG_H_
 #define _WX_DIRDLG_H_
+
+#if wxOSX_USE_COCOA
+    DECLARE_WXCOCOA_OBJC_CLASS(NSOpenPanel);
+#endif
 
 class WXDLLIMPEXP_CORE wxDirDialog : public wxDirDialogBase
 {
@@ -34,14 +38,16 @@ public:
     virtual void ModalFinishedCallback(void* panel, int returnCode);
 #endif
 
-protected:
-
-    DECLARE_DYNAMIC_CLASS(wxDirDialog)
-
+private:
 #if wxOSX_USE_COCOA
+    // Create and initialize NSOpenPanel that we use in both ShowModal() and
+    // ShowWindowModal().
+    WX_NSOpenPanel OSXCreatePanel() const;
+
     WX_NSObject m_sheetDelegate;
 #endif
+
+    DECLARE_DYNAMIC_CLASS(wxDirDialog)
 };
 
-#endif
-    // _WX_DIRDLG_H_
+#endif // _WX_DIRDLG_H_

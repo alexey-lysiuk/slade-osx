@@ -4,7 +4,7 @@
 // Author:      Jens Lody and Teodor Petrov
 // Modified by:
 // Created:     2012-03-23
-// RCS-ID:      $Id: tabartgtk.h 71002 2012-03-25 17:56:04Z VZ $
+// RCS-ID:      $Id: tabartgtk.h 72720 2012-10-22 21:46:46Z VZ $
 // Copyright:   (c) 2012 Jens Lody <jens@codeblocks.org>
 //                  and Teodor Petrov
 // Licence:     wxWindows licence
@@ -33,6 +33,7 @@ public:
     wxAuiGtkTabArt();
 
     virtual wxAuiTabArt* Clone();
+    virtual void DrawBorder(wxDC& dc, wxWindow* wnd, const wxRect& rect);
     virtual void DrawBackground(wxDC& dc, wxWindow* wnd, const wxRect& rect);
     virtual void DrawTab(wxDC& dc,
                          wxWindow* wnd,
@@ -46,6 +47,8 @@ public:
                     int button_state, int orientation, wxRect* out_rect);
     int GetBestTabCtrlSize(wxWindow* wnd, const wxAuiNotebookPageArray& pages,
                             const wxSize& required_bmp_size);
+    int GetBorderWidth(wxWindow* wnd);
+    int GetAdditionalBorderSpace(wxWindow* wnd);
     virtual wxSize GetTabSize(wxDC& dc, wxWindow* wnd, const wxString& caption,
                               const wxBitmap& bitmap, bool active,
                               int close_button_state, int* x_extent);

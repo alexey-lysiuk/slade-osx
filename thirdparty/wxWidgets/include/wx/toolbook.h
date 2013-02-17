@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     2006-01-29
-// RCS-ID:      $Id: toolbook.h 68810 2011-08-21 14:08:49Z VZ $
+// RCS-ID:      $Id: toolbook.h 71435 2012-05-15 10:03:57Z VZ $
 // Copyright:   (c) 2006 Julian Smart
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,6 +17,7 @@
 #if wxUSE_TOOLBOOK
 
 #include "wx/bookctrl.h"
+#include "wx/containr.h"
 
 class WXDLLIMPEXP_FWD_CORE wxToolBarBase;
 class WXDLLIMPEXP_FWD_CORE wxCommandEvent;
@@ -40,7 +41,7 @@ wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_COMMAND_TOOLBOOK_PAGE_CHANGING
 // wxToolbook
 // ----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxToolbook : public wxBookCtrlBase
+class WXDLLIMPEXP_CORE wxToolbook : public wxNavigationEnabled<wxBookCtrlBase>
 {
 public:
     wxToolbook()
@@ -128,7 +129,7 @@ private:
 // ----------------------------------------------------------------------------
 
 // wxToolbookEvent is obsolete and defined for compatibility only
-typedef wxBookCtrlEvent wxToolbookEvent;
+#define wxToolbookEvent wxBookCtrlEvent
 typedef wxBookCtrlEventFunction wxToolbookEventFunction;
 #define wxToolbookEventHandler(func) wxBookCtrlEventHandler(func)
 

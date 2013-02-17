@@ -3,7 +3,7 @@
 // Purpose:     declares wxTextEntry interface defining a simple text entry
 // Author:      Vadim Zeitlin
 // Created:     2007-09-24
-// RCS-ID:      $Id: textentry.h 68918 2011-08-27 14:11:13Z VZ $
+// RCS-ID:      $Id: textentry.h 72491 2012-09-15 23:18:23Z VZ $
 // Copyright:   (c) 2007 Vadim Zeitlin <vadim@wxwindows.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -98,6 +98,8 @@ public:
 
     virtual void SetSelection(long from, long to) = 0;
     virtual void SelectAll() { SetSelection(-1, -1); }
+    virtual void SelectNone()
+        { const long pos = GetInsertionPoint(); SetSelection(pos, pos); }
     virtual void GetSelection(long *from, long *to) const = 0;
     bool HasSelection() const;
     virtual wxString GetStringSelection() const;

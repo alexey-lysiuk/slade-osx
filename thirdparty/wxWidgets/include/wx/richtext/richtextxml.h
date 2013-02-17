@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     2005-09-30
-// RCS-ID:      $Id: richtextxml.h 71276 2012-04-24 11:22:18Z JS $
+// RCS-ID:      $Id: richtextxml.h 71399 2012-05-10 11:59:59Z JS $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -16,6 +16,7 @@
  * Includes
  */
 
+#include "wx/hashmap.h"
 #include "wx/richtext/richtextbuffer.h"
 #include "wx/richtext/richtextstyles.h"
 
@@ -97,6 +98,17 @@ public:
     wxString GetText(wxXmlNode *node, const wxString& param = wxEmptyString, bool translate = false);
     static wxXmlNode* FindNode(wxXmlNode* node, const wxString& name);
 
+    /**
+        Call with XML node name, C++ class name so that wxRTC can read in the node.
+        If you add a custom object, call this.
+    */
+    static void RegisterNodeName(const wxString& nodeName, const wxString& className) { sm_nodeNameToClassMap[nodeName] = className; }
+
+    /**
+        Cleans up the mapping between node name and C++ class.
+    */
+    static void ClearNodeToClassMap() { sm_nodeNameToClassMap.clear(); }
+
 protected:
 #if wxUSE_STREAMS
     virtual bool DoLoadFile(wxRichTextBuffer *buffer, wxInputStream& stream);
@@ -108,6 +120,8 @@ protected:
     wxMBConv* m_convMem;
     wxMBConv* m_convFile;
 #endif
+
+    static wxStringToStringHashMap sm_nodeNameToClassMap;
 };
 
 #endif

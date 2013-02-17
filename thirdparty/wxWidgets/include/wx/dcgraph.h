@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (c) Stefan Csomor
-// RCS-ID:      $Id: dcgraph.h 68935 2011-08-27 23:26:53Z RD $
+// RCS-ID:      $Id: dcgraph.h 73382 2013-01-18 17:27:51Z PC $
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -68,9 +68,6 @@ public:
 
     virtual ~wxGCDCImpl();
 
-    void Init();
-
-
     // implement base class pure virtuals
     // ----------------------------------
 
@@ -102,8 +99,6 @@ public:
     virtual int GetDepth() const;
     virtual wxSize GetPPI() const;
 
-    virtual void SetMapMode(wxMappingMode mode);
-
     virtual void SetLogicalFunction(wxRasterOperationMode function);
 
     virtual void SetTextForeground(const wxColour& colour);
@@ -113,6 +108,8 @@ public:
 
     wxGraphicsContext* GetGraphicsContext() const { return m_graphicContext; }
     virtual void SetGraphicsContext( wxGraphicsContext* ctx );
+
+    virtual void* GetHandle() const;
 
     // the true implementations
     virtual bool DoFloodFill(wxCoord x, wxCoord y, const wxColour& col,
@@ -180,12 +177,12 @@ public:
     virtual void DoGetSize(int *,int *) const;
     virtual void DoGetSizeMM(int* width, int* height) const;
 
-    virtual void DoDrawLines(int n, wxPoint points[],
+    virtual void DoDrawLines(int n, const wxPoint points[],
         wxCoord xoffset, wxCoord yoffset);
-    virtual void DoDrawPolygon(int n, wxPoint points[],
+    virtual void DoDrawPolygon(int n, const wxPoint points[],
                                wxCoord xoffset, wxCoord yoffset,
                                wxPolygonFillMode fillStyle = wxODDEVEN_RULE);
-    virtual void DoDrawPolyPolygon(int n, int count[], wxPoint points[],
+    virtual void DoDrawPolyPolygon(int n, const int count[], const wxPoint points[],
                                    wxCoord xoffset, wxCoord yoffset,
                                    wxPolygonFillMode fillStyle);
 
@@ -206,15 +203,21 @@ public:
 #endif // __WXMSW__
 
 protected:
+    // unused int parameter distinguishes this version, which does not create a
+    // wxGraphicsContext, in the expectation that the derived class will do it
+    wxGCDCImpl(wxDC* owner, int);
+
     // scaling variables
     bool m_logicalFunctionSupported;
-    double       m_mm_to_pix_x, m_mm_to_pix_y;
     wxGraphicsMatrix m_matrixOriginal;
     wxGraphicsMatrix m_matrixCurrent;
 
     double m_formerScaleX, m_formerScaleY;
 
     wxGraphicsContext* m_graphicContext;
+
+private:
+    void Init(wxGraphicsContext*);
 
     DECLARE_CLASS(wxGCDCImpl)
     wxDECLARE_NO_COPY_CLASS(wxGCDCImpl);

@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: font.h 70445 2012-01-23 11:28:21Z VZ $
+// RCS-ID:      $Id: font.h 71769 2012-06-14 21:55:28Z SC $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -120,6 +120,8 @@ public:
     virtual wxString GetFaceName() const;
     virtual wxFontEncoding GetEncoding() const;
     virtual const wxNativeFontInfo *GetNativeFontInfo() const;
+
+    virtual bool IsFixedWidth() const;
 
     virtual void SetPointSize(int pointSize);
     virtual void SetFamily(wxFontFamily family);

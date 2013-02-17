@@ -6,7 +6,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: private.h 70354 2012-01-15 15:53:56Z SC $
+// RCS-ID:      $Id: private.h 72924 2012-11-08 15:46:23Z SC $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -30,6 +30,23 @@
     #define wxOSX_10_6_AND_LATER(x) x
 #else
     #define wxOSX_10_6_AND_LATER(x)
+#endif
+
+// platform specific Clang analyzer support
+#ifndef NS_RETURNS_RETAINED
+#   if WX_HAS_CLANG_FEATURE(attribute_ns_returns_retained)
+#       define NS_RETURNS_RETAINED __attribute__((ns_returns_retained))
+#   else
+#       define NS_RETURNS_RETAINED
+#   endif
+#endif
+
+#ifndef CF_RETURNS_RETAINED
+#   if WX_HAS_CLANG_FEATURE(attribute_cf_returns_retained)
+#       define CF_RETURNS_RETAINED __attribute__((cf_returns_retained))
+#   else
+#       define CF_RETURNS_RETAINED
+#   endif
 #endif
 
 #if ( !wxUSE_GUI && !wxOSX_USE_IPHONE ) || wxOSX_USE_COCOA_OR_CARBON
@@ -265,6 +282,8 @@ public :
 
     virtual bool        NeedsFrame() const;
     virtual void        SetNeedsFrame( bool needs );
+    
+    virtual void        SetDrawingEnabled(bool enabled);
 
     virtual bool        CanFocus() const = 0;
     // return true if successful
@@ -284,6 +303,8 @@ public :
     virtual void        SetCursor( const wxCursor & cursor ) = 0;
     virtual void        CaptureMouse() = 0;
     virtual void        ReleaseMouse() = 0;
+    
+    virtual void        SetDropTarget( wxDropTarget * WXUNUSED(dropTarget) ) {}
 
     virtual wxInt32     GetValue() const = 0;
     virtual void        SetValue( wxInt32 v ) = 0;

@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (c) Stefan Csomor
-// RCS-ID:      $Id: graphics.h 71085 2012-04-03 11:50:19Z VZ $
+// RCS-ID:      $Id: graphics.h 72290 2012-08-03 13:05:11Z VZ $
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -107,6 +107,7 @@ class WXDLLIMPEXP_FWD_CORE wxGraphicsBitmap;
 //
 
 class WXDLLIMPEXP_FWD_CORE wxGraphicsObjectRefData;
+class WXDLLIMPEXP_FWD_CORE wxGraphicsBitmapData;
 class WXDLLIMPEXP_FWD_CORE wxGraphicsMatrixData;
 class WXDLLIMPEXP_FWD_CORE wxGraphicsPathData;
 
@@ -174,6 +175,13 @@ public:
 #if wxUSE_IMAGE
     wxImage ConvertToImage() const;
 #endif // wxUSE_IMAGE
+    
+    void* GetNativeBitmap() const;
+
+    const wxGraphicsBitmapData* GetBitmapData() const
+    { return (const wxGraphicsBitmapData*) GetRefData(); }
+    wxGraphicsBitmapData* GetBitmapData()
+    { return (wxGraphicsBitmapData*) GetRefData(); }
 
 private:
     DECLARE_DYNAMIC_CLASS(wxGraphicsBitmap)
@@ -557,7 +565,7 @@ public:
     virtual bool SetCompositionMode(wxCompositionMode op) = 0;
 
     // returns the size of the graphics context in device coordinates
-    void GetSize(wxDouble* width, wxDouble* height)
+    void GetSize(wxDouble* width, wxDouble* height) const
     {
         if ( width )
             *width = m_width;

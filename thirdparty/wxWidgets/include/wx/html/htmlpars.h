@@ -2,7 +2,7 @@
 // Name:        wx/html/htmlpars.h
 // Purpose:     wxHtmlParser class (generic parser)
 // Author:      Vaclav Slavik
-// RCS-ID:      $Id: htmlpars.h 70556 2012-02-10 10:22:45Z VZ $
+// RCS-ID:      $Id: htmlpars.h 72297 2012-08-06 11:06:45Z VZ $
 // Copyright:   (c) 1999 Vaclav Slavik
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ class wxHtmlTextPieces;
 class wxHtmlParserState;
 
 WX_DECLARE_HASH_SET_WITH_DECL_PTR(wxHtmlTagHandler*,
-                                  ::wxPointerHash, ::wxPointerEqual,
+                                  wxPointerHash, wxPointerEqual,
                                   wxHtmlTagHandlersSet,
                                   class WXDLLIMPEXP_HTML);
 WX_DECLARE_STRING_HASH_MAP_WITH_DECL(wxHtmlTagHandler*,

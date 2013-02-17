@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: bitmap.h 67254 2011-03-20 00:14:35Z DS $
+// RCS-ID:      $Id: bitmap.h 73409 2013-01-20 06:28:11Z PC $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -56,6 +56,8 @@ public:
     bool Create(const wxBitmap& bitmap, const wxColour& colour);
     bool Create(const wxBitmap& bitmap);
     bool Create(const wxMemoryBuffer& buf, int width , int height , int bytesPerRow ) ;
+
+    wxBitmap GetBitmap() const;
 
     // Implementation below
 

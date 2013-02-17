@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     2005-09-30
-// RCS-ID:      $Id: richtextctrl.h 71268 2012-04-23 16:54:52Z JS $
+// RCS-ID:      $Id: richtextctrl.h 73454 2013-02-04 12:52:14Z JS $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -1007,12 +1007,6 @@ public:
     void SetSelection(const wxRichTextSelection& sel) { m_selection = sel; }
     //@}
 
-
-    /**
-        Selects all the text in the buffer.
-    */
-    virtual void SelectAll();
-
     /**
         Makes the control editable, or not.
     */
@@ -1059,6 +1053,21 @@ public:
         You can then call SetFocusObject() to set the focus to the new object.
     */
     virtual wxRichTextBox* WriteTextBox(const wxRichTextAttr& textAttr = wxRichTextAttr());
+
+    /**
+        Writes a field at the current insertion point.
+
+        @param fieldType
+            The field type, matching an existing field type definition.
+        @param properties
+            Extra data for the field.
+        @param textAttr
+            Optional attributes.
+
+        @see wxRichTextField, wxRichTextFieldType, wxRichTextFieldTypeStandard
+    */
+    virtual wxRichTextField* WriteField(const wxString& fieldType, const wxRichTextProperties& properties,
+                            const wxRichTextAttr& textAttr = wxRichTextAttr());
 
     /**
         Write a table at the current insertion point, returning the table.
@@ -1686,6 +1695,83 @@ public:
     */
     virtual bool GetVerticalScrollbarEnabled() const { return m_verticalScrollbarEnabled; }
 
+    /**
+        Sets the scale factor for displaying fonts, for example for more comfortable
+        editing.
+    */
+    void SetFontScale(double fontScale, bool refresh = false);
+
+    /**
+        Returns the scale factor for displaying fonts, for example for more comfortable
+        editing.
+    */
+    double GetFontScale() const { return GetBuffer().GetFontScale(); }
+
+    /**
+        Sets the scale factor for displaying certain dimensions such as indentation and
+        inter-paragraph spacing. This can be useful when editing in a small control
+        where you still want legible text, but a minimum of wasted white space.
+    */
+    void SetDimensionScale(double dimScale, bool refresh = false);
+
+    /**
+        Returns the scale factor for displaying certain dimensions such as indentation
+        and inter-paragraph spacing.
+    */
+    double GetDimensionScale() const { return GetBuffer().GetDimensionScale(); }
+
+    /**
+        Sets an overall scale factor for displaying and editing the content.
+    */
+    void SetScale(double scale, bool refresh = false);
+
+    /**
+        Returns an overall scale factor for displaying and editing the content.
+    */
+    double GetScale() const { return m_scale; }
+
+    /**
+        Returns an unscaled point.
+    */
+    wxPoint GetUnscaledPoint(const wxPoint& pt) const;
+
+    /**
+        Returns a scaled point.
+    */
+    wxPoint GetScaledPoint(const wxPoint& pt) const;
+
+    /**
+        Returns an unscaled size.
+    */
+    wxSize GetUnscaledSize(const wxSize& sz) const;
+
+    /**
+        Returns a scaled size.
+    */
+    wxSize GetScaledSize(const wxSize& sz) const;
+
+    /**
+        Returns an unscaled rectangle.
+    */
+    wxRect GetUnscaledRect(const wxRect& rect) const;
+
+    /**
+        Returns a scaled rectangle.
+    */
+    wxRect GetScaledRect(const wxRect& rect) const;
+
+    /**
+        Returns @true if this control can use virtual attributes and virtual text.
+        The default is @false.
+    */
+    bool GetVirtualAttributesEnabled() const { return m_useVirtualAttributes; }
+
+    /**
+        Pass @true to let the control use virtual attributes.
+        The default is @false.
+    */
+    void EnableVirtualAttributes(bool b) { m_useVirtualAttributes = b; }
+
 // Command handlers
 
     /**
@@ -2065,6 +2151,17 @@ public:
 // Implementation
 
     /**
+        Processes the back key.
+    */
+    virtual bool ProcessBackKey(wxKeyEvent& event, int flags);
+
+    /**
+        Given a character position at which there is a list style, find the range
+        encompassing the same list style by looking backwards and forwards.
+    */
+    virtual wxRichTextRange FindRangeForList(long pos, bool& isNumberedList);
+
+    /**
         Sets up the caret for the given position and container, after a mouse click.
     */
     bool SetCaretPositionAfterClick(wxRichTextParagraphLayoutBox* container, long position, int hitTestFlags, bool extendSelection = false);
@@ -2169,6 +2266,9 @@ protected:
     /// Are we editable?
     bool                    m_editable;
 
+    /// Can we use virtual attributes and virtual text?
+    bool                    m_useVirtualAttributes;
+
     /// Is the vertical scrollbar enabled?
     bool                    m_verticalScrollbarEnabled;
 
@@ -2210,6 +2310,9 @@ protected:
 
     /// The object that currently has the editing focus
     wxRichTextParagraphLayoutBox* m_focusObject;
+
+    /// An overall scale factor
+    double                  m_scale;
 };
 
 #if wxUSE_DRAG_AND_DROP

@@ -6,7 +6,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: private.h 67233 2011-03-18 15:45:51Z SC $
+// RCS-ID:      $Id: private.h 71768 2012-06-14 21:53:06Z SC $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -17,6 +17,11 @@
 #ifdef __OBJC__
     #import <UIKit/UIKit.h>
 #endif
+
+#include <CoreText/CTFont.h>
+#include <CoreText/CTStringAttributes.h>
+#include <CoreText/CTLine.h>
+
 
 #if wxUSE_GUI
 

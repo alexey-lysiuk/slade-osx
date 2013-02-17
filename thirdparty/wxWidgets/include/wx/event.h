@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: event.h 70961 2012-03-22 00:26:59Z VZ $
+// RCS-ID:      $Id: event.h 73411 2013-01-20 12:45:52Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -31,6 +31,14 @@
 
 #ifdef wxHAS_EVENT_BIND
     #include "wx/meta/convertible.h"
+#endif
+
+// Currently VC6 and VC7 are known to not be able to compile CallAfter() code,
+// so disable it for them.
+#if !defined(__VISUALC__) || wxCHECK_VISUALC_VERSION(8)
+    #include "wx/meta/removeref.h"
+
+    #define wxHAS_CALL_AFTER
 #endif
 
 // ----------------------------------------------------------------------------
@@ -621,6 +629,7 @@ extern WXDLLIMPEXP_BASE const wxEventType wxEVT_USER_FIRST;
     // Need events declared to do this
 class WXDLLIMPEXP_FWD_BASE wxIdleEvent;
 class WXDLLIMPEXP_FWD_BASE wxThreadEvent;
+class WXDLLIMPEXP_FWD_BASE wxAsyncMethodCallEvent;
 class WXDLLIMPEXP_FWD_CORE wxCommandEvent;
 class WXDLLIMPEXP_FWD_CORE wxMouseEvent;
 class WXDLLIMPEXP_FWD_CORE wxFocusEvent;
@@ -681,8 +690,9 @@ wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_COMMAND_TOOL_ENTER, wxCommandEv
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_COMMAND_COMBOBOX_DROPDOWN, wxCommandEvent);
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_COMMAND_COMBOBOX_CLOSEUP, wxCommandEvent);
 
-    // Thread events
+    // Thread and asynchronous method call events
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_BASE, wxEVT_THREAD, wxThreadEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_BASE, wxEVT_ASYNC_METHOD_CALL, wxAsyncMethodCallEvent);
 
     // Mouse event types
 wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_LEFT_DOWN, wxMouseEvent);
@@ -929,6 +939,10 @@ public:
 
     int GetId() const { return m_id; }
     void SetId(int Id) { m_id = Id; }
+
+    // Returns the user data optionally associated with the event handler when
+    // using Connect() or Bind().
+    wxObject *GetEventUserData() const { return m_callbackUserData; }
 
     // Can instruct event processor that we wish to ignore this event
     // (treat as if the event table entry had not been found): this must be done
@@ -1244,7 +1258,7 @@ public:
     {
         // make sure our string member (which uses COW, aka refcounting) is not
         // shared by other wxString instances:
-        SetString(GetString().c_str());
+        SetString(GetString().Clone());
     }
 
     virtual wxEvent *Clone() const
@@ -1260,6 +1274,164 @@ public:
 private:
     DECLARE_DYNAMIC_CLASS_NO_ASSIGN(wxThreadEvent)
 };
+
+
+// Asynchronous method call events: these event are processed by wxEvtHandler
+// itself and result in a call to its Execute() method which simply calls the
+// specified method. The difference with a simple method call is that this is
+// done asynchronously, i.e. at some later time, instead of immediately when
+// the event object is constructed.
+
+#ifdef wxHAS_CALL_AFTER
+
+// This is a base class used to process all method calls.
+class wxAsyncMethodCallEvent : public wxEvent
+{
+public:
+    wxAsyncMethodCallEvent(wxObject* object)
+        : wxEvent(wxID_ANY, wxEVT_ASYNC_METHOD_CALL)
+    {
+        SetEventObject(object);
+    }
+
+    wxAsyncMethodCallEvent(const wxAsyncMethodCallEvent& other)
+        : wxEvent(other)
+    {
+    }
+
+    virtual void Execute() = 0;
+};
+
+// This is a version for calling methods without parameters.
+template <typename T>
+class wxAsyncMethodCallEvent0 : public wxAsyncMethodCallEvent
+{
+public:
+    typedef T ObjectType;
+    typedef void (ObjectType::*MethodType)();
+
+    wxAsyncMethodCallEvent0(ObjectType* object,
+                            MethodType method)
+        : wxAsyncMethodCallEvent(object),
+          m_object(object),
+          m_method(method)
+    {
+    }
+
+    wxAsyncMethodCallEvent0(const wxAsyncMethodCallEvent0& other)
+        : wxAsyncMethodCallEvent(other),
+          m_object(other.m_object),
+          m_method(other.m_method)
+    {
+    }
+
+    virtual wxEvent *Clone() const
+    {
+        return new wxAsyncMethodCallEvent0(*this);
+    }
+
+    virtual void Execute()
+    {
+        (m_object->*m_method)();
+    }
+
+private:
+    ObjectType* const m_object;
+    const MethodType m_method;
+};
+
+// This is a version for calling methods with a single parameter.
+template <typename T, typename T1>
+class wxAsyncMethodCallEvent1 : public wxAsyncMethodCallEvent
+{
+public:
+    typedef T ObjectType;
+    typedef void (ObjectType::*MethodType)(T1 x1);
+    typedef typename wxRemoveRef<T1>::type ParamType1;
+
+    wxAsyncMethodCallEvent1(ObjectType* object,
+                            MethodType method,
+                            const ParamType1& x1)
+        : wxAsyncMethodCallEvent(object),
+          m_object(object),
+          m_method(method),
+          m_param1(x1)
+    {
+    }
+
+    wxAsyncMethodCallEvent1(const wxAsyncMethodCallEvent1& other)
+        : wxAsyncMethodCallEvent(other),
+          m_object(other.m_object),
+          m_method(other.m_method),
+          m_param1(other.m_param1)
+    {
+    }
+
+    virtual wxEvent *Clone() const
+    {
+        return new wxAsyncMethodCallEvent1(*this);
+    }
+
+    virtual void Execute()
+    {
+        (m_object->*m_method)(m_param1);
+    }
+
+private:
+    ObjectType* const m_object;
+    const MethodType m_method;
+    const ParamType1 m_param1;
+};
+
+// This is a version for calling methods with two parameters.
+template <typename T, typename T1, typename T2>
+class wxAsyncMethodCallEvent2 : public wxAsyncMethodCallEvent
+{
+public:
+    typedef T ObjectType;
+    typedef void (ObjectType::*MethodType)(T1 x1, T2 x2);
+    typedef typename wxRemoveRef<T1>::type ParamType1;
+    typedef typename wxRemoveRef<T2>::type ParamType2;
+
+    wxAsyncMethodCallEvent2(ObjectType* object,
+                            MethodType method,
+                            const ParamType1& x1,
+                            const ParamType2& x2)
+        : wxAsyncMethodCallEvent(object),
+          m_object(object),
+          m_method(method),
+          m_param1(x1),
+          m_param2(x2)
+    {
+    }
+
+    wxAsyncMethodCallEvent2(const wxAsyncMethodCallEvent2& other)
+        : wxAsyncMethodCallEvent(other),
+          m_object(other.m_object),
+          m_method(other.m_method),
+          m_param1(other.m_param1),
+          m_param2(other.m_param2)
+    {
+    }
+
+    virtual wxEvent *Clone() const
+    {
+        return new wxAsyncMethodCallEvent2(*this);
+    }
+
+    virtual void Execute()
+    {
+        (m_object->*m_method)(m_param1, m_param2);
+    }
+
+private:
+    ObjectType* const m_object;
+    const MethodType m_method;
+    const ParamType1 m_param1;
+    const ParamType2 m_param2;
+};
+
+#endif // wxHAS_CALL_AFTER
 
 
 #if wxUSE_GUI
@@ -1295,7 +1467,12 @@ public:
           wxEventBasicPayloadMixin(event),
           m_clientData(event.m_clientData),
           m_clientObject(event.m_clientObject)
-        { }
+    {
+        // Because GetString() can retrieve the string text only on demand, we
+        // need to copy it explicitly.
+        if ( m_cmdString.empty() )
+            m_cmdString = event.GetString();
+    }
 
     // Set/Get client data from controls
     void SetClientData(void* clientData) { m_clientData = clientData; }
@@ -1685,24 +1862,29 @@ public:
     // Find the position of the event
     void GetPosition(wxCoord *xpos, wxCoord *ypos) const
     {
-        if (xpos) *xpos = m_x;
-        if (ypos) *ypos = m_y;
+        if (xpos)
+            *xpos = GetX();
+        if (ypos)
+            *ypos = GetY();
     }
 
+    // This version if provided only for backwards compatiblity, don't use.
     void GetPosition(long *xpos, long *ypos) const
     {
-        if (xpos) *xpos = (long)m_x;
-        if (ypos) *ypos = (long)m_y;
+        if (xpos)
+            *xpos = GetX();
+        if (ypos)
+            *ypos = GetY();
     }
 
     wxPoint GetPosition() const
-        { return wxPoint(m_x, m_y); }
+        { return wxPoint(GetX(), GetY()); }
 
     // Get X position
-    wxCoord GetX() const { return m_x; }
+    wxCoord GetX() const;
 
     // Get Y position
-    wxCoord GetY() const { return m_y; }
+    wxCoord GetY() const;
 
     // Can be called from wxEVT_CHAR_HOOK handler to allow generation of normal
     // key events even though the event had been handled (by default they would
@@ -1734,6 +1916,8 @@ public:
     }
 
 public:
+    // Do not use these fields directly, they are initialized on demand, so
+    // call GetX() and GetY() or GetPosition() instead.
     wxCoord       m_x, m_y;
 
     long          m_keyCode;
@@ -1766,6 +1950,7 @@ private:
     {
         m_x = evt.m_x;
         m_y = evt.m_y;
+        m_hasPosition = evt.m_hasPosition;
 
         m_keyCode = evt.m_keyCode;
 
@@ -1776,10 +1961,18 @@ private:
 #endif
     }
 
+    // Initialize m_x and m_y using the current mouse cursor position if
+    // necessary.
+    void InitPositionIfNecessary() const;
+
     // If this flag is true, the normal key events should still be generated
     // even if wxEVT_CHAR_HOOK had been handled. By default it is false as
     // handling wxEVT_CHAR_HOOK suppresses all the subsequent events.
     bool m_allowNext;
+
+    // If true, m_x and m_y were already initialized. If false, try to get them
+    // when they're requested.
+    bool m_hasPosition;
 
     DECLARE_DYNAMIC_CLASS(wxKeyEvent)
 };
@@ -2997,7 +3190,7 @@ public:
 protected:
     // Init the hash table with the entries of the static event table.
     void InitHashTable();
-    // Helper funtion of InitHashTable() to insert 1 entry into the hash table.
+    // Helper function of InitHashTable() to insert 1 entry into the hash table.
     void AddEntry(const wxEventTableEntry &entry);
     // Allocate and init with null pointers the base hash table.
     void AllocEventTypeTable(size_t size);
@@ -3118,6 +3311,46 @@ public:
     bool ProcessThreadEvent(const wxEvent& event);
         // NOTE: uses AddPendingEvent(); call only from secondary threads
 #endif
+
+#ifdef wxHAS_CALL_AFTER
+    // Asynchronous method calls: these methods schedule the given method
+    // pointer for a later call (during the next idle event loop iteration).
+    //
+    // Notice that the method is called on this object itself, so the object
+    // CallAfter() is called on must have the correct dynamic type.
+    //
+    // These method can be used from another thread.
+
+    template <typename T>
+    void CallAfter(void (T::*method)())
+    {
+        QueueEvent(
+            new wxAsyncMethodCallEvent0<T>(static_cast<T*>(this), method)
+        );
+    }
+
+    // Notice that we use P1 and not T1 for the parameter to allow passing
+    // parameters that are convertible to the type taken by the method
+    // instead of being exactly the same, to be closer to the usual method call
+    // semantics.
+    template <typename T, typename T1, typename P1>
+    void CallAfter(void (T::*method)(T1 x1), P1 x1)
+    {
+        QueueEvent(
+            new wxAsyncMethodCallEvent1<T, T1>(
+                static_cast<T*>(this), method, x1)
+        );
+    }
+
+    template <typename T, typename T1, typename T2, typename P1, typename P2>
+    void CallAfter(void (T::*method)(T1 x1, T2 x2), P1 x1, P2 x2)
+    {
+        QueueEvent(
+            new wxAsyncMethodCallEvent2<T, T1, T2>(
+                static_cast<T*>(this), method, x1, x2)
+        );
+    }
+#endif // wxHAS_CALL_AFTER
 
 
     // Connecting and disconnecting

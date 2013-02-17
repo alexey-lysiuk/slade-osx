@@ -4,7 +4,7 @@
 // Author:      Mattia Barbon
 // Modified by:
 // Created:     29/01/2002
-// RCS-ID:      $Id: hashmap.h 71102 2012-04-05 18:40:11Z VZ $
+// RCS-ID:      $Id: hashmap.h 71628 2012-06-01 11:01:34Z VZ $
 // Copyright:   (c) Mattia Barbon
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -467,7 +467,7 @@ inline bool never_grow( size_t, size_t ) { return false; }
 inline bool never_shrink( size_t, size_t ) { return false; }
 inline bool grow_lf70( size_t buckets, size_t items )
 {
-    return float(items)/float(buckets) >= 0.85;
+    return float(items)/float(buckets) >= 0.85f;
 }
 
 #endif // various hash map implementations

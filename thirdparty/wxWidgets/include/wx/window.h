@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by: Ron Lee
 // Created:     01/02/97
-// RCS-ID:      $Id: window.h 71024 2012-03-27 11:58:02Z VZ $
+// RCS-ID:      $Id: window.h 73139 2012-12-08 00:37:10Z VZ $
 // Copyright:   (c) Vadim Zeitlin
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -379,6 +379,13 @@ public:
             *h = s.y;
     }
 
+        // Determine the best size in the other direction if one of them is
+        // fixed. This is used with windows that can wrap their contents and
+        // returns input-independent best size for the others.
+    int GetBestHeight(int width) const;
+    int GetBestWidth(int height) const;
+
+
     void SetScrollHelper( wxScrollHelper *sh )   { m_scrollHelper = sh; }
     wxScrollHelper *GetScrollHelper()            { return m_scrollHelper; }
 
@@ -745,7 +752,7 @@ public:
     bool IsDescendant(wxWindowBase* win) const;
 
         // it doesn't really change parent, use Reparent() instead
-    void SetParent( wxWindowBase *parent ) { m_parent = (wxWindow *)parent; }
+    void SetParent( wxWindowBase *parent );
         // change the real parent of this window, return true if the parent
         // was changed, false otherwise (error or newParent == oldParent)
     virtual bool Reparent( wxWindowBase *newParent );
@@ -1686,6 +1693,14 @@ protected:
     // the best size of the client area of the window only, excluding borders
     // (GetBorderSize() will be used to add them)
     virtual wxSize DoGetBestClientSize() const { return wxDefaultSize; }
+
+    // These two methods can be overridden to implement intelligent
+    // width-for-height and/or height-for-width best size determination for the
+    // window. By default the fixed best size is used.
+    virtual int DoGetBestClientHeight(int WXUNUSED(width)) const
+        { return wxDefaultCoord; }
+    virtual int DoGetBestClientWidth(int WXUNUSED(height)) const
+        { return wxDefaultCoord; }
 
     // this is the virtual function to be overridden in any derived class which
     // wants to change how SetSize() or Move() works - it is called by all

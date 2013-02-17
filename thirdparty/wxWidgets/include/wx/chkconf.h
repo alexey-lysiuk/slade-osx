@@ -4,7 +4,7 @@
  * Author:      Vadim Zeitlin
  * Modified by:
  * Created:     09.08.00
- * RCS-ID:      $Id: chkconf.h 71122 2012-04-06 19:51:20Z VZ $
+ * RCS-ID:      $Id: chkconf.h 73290 2012-12-28 16:03:03Z VZ $
  * Copyright:   (c) 2000 Vadim Zeitlin <vadim@wxwidgets.org>
  * Licence:     wxWindows licence
  */
@@ -91,6 +91,14 @@
 #       define wxUSE_ANY 0
 #   endif
 #endif /* wxUSE_ANY */
+
+#ifndef wxUSE_COMPILER_TLS
+#   ifdef wxABORT_ON_CONFIG_ERROR
+#       error "wxUSE_COMPILER_TLS must be defined, please read comment near the top of this file."
+#   else
+#       define wxUSE_COMPILER_TLS 0
+#   endif
+#endif /* !defined(wxUSE_COMPILER_TLS) */
 
 #ifndef wxUSE_CONSOLE_EVENTLOOP
 #   ifdef wxABORT_ON_CONFIG_ERROR
@@ -1203,8 +1211,11 @@
 
 #if defined(__WXWINCE__)
 #  include "wx/msw/wince/chkconf.h"
-#elif defined(__WXMSW__)
+#elif defined(__WINDOWS__)
 #  include "wx/msw/chkconf.h"
+#  if defined(__WXGTK__)
+#      include "wx/gtk/chkconf.h"
+#  endif
 #elif defined(__WXGTK__)
 #  include "wx/gtk/chkconf.h"
 #elif defined(__WXCOCOA__)
@@ -1225,9 +1236,9 @@
 
 /*
     __UNIX__ is also defined under Cygwin but we shouldn't perform these checks
-    there if we're building wxMSW.
+    there if we're building Windows ports.
  */
-#if defined(__UNIX__) && !defined(__WXMSW__)
+#if defined(__UNIX__) && !defined(__WINDOWS__)
 #   include "wx/unix/chkconf.h"
 #endif
 

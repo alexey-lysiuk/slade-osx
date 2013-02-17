@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: choice.h 66993 2011-02-22 13:25:38Z VZ $
+// RCS-ID:      $Id: choice.h 72847 2012-11-01 17:15:25Z VZ $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -93,6 +93,10 @@ protected:
     wxArrayString m_strings;
     wxChoiceDataArray m_datas ;
     wxMenu*    m_popUpMenu ;
+
+private:
+    // This should be called when the number of items in the control changes.
+    void DoAfterItemCountChange();
 };
 
 #endif

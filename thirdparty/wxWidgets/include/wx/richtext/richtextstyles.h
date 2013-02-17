@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     2005-09-30
-// RCS-ID:      $Id: richtextstyles.h 71276 2012-04-24 11:22:18Z JS $
+// RCS-ID:      $Id: richtextstyles.h 71505 2012-05-20 12:25:22Z JS $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ public:
     virtual wxRichTextAttr GetStyleMergedWithBase(const wxRichTextStyleSheet* sheet) const;
 
     /**
-        Sets the definition's properties.
+        Returns the definition's properties.
     */
     wxRichTextProperties& GetProperties() { return m_properties; }
 
@@ -112,7 +112,7 @@ public:
     const wxRichTextProperties& GetProperties() const { return m_properties; }
 
     /**
-        Returns the definition's properties.
+        Sets the definition's properties.
     */
     void SetProperties(const wxRichTextProperties& props) { m_properties = props; }
 
@@ -419,17 +419,17 @@ public:
     const wxString& GetDescription() const { return m_description; }
 
     /**
-        Sets the definition's properties.
+        Returns the sheet's properties.
     */
     wxRichTextProperties& GetProperties() { return m_properties; }
 
     /**
-        Returns the definition's properties.
+        Returns the sheet's properties.
     */
     const wxRichTextProperties& GetProperties() const { return m_properties; }
 
     /**
-        Returns the definition's properties.
+        Sets the sheet's properties.
     */
     void SetProperties(const wxRichTextProperties& props) { m_properties = props; }
 

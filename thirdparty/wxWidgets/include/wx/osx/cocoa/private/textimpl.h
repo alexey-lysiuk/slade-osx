@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     03/02/99
-// RCS-ID:      $Id: textimpl.h 70354 2012-01-15 15:53:56Z SC $
+// RCS-ID:      $Id: textimpl.h 73053 2012-11-28 20:57:59Z SC $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -45,6 +45,10 @@ public :
     virtual bool SetHint(const wxString& hint);
 
     virtual void controlAction(WXWidget slf, void* _cmd, void *sender);
+    virtual bool becomeFirstResponder(WXWidget slf, void *_cmd);
+    virtual bool resignFirstResponder(WXWidget slf, void *_cmd);
+
+    virtual void SetInternalSelection( long from , long to );
 
 protected :
     NSTextField* m_textField;

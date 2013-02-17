@@ -5,7 +5,7 @@
 // Author:      Jethro Grassie / Kevin Ollivier / Marianne Gagnon
 // Modified by:
 // Created:     2004-4-16
-// RCS-ID:      $Id: webview_webkit.h 71034 2012-03-28 18:00:30Z SJL $
+// RCS-ID:      $Id: webview_webkit.h 73453 2013-02-01 09:38:53Z SJL $
 // Copyright:   (c) Jethro Grassie / Kevin Ollivier / Marianne Gagnon
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,8 @@
 
 #include "wx/control.h"
 #include "wx/webview.h"
+
+#include "wx/osx/core/objcid.h"
 
 // ----------------------------------------------------------------------------
 // Web Kit Control
@@ -52,14 +54,10 @@ public:
     virtual bool CanGoForward() const;
     virtual void GoBack();
     virtual void GoForward();
-    virtual void Reload(wxWebViewReloadFlags flags = wxWEB_VIEW_RELOAD_DEFAULT);
+    virtual void Reload(wxWebViewReloadFlags flags = wxWEBVIEW_RELOAD_DEFAULT);
     virtual void Stop();
     virtual wxString GetPageSource() const;
     virtual wxString GetPageText() const;
-
-    //We do not want to hide the other overloads
-    using wxWebView::SetPage;
-    virtual void SetPage(const wxString& html, const wxString& baseUrl);
 
     virtual void Print();
 
@@ -88,6 +86,14 @@ public:
     virtual void Undo();
     virtual void Redo();
 
+    //Find function
+    virtual long Find(const wxString& text, int flags = wxWEBVIEW_FIND_DEFAULT) 
+    { 
+        wxUnusedVar(text);
+        wxUnusedVar(flags);
+        return wxNOT_FOUND; 
+    }
+
     //Clipboard functions
     virtual bool CanCut() const { return true; }
     virtual bool CanCopy() const { return true; }
@@ -112,6 +118,8 @@ public:
 
     //Virtual Filesystem Support
     virtual void RegisterHandler(wxSharedPtr<wxWebViewHandler> handler);
+
+    virtual void* GetNativeBackend() const { return m_webView; }
 
     // ---- methods not from the parent (common) interface
     bool  CanGetPageSource() const;
@@ -141,6 +149,8 @@ public:
     bool m_busy;
 
 protected:
+    virtual void DoSetPage(const wxString& html, const wxString& baseUrl);
+
     DECLARE_EVENT_TABLE()
     void MacVisibilityChanged();
 
@@ -149,13 +159,27 @@ private:
     wxWindowID m_windowID;
     wxString m_pageTitle;
 
-    struct objc_object *m_webView;
+    wxObjCID m_webView;
 
     // we may use this later to setup our own mouse events,
     // so leave it in for now.
     void* m_webKitCtrlEventHandler;
     //It should be WebView*, but WebView is an Objective-C class
     //TODO: look into using DECLARE_WXCOCOA_OBJC_CLASS rather than this.
+};
+
+class WXDLLIMPEXP_WEBVIEW wxWebViewFactoryWebKit : public wxWebViewFactory
+{
+public:
+    virtual wxWebView* Create() { return new wxWebViewWebKit; }
+    virtual wxWebView* Create(wxWindow* parent,
+                              wxWindowID id,
+                              const wxString& url = wxWebViewDefaultURLStr,
+                              const wxPoint& pos = wxDefaultPosition,
+                              const wxSize& size = wxDefaultSize,
+                              long style = 0,
+                              const wxString& name = wxWebViewNameStr)
+    { return new wxWebViewWebKit(parent, id, url, pos, size, style, name); }
 };
 
 #endif // wxUSE_WEBVIEW && wxUSE_WEBVIEW_WEBKIT

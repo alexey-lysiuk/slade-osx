@@ -5,7 +5,7 @@
 // Modified by:
 // Created:     14/4/2006
 // Copyright:   (c) Francesco Montorsi
-// RCS-ID:      $Id: filepickerg.h 70043 2011-12-18 12:34:47Z VZ $
+// RCS-ID:      $Id: filepickerg.h 72451 2012-09-09 13:34:49Z VZ $
 // Licence:     wxWindows Licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -155,10 +155,6 @@ protected:
         { wxStaticCast(p, wxFileDialog)->SetPath(m_path); }
     void UpdatePathFromDialog(wxDialog *p)
         { m_path = wxStaticCast(p, wxFileDialog)->GetPath(); }
-
-    // Set the initial directory for the dialog but without overriding the
-    // directory of the currently selected file, if any.
-    void DoSetInitialDirectory(wxFileDialog* dialog, const wxString& dir);
 
 private:
     DECLARE_DYNAMIC_CLASS(wxGenericFileButton)

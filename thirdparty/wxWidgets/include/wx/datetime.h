@@ -5,7 +5,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     10.02.99
-// RCS-ID:      $Id: datetime.h 71102 2012-04-05 18:40:11Z VZ $
+// RCS-ID:      $Id: datetime.h 72750 2012-10-24 14:02:30Z VZ $
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -408,7 +408,7 @@ public:
     // helper classes
     // ------------------------------------------------------------------------
 
-        // a class representing a time zone: basicly, this is just an offset
+        // a class representing a time zone: basically, this is just an offset
         // (in seconds) from GMT
     class WXDLLIMPEXP_BASE TimeZone
     {
@@ -693,7 +693,7 @@ public:
         // default assignment operator is ok
 
     // calendar calculations (functions which set the date only leave the time
-    // unchanged, e.g. don't explictly zero it): SetXXX() functions modify the
+    // unchanged, e.g. don't explicitly zero it): SetXXX() functions modify the
     // object itself, GetXXX() ones return a new object.
     // ------------------------------------------------------------------------
 
@@ -1063,6 +1063,8 @@ public:
     inline wxTimeSpan Subtract(const wxDateTime& dt) const;
     inline wxTimeSpan operator-(const wxDateTime& dt2) const;
 
+    wxDateSpan DiffAsDateSpan(const wxDateTime& dt) const;
+
     // conversion to/from text
     // ------------------------------------------------------------------------
 
@@ -1211,15 +1213,23 @@ public:
     // if the overloads above were used.
     //
     // And then we also have to provide the overloads for wxCStrData, as usual.
-    wxAnyStrPtr ParseRfc822Date(const wxCStrData& date)
-        { return ParseRfc822Date(wxString(date)); }
+    // Unfortunately those ones can't return anything as we don't have any
+    // sufficiently long-lived wxAnyStrPtr to return from them: any temporary
+    // strings it would point to would be destroyed when this function returns
+    // making it impossible to dereference the return value. So we just don't
+    // return anything from here which at least allows to keep compatibility
+    // with the code not testing the return value. Other uses of this method
+    // need to be converted to use one of the new bool-returning overloads
+    // above.
+    void ParseRfc822Date(const wxCStrData& date)
+        { ParseRfc822Date(wxString(date)); }
     const char* ParseRfc822Date(const char* date);
     const wchar_t* ParseRfc822Date(const wchar_t* date);
 
-    wxAnyStrPtr ParseFormat(const wxCStrData& date,
-                            const wxString& format = wxDefaultDateTimeFormat,
-                            const wxDateTime& dateDef = wxDefaultDateTime)
-        { return ParseFormat(wxString(date), format, dateDef); }
+    void ParseFormat(const wxCStrData& date,
+                     const wxString& format = wxDefaultDateTimeFormat,
+                     const wxDateTime& dateDef = wxDefaultDateTime)
+        { ParseFormat(wxString(date), format, dateDef); }
     const char* ParseFormat(const char* date,
                             const wxString& format = wxDefaultDateTimeFormat,
                             const wxDateTime& dateDef = wxDefaultDateTime);
@@ -1227,18 +1237,18 @@ public:
                                const wxString& format = wxDefaultDateTimeFormat,
                                const wxDateTime& dateDef = wxDefaultDateTime);
 
-    wxAnyStrPtr ParseDateTime(const wxCStrData& datetime)
-        { return ParseDateTime(wxString(datetime)); }
+    void ParseDateTime(const wxCStrData& datetime)
+        { ParseDateTime(wxString(datetime)); }
     const char* ParseDateTime(const char* datetime);
     const wchar_t* ParseDateTime(const wchar_t* datetime);
 
-    wxAnyStrPtr ParseDate(const wxCStrData& date)
-        { return ParseDate(wxString(date)); }
+    void ParseDate(const wxCStrData& date)
+        { ParseDate(wxString(date)); }
     const char* ParseDate(const char* date);
     const wchar_t* ParseDate(const wchar_t* date);
 
-    wxAnyStrPtr ParseTime(const wxCStrData& time)
-        { return ParseTime(wxString(time)); }
+    void ParseTime(const wxCStrData& time)
+        { ParseTime(wxString(time)); }
     const char* ParseTime(const char* time);
     const wchar_t* ParseTime(const wchar_t* time);
 
@@ -1569,6 +1579,8 @@ public:
     int GetYears() const { return m_years; }
         // get number of months
     int GetMonths() const { return m_months; }
+        // returns 12*GetYears() + GetMonths()
+    int GetTotalMonths() const { return 12*m_years + m_months; }
         // get number of weeks
     int GetWeeks() const { return m_weeks; }
         // get number of days
@@ -1769,9 +1781,16 @@ inline wxDateTime wxDateTime::Today()
 #if (!(defined(__VISAGECPP__) && __IBMCPP__ >= 400))
 inline wxDateTime& wxDateTime::Set(time_t timet)
 {
-    // assign first to avoid long multiplication overflow!
-    m_time = timet - WX_TIME_BASE_OFFSET ;
-    m_time *= TIME_T_FACTOR;
+    if ( timet == (time_t)-1 )
+    {
+        m_time = wxInvalidDateTime.m_time;
+    }
+    else
+    {
+        // assign first to avoid long multiplication overflow!
+        m_time = timet - WX_TIME_BASE_OFFSET;
+        m_time *= TIME_T_FACTOR;
+    }
 
     return *this;
 }

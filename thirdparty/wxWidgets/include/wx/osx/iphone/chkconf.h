@@ -4,7 +4,7 @@
  * Author:      Stefan Csomor
  * Modified by:
  * Created:     2008-07-30
- * RCS-ID:      $Id: chkconf.h 69818 2011-11-25 14:37:03Z SC $
+ * RCS-ID:      $Id: chkconf.h 71768 2012-06-14 21:53:06Z SC $
  * Copyright:   (c) Stefan Csomor
  * Licence:     wxWindows licence
  */
@@ -20,7 +20,7 @@
  * under a certain platform
  */
 
-#define wxOSX_USE_CORE_TEXT 0
+#define wxOSX_USE_CORE_TEXT 1
 #define wxOSX_USE_ATSU_TEXT 0
 #define wxHAS_OPENGL_ES
 

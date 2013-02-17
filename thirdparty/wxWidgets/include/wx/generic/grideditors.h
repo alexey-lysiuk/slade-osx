@@ -4,7 +4,7 @@
 // Author:      Michael Bedward (based on code by Julian Smart, Robin Dunn)
 // Modified by: Santiago Palacios
 // Created:     1/08/1999
-// RCS-ID:      $Id: grideditors.h 70693 2012-02-25 23:49:55Z VZ $
+// RCS-ID:      $Id: grideditors.h 72697 2012-10-17 16:44:02Z VZ $
 // Copyright:   (c) Michael Bedward
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,9 @@ public:
                         wxEvtHandler* evtHandler);
     virtual void SetSize(const wxRect& rect);
 
-    virtual void PaintBackground(const wxRect& rectCell, wxGridCellAttr *attr);
+    virtual void PaintBackground(wxDC& dc,
+                                 const wxRect& rectCell,
+                                 const wxGridCellAttr& attr);
 
     virtual bool IsAcceptedKey(wxKeyEvent& event);
     virtual void BeginEdit(int row, int col, wxGrid* grid);
@@ -297,7 +299,9 @@ public:
 
     virtual void SetSize(const wxRect& rect);
 
-    virtual void PaintBackground(const wxRect& rectCell, wxGridCellAttr *attr);
+    virtual void PaintBackground(wxDC& dc,
+                                 const wxRect& rectCell,
+                                 const wxGridCellAttr& attr);
 
     virtual void BeginEdit(int row, int col, wxGrid* grid);
     virtual bool EndEdit(int row, int col, const wxGrid* grid,

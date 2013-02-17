@@ -4,7 +4,7 @@
 * Author:      John Labenski and others
 * Modified by:
 * Created:     02/02/03
-* RCS-ID:      $Id: math.h 71102 2012-04-05 18:40:11Z VZ $
+* RCS-ID:      $Id: math.h 73280 2012-12-28 00:44:01Z VZ $
 * Copyright:   (c) John Labenski
 * Licence:     wxWindows licence
 */
@@ -57,7 +57,7 @@
 #if defined(__VISUALC__) || defined(__BORLANDC__) || defined(__WATCOMC__)
     #include <float.h>
     #define wxFinite(x) _finite(x)
-#elif defined(__MINGW64__)
+#elif defined(__MINGW64__) || defined(__clang__)
     /*
         add more compilers with C99 support here: using C99 isfinite() is
         preferable to using BSD-ish finite()
@@ -107,8 +107,9 @@
         }
 
     #else /* !__INTELC__ */
-
+        wxGCC_WARNING_SUPPRESS(float-equal)
         inline bool wxIsSameDouble(double x, double y) { return x == y; }
+        wxGCC_WARNING_RESTORE(float-equal)
 
     #endif /* __INTELC__/!__INTELC__ */
 

@@ -5,7 +5,7 @@
 // Modified by:
 // Created:     14/4/2006
 // Copyright:   (c) Francesco Montorsi
-// RCS-ID:      $Id: filepicker.h 70043 2011-12-18 12:34:47Z VZ $
+// RCS-ID:      $Id: filepicker.h 72475 2012-09-13 17:14:37Z VZ $
 // Licence:     wxWindows Licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -129,7 +129,7 @@ protected:
 //       requires that all classes being mapped as wx{File|Dir}PickerWidget have the
 //       same prototype for the contructor...
 // since GTK >= 2.6, there is GtkFileButton
-#if defined(__WXGTK26__) && !defined(__WXUNIVERSAL__)
+#if defined(__WXGTK20__) && !defined(__WXUNIVERSAL__)
     #include "wx/gtk/filepicker.h"
     #define wxFilePickerWidget      wxFileButton
     #define wxDirPickerWidget       wxDirButton
@@ -148,7 +148,7 @@ protected:
 class WXDLLIMPEXP_CORE wxFileDirPickerCtrlBase : public wxPickerBase
 {
 public:
-    wxFileDirPickerCtrlBase() : m_bIgnoreNextTextCtrlUpdate(false) {}
+    wxFileDirPickerCtrlBase() {}
 
 protected:
     // NB: no default values since this function will never be used
@@ -183,11 +183,6 @@ public:        // internal functions
     // event handler for our picker
     void OnFileDirChange(wxFileDirPickerEvent &);
 
-    // Returns TRUE if the current path is a valid one
-    // (i.e. a valid file for a wxFilePickerWidget or a valid
-    //  folder for a wxDirPickerWidget).
-    virtual bool CheckPath(const wxString &str) const = 0;
-
     // TRUE if any textctrl change should update the current working directory
     virtual bool IsCwdToUpdate() const = 0;
 
@@ -208,9 +203,6 @@ protected:
                                             const wxString& wildcard) = 0;
 
 protected:
-
-    // true if the next UpdateTextCtrl() call is to ignore
-    bool m_bIgnoreNextTextCtrlUpdate;
 
     // m_picker object as wxFileDirPickerWidgetBase interface
     wxFileDirPickerWidgetBase *m_pickerIface;

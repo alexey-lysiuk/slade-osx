@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     04.12.99
-// RCS-ID:      $Id: listbase.h 70286 2012-01-07 16:11:10Z VZ $
+// RCS-ID:      $Id: listbase.h 73239 2012-12-22 02:33:23Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -446,6 +446,8 @@ public:
     virtual int GetColumnWidth(int col) const = 0;
     virtual bool SetColumnWidth(int col, int width) = 0;
 
+    // return the attribute for the item (may return NULL if none)
+    virtual wxListItemAttr *OnGetItemAttr(long item) const;
 
     // Other miscellaneous accessors.
     // ------------------------------
@@ -454,12 +456,23 @@ public:
     bool InReportView() const { return HasFlag(wxLC_REPORT); }
     bool IsVirtual() const { return HasFlag(wxLC_VIRTUAL); }
 
+    // Enable or disable beep when incremental match doesn't find any item.
+    // Only implemented in the generic version currently.
+    virtual void EnableBellOnNoMatch(bool WXUNUSED(on) = true) { }
+
+    void EnableAlternateRowColours(bool enable = true);
+    void SetAlternateRowColour(const wxColour& colour);
+
 protected:
     // Real implementations methods to which our public forwards.
     virtual long DoInsertColumn(long col, const wxListItem& info) = 0;
 
     // Overridden methods of the base class.
     virtual wxSize DoGetBestClientSize() const;
+
+private:
+    // user defined color to draw row lines, may be invalid
+    wxListItemAttr m_alternateRowColour;
 };
 
 // ----------------------------------------------------------------------------

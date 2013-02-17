@@ -4,7 +4,7 @@
 // Author:      Robert Roebling
 // Modified by: Bo Yang
 // Created:     08.01.06
-// RCS-ID:      $Id: dataview.h 71055 2012-03-29 23:43:46Z VZ $
+// RCS-ID:      $Id: dataview.h 73271 2012-12-26 17:47:47Z PC $
 // Copyright:   (c) Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -19,6 +19,7 @@
 #include "wx/textctrl.h"
 #include "wx/headercol.h"
 #include "wx/variant.h"
+#include "wx/dnd.h"             // For wxDragResult declaration only.
 #include "wx/dynarray.h"
 #include "wx/icon.h"
 #include "wx/itemid.h"
@@ -228,7 +229,7 @@ public:
         return true;
     }
 
-    // define hierachy
+    // define hierarchy
     virtual wxDataViewItem GetParent( const wxDataViewItem &item ) const = 0;
     virtual bool IsContainer( const wxDataViewItem &item ) const = 0;
     // Is the container just a header or an item with all columns
@@ -431,7 +432,6 @@ public:
 
 private:
     unsigned int m_size;
-    bool m_ordered;
 };
 #endif
 
@@ -761,7 +761,9 @@ public:
 #if wxUSE_DRAG_AND_DROP
         , m_dataObject(NULL),
         m_dataBuffer(NULL),
-        m_dataSize(0)
+        m_dataSize(0),
+        m_dragFlags(0),
+        m_dropEffect(wxDragNone)
 #endif
         { }
 
@@ -780,7 +782,9 @@ public:
         , m_dataObject(event.m_dataObject),
         m_dataFormat(event.m_dataFormat),
         m_dataBuffer(event.m_dataBuffer),
-        m_dataSize(event.m_dataSize)
+        m_dataSize(event.m_dataSize),
+        m_dragFlags(event.m_dragFlags),
+        m_dropEffect(event.m_dropEffect)
 #endif
         { }
 
@@ -826,6 +830,10 @@ public:
     size_t GetDataSize() const { return m_dataSize; }
     void SetDataBuffer( void* buf ) { m_dataBuffer = buf;}
     void *GetDataBuffer() const { return m_dataBuffer; }
+    void SetDragFlags( int flags ) { m_dragFlags = flags; }
+    int GetDragFlags() const { return m_dragFlags; }
+    void SetDropEffect( wxDragResult effect ) { m_dropEffect = effect; }
+    wxDragResult GetDropEffect() const { return m_dropEffect; }
 #endif // wxUSE_DRAG_AND_DROP
 
     virtual wxEvent *Clone() const { return new wxDataViewEvent(*this); }
@@ -847,6 +855,9 @@ protected:
     wxDataFormat        m_dataFormat;
     void*               m_dataBuffer;
     size_t              m_dataSize;
+
+    int                 m_dragFlags;
+    wxDragResult        m_dropEffect;
 #endif // wxUSE_DRAG_AND_DROP
 
 private:
@@ -927,24 +938,20 @@ typedef void (wxEvtHandler::*wxDataViewEventFunction)(wxDataViewEvent&);
 class WXDLLIMPEXP_ADV wxDataViewListStoreLine
 {
 public:
-    wxDataViewListStoreLine( wxClientData *data = NULL )
+    wxDataViewListStoreLine( wxUIntPtr data = 0 )
     {
         m_data = data;
     }
-    virtual ~wxDataViewListStoreLine()
-    {
-        delete m_data;
-    }
 
-    void SetData( wxClientData *data )
-        { if (m_data) delete m_data; m_data = data; }
-    wxClientData *GetData() const
+    void SetData( wxUIntPtr data )
+        { m_data = data; }
+    wxUIntPtr GetData() const
         { return m_data; }
 
     wxVector<wxVariant>  m_values;
 
 private:
-    wxClientData    *m_data;
+    wxUIntPtr m_data;
 };
 
 
@@ -958,11 +965,16 @@ public:
     void InsertColumn( unsigned int pos, const wxString &varianttype );
     void AppendColumn( const wxString &varianttype );
 
-    void AppendItem( const wxVector<wxVariant> &values, wxClientData *data = NULL );
-    void PrependItem( const wxVector<wxVariant> &values, wxClientData *data = NULL );
-    void InsertItem(  unsigned int row, const wxVector<wxVariant> &values, wxClientData *data = NULL );
+    void AppendItem( const wxVector<wxVariant> &values, wxUIntPtr data = 0 );
+    void PrependItem( const wxVector<wxVariant> &values, wxUIntPtr data = 0 );
+    void InsertItem(  unsigned int row, const wxVector<wxVariant> &values, wxUIntPtr data = 0 );
     void DeleteItem( unsigned int pos );
     void DeleteAllItems();
+
+    unsigned int GetItemCount() const;
+
+    void SetItemData( const wxDataViewItem& item, wxUIntPtr data );
+    wxUIntPtr GetItemData( const wxDataViewItem& item ) const;
 
     // override base virtuals
 
@@ -1040,11 +1052,11 @@ public:
           wxDataViewCellMode mode = wxDATAVIEW_CELL_INERT,
           int width = -1, wxAlignment align = wxALIGN_LEFT, int flags = wxDATAVIEW_COL_RESIZABLE );
 
-    void AppendItem( const wxVector<wxVariant> &values, wxClientData *data = NULL )
+    void AppendItem( const wxVector<wxVariant> &values, wxUIntPtr data = 0 )
         { GetStore()->AppendItem( values, data ); }
-    void PrependItem( const wxVector<wxVariant> &values, wxClientData *data = NULL )
+    void PrependItem( const wxVector<wxVariant> &values, wxUIntPtr data = 0 )
         { GetStore()->PrependItem( values, data ); }
-    void InsertItem(  unsigned int row, const wxVector<wxVariant> &values, wxClientData *data = NULL )
+    void InsertItem(  unsigned int row, const wxVector<wxVariant> &values, wxUIntPtr data = 0 )
         { GetStore()->InsertItem( row, values, data ); }
     void DeleteItem( unsigned row )
         { GetStore()->DeleteItem( row ); }
@@ -1068,6 +1080,14 @@ public:
           GetStore()->RowValueChanged( row, col); }
     bool GetToggleValue( unsigned int row, unsigned int col ) const
         { wxVariant value; GetStore()->GetValueByRow( value, row, col ); return value.GetBool(); }
+
+    void SetItemData( const wxDataViewItem& item, wxUIntPtr data )
+        { GetStore()->SetItemData( item, data ); }
+    wxUIntPtr GetItemData( const wxDataViewItem& item ) const
+        { return GetStore()->GetItemData( item ); }
+
+    int GetItemCount() const
+        { return GetStore()->GetItemCount(); }
 
     void OnSize( wxSizeEvent &event );
 

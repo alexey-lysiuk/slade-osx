@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by: Francesco Montorsi
 // Created:     27/07/03
-// RCS-ID:      $Id: xtitypes.h 70384 2012-01-18 14:05:39Z SC $
+// RCS-ID:      $Id: xtitypes.h 71480 2012-05-18 10:35:08Z SC $
 // Copyright:   (c) 1997 Julian Smart
 //              (c) 2003 Stefan Csomor
 // Licence:     wxWindows licence
@@ -236,7 +236,7 @@ void wxFlagsToString( wxString &s, const e& data )
 #define wxBEGIN_FLAGS( e ) \
     wxEnumMemberData s_enumDataMembers##e[] = {
 
-#define wxFLAGS_MEMBER( v ) { wxT(#v), v },
+#define wxFLAGS_MEMBER( v ) { wxT(#v), static_cast<int>(v) },
 
 #define wxEND_FLAGS( e )                                                \
         { NULL, 0 } };                                                 \

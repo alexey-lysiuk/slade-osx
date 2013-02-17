@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: window.h 70765 2012-03-01 15:04:42Z JS $
+// RCS-ID:      $Id: window.h 73044 2012-11-27 19:09:41Z SC $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -259,7 +259,10 @@ public:
     // optimization to avoid creating a user pane in wxWindow::Create if we already know
     // we will replace it with our own peer
     void                DontCreatePeer();
-    
+
+    // return true unless DontCreatePeer() had been called
+    bool                ShouldCreatePeer() const;
+
     // sets the native implementation wrapper, can replace an existing peer, use peer = NULL to 
     // release existing peer
     void                SetPeer(wxOSXWidgetImpl* peer);
@@ -283,6 +286,7 @@ public:
 
     virtual bool        OSXHandleClicked( double timestampsec );
     virtual bool        OSXHandleKeyEvent( wxKeyEvent& event );
+    virtual void        OSXSimulateFocusEvents();
 
     bool                IsNativeWindowWrapper() const { return m_isNativeWindowWrapper; }
     

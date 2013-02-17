@@ -4,7 +4,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: button.h 67931 2011-06-14 13:00:42Z VZ $
+// RCS-ID:      $Id: button.h 72885 2012-11-04 23:50:28Z VZ $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -48,6 +48,10 @@ public:
     // osx specific event handling common for all osx-ports
 
     virtual bool        OSXHandleClicked( double timestampsec );
+
+#if wxOSX_USE_COCOA
+    void OSXUpdateAfterLabelChange(const wxString& label);
+#endif
 
 protected:
     DECLARE_DYNAMIC_CLASS(wxButton)

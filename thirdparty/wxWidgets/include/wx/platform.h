@@ -4,7 +4,7 @@
 * Author:      Vadim Zeitlin
 * Modified by:
 * Created:     29.10.01 (extracted from wx/defs.h)
-* RCS-ID:      $Id: platform.h 71122 2012-04-06 19:51:20Z VZ $
+* RCS-ID:      $Id: platform.h 73290 2012-12-28 16:03:03Z VZ $
 * Copyright:   (c) 1997-2001 Vadim Zeitlin
 * Licence:     wxWindows licence
 */
@@ -26,6 +26,12 @@
 #    endif
 #    ifndef MAC_OS_X_VERSION_10_6
 #       define MAC_OS_X_VERSION_10_6 1060
+#    endif
+#    ifndef MAC_OS_X_VERSION_10_7
+#       define MAC_OS_X_VERSION_10_7 1070
+#    endif
+#    ifndef MAC_OS_X_VERSION_10_8
+#       define MAC_OS_X_VERSION_10_8 1080
 #    endif
 #    include "wx/osx/config_xcode.h"
 #    ifndef __WXOSX__
@@ -68,13 +74,9 @@
 #    endif
 #endif /* Win32 */
 
-#if defined(__WXMSW__)
+#if defined(_WIN32)
 #   if !defined(__WINDOWS__)
 #       define __WINDOWS__
-#   endif
-
-#   ifndef _WIN32
-#        define _WIN32
 #   endif
 
 #   ifndef WIN32
@@ -84,7 +86,25 @@
 #   ifndef __WIN32__
 #        define __WIN32__
 #   endif
-#endif /* __WXMSW__ */
+#endif /* _WIN32 */
+
+/* Don't use widget toolkit specific code in non-GUI code */
+#if defined(wxUSE_GUI) && !wxUSE_GUI
+#   ifdef __WXMSW__
+#       undef __WXMSW__
+#   endif
+#   ifdef __WXGTK__
+#       undef __WXGTK__
+#   endif
+#endif
+
+#if defined(__WXGTK__) && defined(__WINDOWS__)
+
+#   ifdef __WXMSW__
+#       undef __WXMSW__
+#   endif
+
+#endif /* __WXGTK__ && __WINDOWS__ */
 
 /* detect MS SmartPhone */
 #if defined( WIN32_PLATFORM_WFSP )
@@ -535,7 +555,6 @@
     !defined(__DOS__) && \
     !defined(__WXPM__) && \
     !defined(__WXMOTIF__) && \
-    !defined(__WXGTK__) && \
     !defined(__WXX11__)
 #    include "wx/msw/gccpriv.h"
 #else
@@ -609,8 +628,7 @@
     checking for any OS X port (Carbon and Cocoa) and __WXMAC__ is an old name
     for it.
  */
-#if defined(__WXOSX_CARBON__) || defined(__WXOSX_COCOA__) || defined(__WXOSX_IPHONE__) \
-        || (defined(__DARWIN__) && !wxUSE_GUI)
+#if defined(__WXOSX_CARBON__) || defined(__WXOSX_COCOA__) || defined(__WXOSX_IPHONE__)
 #   ifndef __WXOSX__
 #       define __WXOSX__ 1
 #   endif
@@ -648,6 +666,12 @@
 #        endif
 #        ifndef MAC_OS_X_VERSION_10_6
 #           define MAC_OS_X_VERSION_10_6 1060
+#        endif
+#        ifndef MAC_OS_X_VERSION_10_7
+#           define MAC_OS_X_VERSION_10_7 1070
+#        endif
+#        ifndef MAC_OS_X_VERSION_10_8
+#           define MAC_OS_X_VERSION_10_8 1080
 #        endif
 #    else
 #        error "only mach-o configurations are supported"
@@ -735,7 +759,7 @@
 
 /* Choose which method we will use for updating menus
  * - in OnIdle, or when we receive a wxEVT_MENU_OPEN event.
- * Presently, only Windows and GTK+ support wxEVT_MENU_OPEN.
+ * Presently, only Windows, OS X and GTK+ support wxEVT_MENU_OPEN.
  */
 #ifndef wxUSE_IDLEMENUUPDATES
 #    if (defined(__WXMSW__) || defined(__WXGTK__) || defined(__WXOSX__)) && !defined(__WXUNIVERSAL__)

@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by: Wlodzimierz ABX Skiba from wx/listbook.h
 // Created:     15.09.04
-// RCS-ID:      $Id: choicebk.h 68810 2011-08-21 14:08:49Z VZ $
+// RCS-ID:      $Id: choicebk.h 71435 2012-05-15 10:03:57Z VZ $
 // Copyright:   (c) Vadim Zeitlin, Wlodzimierz Skiba
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,7 @@
 
 #include "wx/bookctrl.h"
 #include "wx/choice.h"
+#include "wx/containr.h"
 
 class WXDLLIMPEXP_FWD_CORE wxChoice;
 
@@ -36,7 +37,7 @@ wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGI
 // wxChoicebook
 // ----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxChoicebook : public wxBookCtrlBase
+class WXDLLIMPEXP_CORE wxChoicebook : public wxNavigationEnabled<wxBookCtrlBase>
 {
 public:
     wxChoicebook() { }
@@ -111,7 +112,7 @@ private:
 // ----------------------------------------------------------------------------
 
 // wxChoicebookEvent is obsolete and defined for compatibility only
-typedef wxBookCtrlEvent wxChoicebookEvent;
+#define wxChoicebookEvent wxBookCtrlEvent
 typedef wxBookCtrlEventFunction wxChoicebookEventFunction;
 #define wxChoicebookEventHandler(func) wxBookCtrlEventHandler(func)
 

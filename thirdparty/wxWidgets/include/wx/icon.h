@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (c) Julian Smart
-// RCS-ID:      $Id: icon.h 70353 2012-01-15 14:46:41Z VZ $
+// RCS-ID:      $Id: icon.h 71889 2012-06-30 16:33:23Z VZ $
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,11 @@
   #define wxICON_DEFAULT_TYPE   wxBITMAP_TYPE_XPM
   #include "wx/motif/icon.h"
 #elif defined(__WXGTK20__)
-  #define wxICON_DEFAULT_TYPE   wxBITMAP_TYPE_XPM
+  #ifdef __WINDOWS__
+    #define wxICON_DEFAULT_TYPE   wxBITMAP_TYPE_ICO_RESOURCE
+  #else
+    #define wxICON_DEFAULT_TYPE   wxBITMAP_TYPE_XPM
+  #endif
   #include "wx/generic/icon.h"
 #elif defined(__WXGTK__)
   #define wxICON_DEFAULT_TYPE   wxBITMAP_TYPE_XPM

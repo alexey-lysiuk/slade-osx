@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     2006-10-02
-// RCS-ID:      $Id: richtextfontpage.h 68619 2011-08-10 14:06:28Z JS $
+// RCS-ID:      $Id: richtextfontpage.h 72465 2012-09-12 18:58:30Z JS $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -19,6 +19,7 @@
 #include "wx/richtext/richtextdialogpage.h"
 
 ////@begin includes
+#include "wx/spinbutt.h"
 ////@end includes
 
 /*!
@@ -26,6 +27,8 @@
  */
 
 ////@begin forward declarations
+class wxSpinButton;
+class wxBoxSizer;
 class wxRichTextFontListBox;
 class wxRichTextColourSwatchCtrl;
 class wxRichTextFontPreviewCtrl;
@@ -82,11 +85,23 @@ public:
 
 ////@begin wxRichTextFontPage event handler declarations
 
+    /// wxEVT_IDLE event handler for ID_RICHTEXTFONTPAGE
+    void OnIdle( wxIdleEvent& event );
+
     /// wxEVT_COMMAND_TEXT_UPDATED event handler for ID_RICHTEXTFONTPAGE_FACETEXTCTRL
     void OnFaceTextCtrlUpdated( wxCommandEvent& event );
 
     /// wxEVT_COMMAND_TEXT_UPDATED event handler for ID_RICHTEXTFONTPAGE_SIZETEXTCTRL
     void OnSizeTextCtrlUpdated( wxCommandEvent& event );
+
+    /// wxEVT_SCROLL_LINEUP event handler for ID_RICHTEXTFONTPAGE_SPINBUTTONS
+    void OnRichtextfontpageSpinbuttonsUp( wxSpinEvent& event );
+
+    /// wxEVT_SCROLL_LINEDOWN event handler for ID_RICHTEXTFONTPAGE_SPINBUTTONS
+    void OnRichtextfontpageSpinbuttonsDown( wxSpinEvent& event );
+
+    /// wxEVT_COMMAND_CHOICE_SELECTED event handler for ID_RICHTEXTFONTPAGE_SIZE_UNITS
+    void OnRichtextfontpageSizeUnitsSelected( wxCommandEvent& event );
 
     /// wxEVT_COMMAND_LISTBOX_SELECTED event handler for ID_RICHTEXTFONTPAGE_SIZELISTBOX
     void OnSizeListBoxSelected( wxCommandEvent& event );
@@ -128,8 +143,11 @@ public:
 
 ////@begin wxRichTextFontPage member variables
     wxTextCtrl* m_faceTextCtrl;
-    wxRichTextFontListBox* m_faceListBox;
     wxTextCtrl* m_sizeTextCtrl;
+    wxSpinButton* m_fontSizeSpinButtons;
+    wxChoice* m_sizeUnitsCtrl;
+    wxBoxSizer* m_fontListBoxParent;
+    wxRichTextFontListBox* m_faceListBox;
     wxListBox* m_sizeListBox;
     wxComboBox* m_styleCtrl;
     wxComboBox* m_weightCtrl;
@@ -140,6 +158,7 @@ public:
     wxRichTextColourSwatchCtrl* m_bgColourCtrl;
     wxCheckBox* m_strikethroughCtrl;
     wxCheckBox* m_capitalsCtrl;
+    wxCheckBox* m_smallCapitalsCtrl;
     wxCheckBox* m_superscriptCtrl;
     wxCheckBox* m_subscriptCtrl;
     wxRichTextFontPreviewCtrl* m_previewCtrl;
@@ -147,21 +166,24 @@ public:
     enum {
         ID_RICHTEXTFONTPAGE = 10000,
         ID_RICHTEXTFONTPAGE_FACETEXTCTRL = 10001,
-        ID_RICHTEXTFONTPAGE_FACELISTBOX = 10002,
-        ID_RICHTEXTFONTPAGE_SIZETEXTCTRL = 10005,
+        ID_RICHTEXTFONTPAGE_SIZETEXTCTRL = 10002,
+        ID_RICHTEXTFONTPAGE_SPINBUTTONS = 10003,
+        ID_RICHTEXTFONTPAGE_SIZE_UNITS = 10004,
+        ID_RICHTEXTFONTPAGE_FACELISTBOX = 10005,
         ID_RICHTEXTFONTPAGE_SIZELISTBOX = 10006,
         ID_RICHTEXTFONTPAGE_STYLECTRL = 10007,
-        ID_RICHTEXTFONTPAGE_WEIGHTCTRL = 10004,
-        ID_RICHTEXTFONTPAGE_UNDERLINING_CTRL = 10008,
-        ID_RICHTEXTFONTPAGE_COLOURCTRL_LABEL = 10015,
-        ID_RICHTEXTFONTPAGE_COLOURCTRL = 10009,
-        ID_RICHTEXTFONTPAGE_BGCOLOURCTRL_LABEL = 10016,
-        ID_RICHTEXTFONTPAGE_BGCOLOURCTRL = 10014,
-        ID_RICHTEXTFONTPAGE_STRIKETHROUGHCTRL = 10010,
-        ID_RICHTEXTFONTPAGE_CAPSCTRL = 10011,
-        ID_RICHTEXTFONTPAGE_SUPERSCRIPT = 10012,
-        ID_RICHTEXTFONTPAGE_SUBSCRIPT = 10013,
-        ID_RICHTEXTFONTPAGE_PREVIEWCTRL = 10003
+        ID_RICHTEXTFONTPAGE_WEIGHTCTRL = 10008,
+        ID_RICHTEXTFONTPAGE_UNDERLINING_CTRL = 10009,
+        ID_RICHTEXTFONTPAGE_COLOURCTRL_LABEL = 10010,
+        ID_RICHTEXTFONTPAGE_COLOURCTRL = 10011,
+        ID_RICHTEXTFONTPAGE_BGCOLOURCTRL_LABEL = 10012,
+        ID_RICHTEXTFONTPAGE_BGCOLOURCTRL = 10013,
+        ID_RICHTEXTFONTPAGE_STRIKETHROUGHCTRL = 10014,
+        ID_RICHTEXTFONTPAGE_CAPSCTRL = 10015,
+        ID_RICHTEXTFONTPAGE_SMALLCAPSCTRL = 10016,
+        ID_RICHTEXTFONTPAGE_SUPERSCRIPT = 10017,
+        ID_RICHTEXTFONTPAGE_SUBSCRIPT = 10018,
+        ID_RICHTEXTFONTPAGE_PREVIEWCTRL = 10019
     };
 ////@end wxRichTextFontPage member variables
 

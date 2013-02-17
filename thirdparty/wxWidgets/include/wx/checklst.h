@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     12.09.00
-// RCS-ID:      $Id: checklst.h 65210 2010-08-08 11:35:55Z VZ $
+// RCS-ID:      $Id: checklst.h 73422 2013-01-21 11:18:55Z VZ $
 // Copyright:   (c) Vadim Zeitlin
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,6 +36,8 @@ public:
     // check list box specific methods
     virtual bool IsChecked(unsigned int item) const = 0;
     virtual void Check(unsigned int item, bool check = true) = 0;
+
+    virtual unsigned int GetCheckedItems(wxArrayInt& checkedItems) const;
 
     wxDECLARE_NO_COPY_CLASS(wxCheckListBoxBase);
 };

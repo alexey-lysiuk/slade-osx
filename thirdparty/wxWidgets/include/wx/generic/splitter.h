@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: splitter.h 70840 2012-03-08 13:23:39Z VZ $
+// RCS-ID:      $Id: splitter.h 73111 2012-12-03 18:14:55Z PC $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -212,7 +212,7 @@ public:
     virtual void DrawSashTracker(int x, int y);
 
     // Tests for x, y over sash
-    virtual bool SashHitTest(int x, int y, int tolerance = 5);
+    virtual bool SashHitTest(int x, int y);
 
     // Resizes subwindows
     virtual void SizeWindows();

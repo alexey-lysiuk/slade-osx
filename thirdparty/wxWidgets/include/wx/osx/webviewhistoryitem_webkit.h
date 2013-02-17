@@ -2,7 +2,7 @@
 // Name:        include/wx/osx/webviewhistoryitem.h
 // Purpose:     wxWebViewHistoryItem header for OSX
 // Author:      Steven Lamerton
-// Id:          $Id: webviewhistoryitem_webkit.h 71034 2012-03-28 18:00:30Z SJL $
+// Id:          $Id: webviewhistoryitem_webkit.h 71567 2012-05-26 12:29:39Z VZ $
 // Copyright:   (c) 2011 Steven Lamerton
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -14,6 +14,8 @@
 
 #if wxUSE_WEBVIEW && wxUSE_WEBVIEW_WEBKIT && (defined(__WXOSX_COCOA__) \
                                           ||  defined(__WXOSX_CARBON__))
+
+#include "wx/osx/core/objcid.h"
 
 class WXDLLIMPEXP_WEBVIEW wxWebViewHistoryItem
 {
@@ -27,7 +29,7 @@ public:
 
 private:
     wxString m_url, m_title;
-    struct objc_object *m_histItem;
+    wxObjCID m_histItem;
 };
 
 #endif // wxUSE_WEBVIEW && wxUSE_WEBVIEW_WEBKIT

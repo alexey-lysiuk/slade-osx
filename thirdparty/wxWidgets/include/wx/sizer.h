@@ -4,7 +4,7 @@
 // Author:      Robert Roebling and Robin Dunn
 // Modified by: Ron Lee, Vadim Zeitlin (wxSizerFlags)
 // Created:
-// RCS-ID:      $Id: sizer.h 69970 2011-12-10 04:34:06Z RD $
+// RCS-ID:      $Id: sizer.h 72436 2012-09-08 21:48:57Z VZ $
 // Copyright:   (c) Robin Dunn, Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -125,6 +125,10 @@ public:
 
     wxSizerFlags& Border(int direction, int borderInPixels)
     {
+        wxCHECK_MSG( !(direction & ~wxALL), *this,
+                     wxS("direction must be a combination of wxDirection ")
+                     wxS("enum values.") );
+
         m_flags &= ~wxALL;
         m_flags |= direction;
 
@@ -311,6 +315,10 @@ public:
         { return m_minSize; }
     wxSize GetMinSizeWithBorder() const;
 
+    wxSize GetMaxSize() const
+        { return IsWindow() ? m_window->GetMaxSize() : wxDefaultSize; }
+    wxSize GetMaxSizeWithBorder() const;
+
     void SetMinSize(const wxSize& size)
     {
         if ( IsWindow() )
@@ -435,6 +443,10 @@ protected:
     void DoSetWindow(wxWindow *window);
     void DoSetSizer(wxSizer *sizer);
     void DoSetSpacer(const wxSize& size);
+
+    // Add the border specified for this item to the given size
+    // if it's != wxDefaultSize, just return wxDefaultSize otherwise.
+    wxSize AddBorderToSize(const wxSize& size) const;
 
     // discriminated union: depending on m_kind one of the fields is valid
     enum
@@ -601,7 +613,7 @@ public:
     virtual void DeleteWindows();
 
     // Inform sizer about the first direction that has been decided (by parent item)
-    // Returns true if it made use of the informtion (and recalculated min size)
+    // Returns true if it made use of the information (and recalculated min size)
     virtual bool InformFirstDirection( int WXUNUSED(direction), int WXUNUSED(size), int WXUNUSED(availableOtherDir) )
         { return false; }
 

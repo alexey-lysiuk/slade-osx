@@ -4,7 +4,7 @@
  *  Author:      Julian Smart and others
  *  Modified by: Ryan Norton (Converted to C)
  *  Created:     01/02/97
- *  RCS-ID:      $Id: defs.h 71102 2012-04-05 18:40:11Z VZ $
+ *  RCS-ID:      $Id: defs.h 73405 2013-01-20 02:10:07Z VZ $
  *  Copyright:   (c) Julian Smart
  *  Licence:     wxWindows licence
  */
@@ -30,7 +30,7 @@
 #ifdef __cplusplus
 /*  Make sure the environment is set correctly */
 #   if defined(__WXMSW__) && defined(__X__)
-#       error "Target can't be both X and Windows"
+#       error "Target can't be both X and MSW"
 #   elif !defined(__WXMOTIF__) && \
          !defined(__WXMSW__)   && \
          !defined(__WXGTK__)   && \
@@ -175,6 +175,18 @@
 #   define wxSUPPRESS_GCC_PRIVATE_DTOR_WARNING(name)
 #endif
 
+/*
+   Clang Support
+ */
+ 
+#ifndef WX_HAS_CLANG_FEATURE
+#   ifndef __has_feature      
+#       define WX_HAS_CLANG_FEATURE(x) 0 
+#   else
+#       define WX_HAS_CLANG_FEATURE(x) __has_feature(x)
+#   endif
+#endif
+
 /*  ---------------------------------------------------------------------------- */
 /*  wxWidgets version and compatibility defines */
 /*  ---------------------------------------------------------------------------- */
@@ -205,7 +217,7 @@
 
 /* Prevents conflicts between sys/types.h and winsock.h with Cygwin, */
 /* when using Windows sockets. */
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) && defined(__WXMSW__)
 #define __USE_W32_SOCKETS
 #endif
 
@@ -391,6 +403,10 @@ typedef short int WXTYPE;
     #if wxCHECK_WATCOM_VERSION(1,2)
         #define HAVE_VARIADIC_MACROS
     #endif
+
+    #if wxCHECK_VISUALC_VERSION(9)
+        #define HAVE_VARIADIC_MACROS
+    #endif
 #endif /* HAVE_VARIADIC_MACROS */
 
 
@@ -458,7 +474,7 @@ typedef short int WXTYPE;
     #define wxSTDCALL
 #endif /*  platform */
 
-/*  LINKAGEMODE mode is empty for everyting except OS/2 */
+/*  LINKAGEMODE mode is empty for everything except OS/2 */
 #ifndef LINKAGEMODE
     #define LINKAGEMODE
 #endif /*  LINKAGEMODE */
@@ -510,6 +526,17 @@ typedef short int WXTYPE;
 #   define WX_ATTRIBUTE_PRINTF_5 WX_ATTRIBUTE_PRINTF(5, 6)
 #endif /* !defined(WX_ATTRIBUTE_PRINTF) */
 
+#ifndef WX_ATTRIBUTE_NORETURN
+#   if WX_HAS_CLANG_FEATURE(attribute_analyzer_noreturn)
+#       define WX_ATTRIBUTE_NORETURN __attribute__((analyzer_noreturn))
+#   elif defined( __GNUC__ )
+#       define WX_ATTRIBUTE_NORETURN __attribute__ ((noreturn))
+#   elif wxCHECK_VISUALC_VERSION(7)
+#       define WX_ATTRIBUTE_NORETURN __declspec(noreturn)
+#   else
+#       define WX_ATTRIBUTE_NORETURN
+#   endif
+#endif
 
 /*  Macro to issue warning when using deprecated functions with gcc3 or MSVC7: */
 #if wxCHECK_GCC_VERSION(3, 1)
@@ -554,6 +581,27 @@ typedef short int WXTYPE;
 #   define wxDEPRECATED_BUT_USED_INTERNALLY(x) x
 #else
 #   define wxDEPRECATED_BUT_USED_INTERNALLY(x) wxDEPRECATED(x)
+#endif
+
+/*
+   Macros to suppress and restore gcc warnings, requires g++ >= 4.6 and don't
+   do anything otherwise.
+
+   Example of use:
+
+        wxGCC_WARNING_SUPPRESS(float-equal)
+        inline bool wxIsSameDouble(double x, double y) { return x == y; }
+        wxGCC_WARNING_RESTORE(float-equal)
+ */
+#if wxCHECK_GCC_VERSION(4, 6)
+#   define wxGCC_WARNING_SUPPRESS(x) \
+        _Pragma (wxSTRINGIZE(GCC diagnostic push)) \
+        _Pragma (wxSTRINGIZE(GCC diagnostic ignored wxSTRINGIZE(wxCONCAT(-W,x))))
+#   define wxGCC_WARNING_RESTORE(x) \
+       _Pragma (wxSTRINGIZE(GCC diagnostic pop))
+#else /* gcc < 4.6 or not gcc at all */
+#   define wxGCC_WARNING_SUPPRESS(x)
+#   define wxGCC_WARNING_RESTORE(x)
 #endif
 
 /*
@@ -646,9 +694,13 @@ typedef short int WXTYPE;
     m(==,x,y,z) m(!=,x,y,z) m(>=,x,y,z) m(<=,x,y,z) m(>,x,y,z) m(<,x,y,z)
 
 /*
-    This is only used with wxDEFINE_COMPARISON_REV: it passes both the normal
-    and the reversed comparison operators to the macro.
+    These are only used with wxDEFINE_COMPARISON_[BY_]REV: they pass both the
+    normal and the reversed comparison operators to the macro.
  */
+#define wxFOR_ALL_COMPARISONS_2_REV(m, x, y) \
+    m(==,x,y,==) m(!=,x,y,!=) m(>=,x,y,<=) \
+    m(<=,x,y,>=) m(>,x,y,<) m(<,x,y,>)
+
 #define wxFOR_ALL_COMPARISONS_3_REV(m, x, y, z) \
     m(==,x,y,z,==) m(!=,x,y,z,!=) m(>=,x,y,z,<=) \
     m(<=,x,y,z,>=) m(>,x,y,z,<) m(<,x,y,z,>)
@@ -660,6 +712,9 @@ typedef short int WXTYPE;
 #define wxDEFINE_COMPARISON_REV(op, T1, T2, cmp, oprev) \
     inline bool operator op(T2 y, T1 x) { return cmp(x, y, oprev); }
 
+#define wxDEFINE_COMPARISON_BY_REV(op, T1, T2, oprev) \
+    inline bool operator op(T1 x, T2 y) { return y oprev x; }
+
 /*
     Define all 6 comparison operators (==, !=, <, <=, >, >=) for the given
     types in the specified order. The implementation is provided by the cmp
@@ -668,6 +723,14 @@ typedef short int WXTYPE;
  */
 #define wxDEFINE_COMPARISONS(T1, T2, cmp) \
     wxFOR_ALL_COMPARISONS_3(wxDEFINE_COMPARISON, T1, T2, cmp)
+
+/*
+    Define all 6 comparison operators (==, !=, <, <=, >, >=) for the given
+    types in the specified order, implemented in terms of existing operators
+    for the reverse order.
+ */
+#define wxDEFINE_COMPARISONS_BY_REV(T1, T2) \
+    wxFOR_ALL_COMPARISONS_2_REV(wxDEFINE_COMPARISON_BY_REV, T1, T2)
 
 /*
     This macro allows to define all 12 comparison operators (6 operators for
@@ -2200,6 +2263,28 @@ enum wxHitTest
 /*  GDI descriptions */
 /*  ---------------------------------------------------------------------------- */
 
+// Hatch styles used by both pen and brush styles.
+//
+// NB: Do not use these constants directly, they're for internal use only, use
+//     wxBRUSHSTYLE_XXX_HATCH and wxPENSTYLE_XXX_HATCH instead.
+enum wxHatchStyle
+{
+    wxHATCHSTYLE_INVALID = -1,
+
+    /*
+        The value of the first style is chosen to fit with
+        wxDeprecatedGUIConstants values below, don't change it.
+     */
+    wxHATCHSTYLE_FIRST = 111,
+    wxHATCHSTYLE_BDIAGONAL = wxHATCHSTYLE_FIRST,
+    wxHATCHSTYLE_CROSSDIAG,
+    wxHATCHSTYLE_FDIAGONAL,
+    wxHATCHSTYLE_CROSS,
+    wxHATCHSTYLE_HORIZONTAL,
+    wxHATCHSTYLE_VERTICAL,
+    wxHATCHSTYLE_LAST = wxHATCHSTYLE_VERTICAL
+};
+
 /*
     WARNING: the following styles are deprecated; use the
              wxFontFamily, wxFontStyle, wxFontWeight, wxBrushStyle,
@@ -2248,14 +2333,14 @@ enum wxDeprecatedGUIConstants
     /*  drawn with a Pen, and without any Brush -- and it can be stippled. */
     wxSTIPPLE =          110,
 
-    wxBDIAGONAL_HATCH,     /* In wxWidgets < 2.6 use WX_HATCH macro  */
-    wxCROSSDIAG_HATCH,     /* to verify these wx*_HATCH are in style */
-    wxFDIAGONAL_HATCH,     /* of wxBrush. In wxWidgets >= 2.6 use    */
-    wxCROSS_HATCH,         /* wxBrush::IsHatch() instead.            */
-    wxHORIZONTAL_HATCH,
-    wxVERTICAL_HATCH,
-    wxFIRST_HATCH = wxBDIAGONAL_HATCH,
-    wxLAST_HATCH = wxVERTICAL_HATCH
+    wxBDIAGONAL_HATCH = wxHATCHSTYLE_BDIAGONAL,
+    wxCROSSDIAG_HATCH = wxHATCHSTYLE_CROSSDIAG,
+    wxFDIAGONAL_HATCH = wxHATCHSTYLE_FDIAGONAL,
+    wxCROSS_HATCH = wxHATCHSTYLE_CROSS,
+    wxHORIZONTAL_HATCH = wxHATCHSTYLE_HORIZONTAL,
+    wxVERTICAL_HATCH = wxHATCHSTYLE_VERTICAL,
+    wxFIRST_HATCH = wxHATCHSTYLE_FIRST,
+    wxLAST_HATCH = wxHATCHSTYLE_LAST
 };
 #endif
 
@@ -2726,9 +2811,14 @@ typedef int (* LINKAGEMODE wxListIterateFunction)(void *current);
 
 /*  --------------------------------------------------------------------------- */
 /*  macros that enable wxWidgets apps to be compiled in absence of the */
-/*  sytem headers, although some platform specific types are used in the */
+/*  system headers, although some platform specific types are used in the */
 /*  platform specific (implementation) parts of the headers */
 /*  --------------------------------------------------------------------------- */
+
+#ifdef __DARWIN__
+#define DECLARE_WXOSX_OPAQUE_CFREF( name ) typedef struct __##name* name##Ref;
+#define DECLARE_WXOSX_OPAQUE_CONST_CFREF( name ) typedef const struct __##name* name##Ref;
+#endif
 
 #ifdef __WXMAC__
 
@@ -2765,9 +2855,6 @@ typedef void*       WXDisplay;
 typedef const void * CFTypeRef;
 
 /* typedef const struct __CFString * CFStringRef; */
-
-#define DECLARE_WXOSX_OPAQUE_CFREF( name ) typedef struct __##name* name##Ref;
-#define DECLARE_WXOSX_OPAQUE_CONST_CFREF( name ) typedef const struct __##name* name##Ref;
 
 DECLARE_WXOSX_OPAQUE_CONST_CFREF( CFString )
 typedef struct __CFString * CFMutableStringRef;
@@ -2991,7 +3078,9 @@ typedef void *          WXDRAWITEMSTRUCT;
 typedef void *          WXMEASUREITEMSTRUCT;
 typedef void *          WXLPCREATESTRUCT;
 
+#ifdef __WXMSW__
 typedef WXHWND          WXWidget;
+#endif
 
 #ifdef __WIN64__
 typedef unsigned __int64   WXWPARAM;
@@ -3164,14 +3253,14 @@ typedef struct _GdkDragContext  GdkDragContext;
     typedef unsigned long GdkAtom;
 #endif
 
-#if !defined(__WXGTK30__)
+#if !defined(__WXGTK3__)
     typedef struct _GdkColormap GdkColormap;
     typedef struct _GdkFont GdkFont;
     typedef struct _GdkGC GdkGC;
     typedef struct _GdkRegion GdkRegion;
 #endif
 
-#if defined(__WXGTK30__)
+#if defined(__WXGTK3__)
     typedef struct _GdkWindow GdkWindow;
 #elif defined(__WXGTK20__)
     typedef struct _GdkDrawable GdkWindow;
@@ -3227,9 +3316,9 @@ typedef const void* WXWidget;
 /*  included before or after wxWidgets classes, and therefore must be */
 /*  disabled here before any significant wxWidgets headers are included. */
 #ifdef __cplusplus
-#ifdef __WXMSW__
+#ifdef __WINDOWS__
 #include "wx/msw/winundef.h"
-#endif /* __WXMSW__ */
+#endif /* __WINDOWS__ */
 #endif /* __cplusplus */
 
 
@@ -3278,7 +3367,7 @@ typedef const void* WXWidget;
     "/manifestdependency:\"type='win32'         \
      name='Microsoft.Windows.Common-Controls'   \
      version='6.0.0.0'                          \
-     processorArchitecture='"cpu"'              \
+     processorArchitecture='" cpu "'            \
      publicKeyToken='6595b64144ccf1df'          \
      language='*'\""
 
@@ -3293,6 +3382,14 @@ typedef const void* WXWidget;
 #endif
 
 #endif /* !wxUSE_NO_MANIFEST && _MSC_FULL_VER >= 140040130 */
+
+/* wxThread and wxProcess priorities */
+enum
+{
+    wxPRIORITY_MIN     = 0u,   /* lowest possible priority */
+    wxPRIORITY_DEFAULT = 50u,  /* normal priority */
+    wxPRIORITY_MAX     = 100u  /* highest possible priority */
+};
 
 #endif
     /*  _WX_DEFS_H_ */

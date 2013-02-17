@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     26.07.99
-// RCS-ID:      $Id: control.h 70345 2012-01-15 01:05:28Z VZ $
+// RCS-ID:      $Id: control.h 72935 2012-11-09 21:11:37Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -134,6 +134,10 @@ public:
     // wxControl-specific processing after processing the update event
     virtual void DoUpdateWindowUI(wxUpdateUIEvent& event);
 
+    wxSize GetSizeFromTextSize(int xlen, int ylen = -1) const
+        { return DoGetSizeFromTextSize(xlen, ylen); }
+    wxSize GetSizeFromTextSize(const wxSize& tsize) const
+        { return DoGetSizeFromTextSize(tsize.x, tsize.y); }
 
 
     // static utilities for mnemonics char (&) handling
@@ -192,6 +196,8 @@ protected:
     virtual bool DoSetLabelMarkup(const wxString& markup);
 #endif // wxUSE_MARKUP
 
+    // override this to return the total control's size from a string size
+    virtual wxSize DoGetSizeFromTextSize(int xlen, int ylen = -1) const;
 
     // initialize the common fields of wxCommandEvent
     void InitCommandEvent(wxCommandEvent& event) const;

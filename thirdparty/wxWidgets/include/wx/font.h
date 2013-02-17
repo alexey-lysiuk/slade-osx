@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     20.09.99
-// RCS-ID:      $Id: font.h 70446 2012-01-23 11:28:28Z VZ $
+// RCS-ID:      $Id: font.h 72487 2012-09-15 23:16:46Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -318,6 +318,10 @@ protected:
         return (flags & wxFONTFLAG_UNDERLINED) != 0;
     }
 
+    static bool GetStrikethroughFromFlags(int flags)
+    {
+        return (flags & wxFONTFLAG_STRIKETHROUGH) != 0;
+    }
 
 private:
     // the currently default encoding: by default, it's the default system

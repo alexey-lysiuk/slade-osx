@@ -5,7 +5,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     29/01/98
-// RCS-ID:      $Id: file.h 67254 2011-03-20 00:14:35Z DS $
+// RCS-ID:      $Id: file.h 72596 2012-09-30 22:28:08Z VZ $
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -19,7 +19,7 @@
 
 #include  "wx/string.h"
 #include  "wx/filefn.h"
-#include  "wx/strconv.h"
+#include  "wx/convauto.h"
 
 // ----------------------------------------------------------------------------
 // class wxFile: raw file IO
@@ -70,6 +70,8 @@ public:
   int  fd() const { return m_fd; }
 
   // read/write (unbuffered)
+    // read all data from the file into a string (useful for text files)
+  bool ReadAll(wxString *str, const wxMBConv& conv = wxConvAuto());
     // returns number of bytes read or wxInvalidOffset on error
   ssize_t Read(void *pBuf, size_t nCount);
     // returns the number of bytes written

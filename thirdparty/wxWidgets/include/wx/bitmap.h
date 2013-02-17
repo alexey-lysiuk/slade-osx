@@ -4,7 +4,7 @@
 // Author:      Vaclav Slavik
 // Modified by:
 // Created:     22.04.01
-// RCS-ID:      $Id: bitmap.h 70353 2012-01-15 14:46:41Z VZ $
+// RCS-ID:      $Id: bitmap.h 72477 2012-09-13 17:15:25Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -83,6 +83,23 @@ protected:
 #define wxBITMAP_SCREEN_DEPTH       (-1)
 
 
+// ----------------------------------------------------------------------------
+// wxBitmapHelpers: container for various bitmap methods common to all ports.
+// ----------------------------------------------------------------------------
+
+// Unfortunately, currently wxBitmap does not inherit from wxBitmapBase on all
+// platforms and this is not easy to fix. So we extract at least some common
+// methods into this class from which both wxBitmapBase (and hence wxBitmap on
+// all platforms where it does inherit from it) and wxBitmap in wxMSW and other
+// exceptional ports (only wxPM and old wxCocoa) inherit.
+class WXDLLIMPEXP_CORE wxBitmapHelpers
+{
+public:
+    // Create a new wxBitmap from the PNG data in the given buffer.
+    static wxBitmap NewFromPNGData(const void* data, size_t size);
+};
+
+
 // All ports except wxMSW and wxOS2 use wxBitmapHandler and wxBitmapBase as
 // base class for wxBitmapHandler; wxMSW and wxOS2 use wxGDIImageHandler as
 // base class since it allows some code reuse there.
@@ -132,12 +149,12 @@ private:
     DECLARE_ABSTRACT_CLASS(wxBitmapHandler)
 };
 
-
 // ----------------------------------------------------------------------------
 // wxBitmap: class which represents platform-dependent bitmap (unlike wxImage)
 // ----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxBitmapBase : public wxGDIObject
+class WXDLLIMPEXP_CORE wxBitmapBase : public wxGDIObject,
+                                      public wxBitmapHelpers
 {
 public:
     /*
@@ -243,7 +260,11 @@ protected:
     #define wxBITMAP_DEFAULT_TYPE    wxBITMAP_TYPE_XPM
     #include "wx/x11/bitmap.h"
 #elif defined(__WXGTK20__)
-    #define wxBITMAP_DEFAULT_TYPE    wxBITMAP_TYPE_XPM
+    #ifdef __WINDOWS__
+        #define wxBITMAP_DEFAULT_TYPE    wxBITMAP_TYPE_BMP_RESOURCE
+    #else
+        #define wxBITMAP_DEFAULT_TYPE    wxBITMAP_TYPE_XPM
+    #endif
     #include "wx/gtk/bitmap.h"
 #elif defined(__WXGTK__)
     #define wxBITMAP_DEFAULT_TYPE    wxBITMAP_TYPE_XPM

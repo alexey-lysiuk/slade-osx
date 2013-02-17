@@ -3,7 +3,7 @@
 // Purpose:     wxHtmlCell class is used by wxHtmlWindow/wxHtmlWinParser
 //              as a basic visual element of HTML page
 // Author:      Vaclav Slavik
-// RCS-ID:      $Id: htmlcell.h 70528 2012-02-07 13:02:32Z VZ $
+// RCS-ID:      $Id: htmlcell.h 72589 2012-09-30 22:20:58Z VZ $
 // Copyright:   (c) 1999-2003 Vaclav Slavik
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -91,10 +91,13 @@ public:
     const wxColour& GetFgColour() const { return m_fgColour; }
     void SetBgColour(const wxColour& c) { m_bgColour = c; }
     const wxColour& GetBgColour() const { return m_bgColour; }
+    void SetBgMode(int m) { m_bgMode = m; }
+    int GetBgMode() const { return m_bgMode; }
 
 private:
     wxHtmlSelectionState  m_selState;
     wxColour              m_fgColour, m_bgColour;
+    int                   m_bgMode;
 };
 
 

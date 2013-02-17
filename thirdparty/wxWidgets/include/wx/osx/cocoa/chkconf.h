@@ -4,7 +4,7 @@
  * Author:      Stefan Csomor
  * Modified by:
  * Created:     2008-07-30
- * RCS-ID:      $Id: chkconf.h 67232 2011-03-18 15:10:15Z DS $
+ * RCS-ID:      $Id: chkconf.h 73264 2012-12-23 11:50:33Z SC $
  * Copyright:   (c) Stefan Csomor
  * Licence:     wxWindows licence
  */
@@ -18,6 +18,13 @@
 
 #ifndef wxOSX_USE_NATIVE_TOOLBAR
     #define wxOSX_USE_NATIVE_TOOLBAR 1
+#endif
+
+/*
+ * leave is isFlipped and don't override
+ */
+#ifndef wxOSX_USE_NATIVE_FLIPPED 
+    #define wxOSX_USE_NATIVE_FLIPPED 1
 #endif
 
 /*
