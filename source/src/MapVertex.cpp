@@ -37,27 +37,27 @@ double MapVertex::floatProperty(string key) {
 }
 
 void MapVertex::setIntProperty(string key, int value) {
+	// Update modified time
+	setModified();
+
 	if (key == "x")
 		x = value;
 	else if (key == "y")
 		y = value;
 	else
-		MapObject::setIntProperty(key, value);
-
-	// Update modified time
-	modified_time = theApp->runTimer();
+		return MapObject::setIntProperty(key, value);
 }
 
 void MapVertex::setFloatProperty(string key, double value) {
+	// Update modified time
+	setModified();
+
 	if (key == "x")
 		x = value;
 	else if (key == "y")
 		y = value;
 	else
-		MapObject::setFloatProperty(key, value);
-
-	// Update modified time
-	modified_time = theApp->runTimer();
+		return MapObject::setFloatProperty(key, value);
 }
 
 void MapVertex::connectLine(MapLine* line) {
@@ -85,20 +85,14 @@ MapLine* MapVertex::connectedLine(unsigned index) {
 	return connected_lines[index];
 }
 
-void MapVertex::writeBackup(PropertyList& plist) {
-	// General properties
-	//MapObject::backup(plist);
-
+void MapVertex::writeBackup(mobj_backup_t* backup) {
 	// Position
-	plist["x"] = x;
-	plist["y"] = y;
+	backup->properties["x"] = x;
+	backup->properties["y"] = y;
 }
 
-void MapVertex::readBackup(PropertyList& plist) {
-	// General properties
-	//MapObject::backup(plist);
-
+void MapVertex::readBackup(mobj_backup_t* backup) {
 	// Position
-	x = plist["x"].getFloatValue();
-	y = plist["y"].getFloatValue();
+	x = backup->properties["x"].getFloatValue();
+	y = backup->properties["y"].getFloatValue();
 }

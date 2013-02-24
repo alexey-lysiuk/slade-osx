@@ -11,6 +11,7 @@
 #include "Archive.h"
 #include "ArchiveManager.h"
 #include "SLADEMap.h"
+#include "GenLineSpecial.h"
 #include <wx/textfile.h>
 #include <wx/filename.h>
 #include <wx/dir.h>
@@ -45,6 +46,9 @@ GameConfiguration::~GameConfiguration() {
 		if (tt->second.type) delete tt->second.type;
 		tt++;
 	}
+
+	for (unsigned a = 0; a < tt_group_defaults.size(); a++)
+		delete tt_group_defaults[a];
 }
 
 void GameConfiguration::setDefaults() {
@@ -422,10 +426,10 @@ void GameConfiguration::buildConfig(string filename, string& out) {
 /* GameConfiguration::buildConfig
  * Reads the text entry [entry], processing any #include statements
  * in the entry text recursively. This will search in the resource
- * folder and archive as well as in the parent archive. The resulting 
+ * folder and archive as well as in the parent archive. The resulting
  * 'expanded' text is written to [out]
  *******************************************************************/
-void GameConfiguration::buildConfig(ArchiveEntry* entry, string& out) {
+void GameConfiguration::buildConfig(ArchiveEntry* entry, string& out, bool use_res) {
 	// Check entry was given
 	if (!entry)
 		return;
@@ -440,7 +444,7 @@ void GameConfiguration::buildConfig(ArchiveEntry* entry, string& out) {
 		return;
 
 	// Go through line-by-line
-	string line = file.GetNextLine();
+	string line = file.GetFirstLine();
 	while (!file.Eof()) {
 		// Check for #include
 		if (line.Trim().StartsWith("#include")) {
@@ -458,9 +462,11 @@ void GameConfiguration::buildConfig(ArchiveEntry* entry, string& out) {
 				buildConfig(entry_inc, out);
 				done = true;
 			}
+			else
+				LOG_MESSAGE(2, S_FMT("Couldn't find entry to #include: %s", CHR(name)));
 
 			// Look in resource pack
-			if (!done && theArchiveManager->programResourceArchive()) {
+			if (use_res && !done && theArchiveManager->programResourceArchive()) {
 				name = "config/games/" + inc_name;
 				entry_inc = theArchiveManager->programResourceArchive()->entryAtPath(name);
 				if (entry_inc) {
@@ -504,9 +510,8 @@ void GameConfiguration::readActionSpecials(ParseTreeNode* node, ActionSpecial* g
 		groupname.RemoveLast();	// Remove last '/'
 
 	// --- Set up group default properties ---
-	ActionSpecial* as_defaults = NULL;
-	if (group_defaults) as_defaults = new ActionSpecial(*group_defaults);
-	else as_defaults = new ActionSpecial();
+	ActionSpecial* as_defaults = new ActionSpecial();
+	if (group_defaults) as_defaults->copy(group_defaults);
 	as_defaults->parse(node);
 
 	// --- Go through all child nodes ---
@@ -566,10 +571,11 @@ void GameConfiguration::readThingTypes(ParseTreeNode* node, ThingType* group_def
 
 	// --- Set up group default properties ---
 	ParseTreeNode* child = NULL;
-	ThingType* tt_defaults = NULL;
-	if (group_defaults) tt_defaults = new ThingType(*group_defaults);
-	else tt_defaults = new ThingType();
+	ThingType* tt_defaults = new ThingType();
+	tt_defaults->copy(group_defaults);
 	tt_defaults->parse(node);
+	tt_defaults->group = groupname;
+	tt_group_defaults.push_back(tt_defaults);
 
 
 	// --- Go through all child nodes ---
@@ -607,7 +613,7 @@ void GameConfiguration::readThingTypes(ParseTreeNode* node, ThingType* group_def
 		}
 	}
 
-	delete tt_defaults;
+	//delete tt_defaults;
 }
 
 void GameConfiguration::readUDMFProperties(ParseTreeNode* block, UDMFPropMap& plist) {
@@ -796,6 +802,9 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 		udmf_sidedef_props.clear();
 		udmf_sector_props.clear();
 		udmf_thing_props.clear();
+		for (unsigned a = 0; a < tt_group_defaults.size(); a++)
+			delete tt_group_defaults[a];
+		tt_group_defaults.clear();
 	}
 
 	// Parse the full configuration
@@ -863,7 +872,7 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 
 				long flag_val;
 				string flag_name, flag_udmf;
-				
+
 				if (value->nValues() == 0) {
 					// Full definition
 					flag_name = value->getName();
@@ -891,7 +900,7 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 				for (unsigned f = 0; f < flags_line.size(); f++) {
 					if (flags_line[f].flag == flag_val) {
 						exists = true;
-						flags_line[f].name = value->getStringValue();
+						flags_line[f].name = flag_name;
 						break;
 					}
 				}
@@ -913,7 +922,7 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 
 				long flag_val;
 				string flag_name, flag_udmf;
-				
+
 				if (value->nValues() == 0) {
 					// Full definition
 					flag_name = value->getName();
@@ -941,7 +950,7 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 				for (unsigned f = 0; f < triggers_line.size(); f++) {
 					if (triggers_line[f].flag == flag_val) {
 						exists = true;
-						triggers_line[f].name = value->getStringValue();
+						triggers_line[f].name = flag_name;
 						break;
 					}
 				}
@@ -963,7 +972,7 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 
 				long flag_val;
 				string flag_name, flag_udmf;
-				
+
 				if (value->nValues() == 0) {
 					// Full definition
 					flag_name = value->getName();
@@ -991,7 +1000,7 @@ bool GameConfiguration::readConfiguration(string& cfg, string source, bool ignor
 				for (unsigned f = 0; f < flags_thing.size(); f++) {
 					if (flags_thing[f].flag == flag_val) {
 						exists = true;
-						flags_thing[f].name = value->getStringValue();
+						flags_thing[f].name = flag_name;
 						break;
 					}
 				}
@@ -1543,6 +1552,8 @@ string GameConfiguration::actionSpecialName(int special) {
 
 	if (action_specials[special].special)
 		return action_specials[special].special->getName();
+	else if (special >= 0x2F80 && boom)
+		return BoomGenLineSpecial::parseLineType(special);
 	else
 		return "Unknown";
 }
@@ -1643,6 +1654,211 @@ void GameConfiguration::setThingFlag(unsigned index, MapThing* thing, bool set) 
 
 	// Update thing flags
 	thing->setIntProperty("flags", flags);
+}
+
+bool GameConfiguration::parseDecorateDefs(Archive* archive) {
+	// Get base decorate file
+	Archive::search_options_t opt;
+	opt.match_name = "decorate";
+	//opt.match_type = EntryType::getType("text");
+	opt.ignore_ext = true;
+	vector<ArchiveEntry*> decorate_entries = archive->findAll(opt);
+	if (decorate_entries.empty())
+		return false;
+
+	//ArchiveEntry* decorate_base = archive->getEntry("DECORATE", true);
+	//if (!decorate_base)
+	//	return false;
+
+	// Build full definition string
+	string full_defs;
+	for (unsigned a = 0; a < decorate_entries.size(); a++)
+		buildConfig(decorate_entries[a], full_defs, false);
+	//buildConfig(decorate_base, full_defs, false);
+
+	// Init tokenizer
+	Tokenizer tz;
+	tz.setSpecialCharacters(":,{}");
+	tz.enableDecorate(true);
+	tz.openString(full_defs);
+
+	// --- Parse ---
+	string token = tz.getToken();
+	while (!token.empty()) {
+		// Check for actor definition
+		if (S_CMPNOCASE(token, "actor")) {
+			// Get actor name
+			string name = tz.getToken();
+
+			// Check for inheritance
+			string next = tz.peekToken();
+			if (next == ":") {
+				tz.skipToken(); // Skip :
+				tz.skipToken(); // Skip parent actor
+				next = tz.peekToken();
+			}
+
+			// Check for replaces
+			if (S_CMPNOCASE(next, "replaces")) {
+				tz.skipToken(); // Skip replaces
+				tz.skipToken(); // Skip replace actor
+			}
+
+			// Check for no editor number (ie can't be placed in the map)
+			if (tz.peekToken() == "{") {
+				LOG_MESSAGE(2, S_FMT("Not adding actor %s, no editor number", CHR(name)));
+
+				// Skip actor definition
+				tz.skipToken();
+				tz.skipSection("{", "}");
+			}
+			else {
+				// Read editor number
+				int type;
+				tz.getInteger(&type);
+				string group;
+				PropertyList found_props;
+
+				// Check for actor definition open
+				token = tz.getToken();
+				if (token == "{") {
+					token = tz.getToken();
+					bool title_given = false;
+					bool sprite_given = false;
+					while (token != "}") {
+						// Check for subsection
+						if (token == "{")
+							tz.skipSection("{", "}");
+
+						// Title
+						else if (S_CMPNOCASE(token, "//$Title")) {
+							name = tz.getToken();
+							title_given = true;
+						}
+
+						// Tag
+						else if (!title_given && S_CMPNOCASE(token, "tag"))
+							name = tz.getToken();
+
+						// Category
+						else if (S_CMPNOCASE(token, "//$Category"))
+							group = tz.getToken();
+
+						// Sprite
+						else if (S_CMPNOCASE(token, "//$EditorSprite")) {
+							found_props["sprite"] = tz.getToken();
+							sprite_given = true;
+						}
+						else if (S_CMPNOCASE(token, "//$Sprite")) {
+							found_props["sprite"] = tz.getToken();
+							sprite_given = true;
+						}
+
+						// Radius
+						else if (S_CMPNOCASE(token, "radius"))
+							found_props["radius"] = tz.getInteger();
+
+						// Height
+						else if (S_CMPNOCASE(token, "height"))
+							found_props["height"] = tz.getInteger();
+
+						// Hanging
+						else if (S_CMPNOCASE(token, "+spawnceiling"))
+							found_props["hanging"] = true;
+
+						// Fullbright
+						else if (S_CMPNOCASE(token, "+bright"))
+							found_props["bright"] = true;
+
+						// Is Decoration
+						else if (S_CMPNOCASE(token, "//$IsDecoration"))
+							found_props["decoration"] = true;
+
+						// Icon
+						else if (S_CMPNOCASE(token, "//$Icon"))
+							found_props["icon"] = tz.getToken();
+
+						// Translation
+						else if (S_CMPNOCASE(token, "translation")) {
+							found_props["translation"] = tz.getToken();
+							// TODO: multiple translation strings
+						}
+
+						// States
+						if (!sprite_given && S_CMPNOCASE(token, "states")) {
+							tz.skipToken(); // Skip {
+
+							token = tz.getToken();
+							while (token != "}") {
+								// Spawn state
+								if (S_CMPNOCASE(token, "spawn")) {
+									tz.skipToken();	// Skip :
+									string sb = tz.getToken(); // Sprite base
+									string sf = tz.getToken(); // Sprite frame(s)
+									string sprite = sb + sf.Left(1) + "?";
+									found_props["sprite"] = sprite;
+									LOG_MESSAGE(2, S_FMT("Actor %s found sprite %s", CHR(name), CHR(sprite)));
+									tz.skipSection("{", "}");
+									break;
+								}
+
+								token = tz.getToken();
+							}
+						}
+
+						token = tz.getToken();
+					}
+
+					LOG_MESSAGE(2, S_FMT("Parsed actor %s: %d", CHR(name), type));
+				}
+				else
+					LOG_MESSAGE(1, S_FMT("Warning: Invalid actor definition for %s", CHR(name)));
+
+				// Create thing type object if needed
+				if (!thing_types[type].type) {
+					thing_types[type].type = new ThingType();
+					thing_types[type].index = thing_types.size();
+					thing_types[type].number = type;
+					thing_types[type].type->decorate = true;
+				}
+				ThingType* tt = thing_types[type].type;
+
+				// Get group defaults (if any)
+				if (!group.empty()) {
+					ThingType* group_defaults = NULL;
+					for (unsigned a = 0; a < tt_group_defaults.size(); a++) {
+						if (S_CMPNOCASE(group, tt_group_defaults[a]->group)) {
+							group_defaults = tt_group_defaults[a];
+							break;
+						}
+					}
+
+					if (group_defaults)
+						tt->copy(group_defaults);
+				}
+
+				// Setup thing
+				tt->name = name;
+				tt->group = group.empty() ? "Decorate" : group;
+				if (found_props["sprite"].hasValue()) tt->sprite = found_props["sprite"].getStringValue();
+				if (found_props["radius"].hasValue()) tt->radius = found_props["radius"].getIntValue();
+				if (found_props["height"].hasValue()) tt->height = found_props["height"].getIntValue();
+				if (found_props["hanging"].hasValue()) tt->hanging = found_props["hanging"].getBoolValue();
+				if (found_props["bright"].hasValue()) tt->fullbright = found_props["bright"].getBoolValue();
+				if (found_props["decoration"].hasValue()) tt->decoration = found_props["decoration"].getBoolValue();
+				if (found_props["icon"].hasValue()) tt->icon = found_props["icon"].getStringValue();
+				if (found_props["translation"].hasValue()) tt->translation = found_props["translation"].getStringValue();
+			}
+		}
+
+		token = tz.getToken();
+	}
+
+	//wxFile tempfile(appPath("decorate_full.txt", DIR_APP), wxFile::write);
+	//tempfile.Write(full_defs);
+	//tempfile.Close();
+
+	return true;
 }
 
 string GameConfiguration::lineFlag(unsigned index) {
@@ -2406,7 +2622,7 @@ void GameConfiguration::dumpUDMFProperties() {
 }
 
 
-CONSOLE_COMMAND(testgc, 0) {
+CONSOLE_COMMAND(testgc, 0, false) {
 	string game = "doomu";
 
 	if (args.size() > 0)
@@ -2415,10 +2631,10 @@ CONSOLE_COMMAND(testgc, 0) {
 	theGameConfiguration->openConfig(game);
 }
 
-CONSOLE_COMMAND(dumpactionspecials, 0) {
+CONSOLE_COMMAND(dumpactionspecials, 0, false) {
 	theGameConfiguration->dumpActionSpecials();
 }
 
-CONSOLE_COMMAND(dumpudmfprops, 0) {
+CONSOLE_COMMAND(dumpudmfprops, 0, false) {
 	theGameConfiguration->dumpUDMFProperties();
 }

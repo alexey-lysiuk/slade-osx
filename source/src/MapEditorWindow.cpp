@@ -348,6 +348,9 @@ bool MapEditorWindow::openMap(Archive::mapdesc_t map) {
 	// Show window if opened ok
 	if (ok) {
 		mdesc_current = map;
+		
+		// Read DECORATE definitions if any
+		theGameConfiguration->parseDecorateDefs(archive);
 
 		// Load scripts if any
 		loadMapScripts(map);
@@ -489,7 +492,7 @@ bool MapEditorWindow::saveMap() {
 	}
 
 	// Add map data to temporary wad
-	Archive* wad = new WadArchive();
+	WadArchive* wad = new WadArchive();
 	wad->addNewEntry("MAP01");
 	for (unsigned a = 0; a < map_data.size(); a++)
 		wad->addEntry(map_data[a]);
@@ -512,7 +515,7 @@ bool MapEditorWindow::saveMap() {
 		else
 			return false;
 	}
-	
+
 	// Build nodes
 	buildNodes(wad);
 
@@ -640,7 +643,7 @@ bool MapEditorWindow::handleAction(string id) {
 		// Save archive
 		Archive* a = currentMapDesc().head->getParent();
 		if (a) a->save();
-		
+
 		return true;
 	}
 
@@ -652,13 +655,13 @@ bool MapEditorWindow::handleAction(string id) {
 
 	// Edit->Undo
 	if (id == "mapw_undo") {
-		editor.undoManager()->undo();
+		editor.doUndo();
 		return true;
 	}
 
 	// Edit->Redo
 	if (id == "mapw_redo") {
-		editor.undoManager()->redo();
+		editor.doRedo();
 		return true;
 	}
 

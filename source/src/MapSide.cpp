@@ -15,16 +15,13 @@ MapSide::MapSide(MapSector* sector, SLADEMap* parent) : MapObject(MOBJ_SIDE, par
 	if (sector) sector->connected_sides.push_back(this);
 }
 
+MapSide::MapSide(SLADEMap* parent) : MapObject(MOBJ_SIDE, parent) {
+	// Init variables
+	this->sector = NULL;
+	this->parent = NULL;
+}
+
 MapSide::~MapSide() {
-	// Remove side from current sector, if any
-	if (this->sector) {
-		for (unsigned a = 0; a < sector->connected_sides.size(); a++) {
-			if (sector->connected_sides[a] == this) {
-				sector->connected_sides.erase(sector->connected_sides.begin() + a);
-				break;
-			}
-		}
-	}
 }
 
 void MapSide::setSector(MapSector* sector) {
@@ -32,12 +29,12 @@ void MapSide::setSector(MapSector* sector) {
 	if (this->sector)
 		this->sector->disconnectSide(this);
 
+	// Update modified time
+	setModified();
+
 	// Add side to new sector
 	this->sector = sector;
 	sector->connectSide(this);
-
-	// Update modified time
-	modified_time = theApp->runTimer();
 }
 
 int MapSide::intProperty(string key) {
@@ -56,32 +53,25 @@ void MapSide::setIntProperty(string key, int value) {
 		setSector(parent_map->getSector(value));
 	else
 		MapObject::setIntProperty(key, value);
-
-	// Update modified time
-	modified_time = theApp->runTimer();
 }
 
-void MapSide::writeBackup(PropertyList& plist) {
-	// General properties
-	//MapObject::backup(plist);
-
+void MapSide::writeBackup(mobj_backup_t* backup) {
 	// Sector
 	if (sector)
-		plist["sector"] = (int)sector->getIndex();
+		backup->properties["sector"] = sector->getId();
 	else
-		plist["sector"] = -1;
+		backup->properties["sector"] = 0;
+	//wxLogMessage("Side %d backup sector #%d", id, sector->getIndex());
 }
 
-void MapSide::readBackup(PropertyList& plist) {
-	// General properties
-	//MapObject::backup(plist);
-
+void MapSide::readBackup(mobj_backup_t* backup) {
 	// Sector
-	MapSector* s = parent_map->getSector(plist["sector"].getIntValue());
+	MapObject* s = parent_map->getObjectById(backup->properties["sector"]);
 	if (s) {
 		sector->disconnectSide(this);
-		sector = s;
-		s->connectSide(this);
+		sector = (MapSector*)s;
+		sector->connectSide(this);
+		//wxLogMessage("Side %d load backup sector #%d", id, s->getIndex());
 	}
 	else {
 		if (sector)

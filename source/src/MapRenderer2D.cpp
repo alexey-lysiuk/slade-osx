@@ -654,6 +654,24 @@ bool MapRenderer2D::renderSpriteThing(double x, double y, double angle, ThingTyp
 	// Attempt to get sprite texture
 	tex = theMapEditor->textureManager().getSprite(tt->getSprite(), tt->getTranslation(), tt->getPalette());
 
+	// Check for ? ending (0 or 1)
+	/*
+	if (!tex && tt->getSprite().EndsWith("?")) {
+		string sprite = tt->getSprite();
+		sprite.RemoveLast(1);
+		sprite = sprite + "0";
+		tex = theMapEditor->textureManager().getSprite(sprite, tt->getTranslation(), tt->getPalette());
+		if (!tex) {
+			sprite.RemoveLast(1);
+			sprite = sprite + "1";
+			tex = theMapEditor->textureManager().getSprite(sprite, tt->getTranslation(), tt->getPalette());
+		}
+
+		if (tex)
+			tt->setSprite(sprite);
+	}
+	*/
+
 	// If sprite not found, just draw as a normal, round thing
 	if (!tex) {
 		renderRoundThing(x, y, angle, tt, alpha);
@@ -1244,6 +1262,8 @@ void MapRenderer2D::renderFlats(int type, bool texture, float alpha) {
 		renderFlatsVBO(type, texture, alpha);
 	else
 		renderFlatsImmediate(type, texture, alpha);
+
+	flats_updated = theApp->runTimer();
 }
 
 bool sortPolyByTex(Polygon2D* left, Polygon2D* right) {
@@ -1257,6 +1277,15 @@ void MapRenderer2D::renderFlatsImmediate(int type, bool texture, float alpha) {
 	if (flat_ignore_light)
 		glColor4f(flat_brightness, flat_brightness, flat_brightness, alpha);
 
+	// Re-init flats texture list if invalid
+	if (texture && tex_flats.size() < map->nSectors() || last_flat_type != type) {
+		tex_flats.clear();
+		for (unsigned a = 0; a < map->nSectors(); a++)
+			tex_flats.push_back(NULL);
+
+		last_flat_type = type;
+	}
+
 	// Go through sectors
 	GLTexture* tex_last = NULL;
 	GLTexture* tex = NULL;
@@ -1268,11 +1297,17 @@ void MapRenderer2D::renderFlatsImmediate(int type, bool texture, float alpha) {
 			continue;
 
 		if (texture) {
-			// Get the sector texture
-			if (type <= 1)
-				tex = theMapEditor->textureManager().getFlat(sector->floorTexture(), theGameConfiguration->mixTexFlats());
+			if (!tex_flats[a] || sector->modifiedTime() > flats_updated) {
+				// Get the sector texture
+				if (type <= 1)
+					tex = theMapEditor->textureManager().getFlat(sector->floorTexture(), theGameConfiguration->mixTexFlats());
+				else
+					tex = theMapEditor->textureManager().getFlat(sector->ceilingTexture(), theGameConfiguration->mixTexFlats());
+
+				tex_flats[a] = tex;
+			}
 			else
-				tex = theMapEditor->textureManager().getFlat(sector->ceilingTexture(), theGameConfiguration->mixTexFlats());
+				tex = tex_flats[a];
 
 			// Bind the texture if needed
 			if (tex) {
@@ -1283,6 +1318,7 @@ void MapRenderer2D::renderFlatsImmediate(int type, bool texture, float alpha) {
 			}
 			else if (tex_last)
 				glDisable(GL_TEXTURE_2D);
+
 			tex_last = tex;
 		}
 
@@ -1342,6 +1378,15 @@ void MapRenderer2D::renderFlatsVBO(int type, bool texture, float alpha) {
 	if (!glGenBuffers)
 		return;
 
+	// Re-init flats texture list if invalid
+	if (texture && tex_flats.size() < map->nSectors() || last_flat_type != type) {
+		tex_flats.clear();
+		for (unsigned a = 0; a < map->nSectors(); a++)
+			tex_flats.push_back(NULL);
+
+		last_flat_type = type;
+	}
+
 	// First, check if any polygon vertex data has changed (in this case we need to refresh the entire vbo)
 	for (unsigned a = 0; a < map->nSectors(); a++) {
 		Polygon2D* poly = map->getSector(a)->getPolygon();
@@ -1382,18 +1427,24 @@ void MapRenderer2D::renderFlatsVBO(int type, bool texture, float alpha) {
 
 		first = false;
 		if (texture) {
-			// Get the sector texture
-			if (type <= 1)
-				tex = theMapEditor->textureManager().getFlat(sector->floorTexture(), theGameConfiguration->mixTexFlats());
+			if (!tex_flats[a] || sector->modifiedTime() > flats_updated) {
+				// Get the sector texture
+				if (type <= 1)
+					tex = theMapEditor->textureManager().getFlat(sector->floorTexture(), theGameConfiguration->mixTexFlats());
+				else
+					tex = theMapEditor->textureManager().getFlat(sector->ceilingTexture(), theGameConfiguration->mixTexFlats());
+
+				tex_flats[a] = tex;
+			}
 			else
-				tex = theMapEditor->textureManager().getFlat(sector->ceilingTexture(), theGameConfiguration->mixTexFlats());
+				tex = tex_flats[a];
 		}
 
 		// Setup polygon texture info if needed
 		Polygon2D* poly = sector->getPolygon();
 		if (texture && poly->getTexture() != tex) {
 			poly->setTexture(tex);			// Set polygon texture
-			
+
 			// Get scaling/offset info
 			double ox = 0;
 			double oy = 0;
@@ -2080,11 +2131,13 @@ void MapRenderer2D::forceUpdate(float line_alpha) {
 	// Update variables
 	this->view_scale = view_scale;
 	this->view_scale_inv = 1.0 / view_scale;
+	tex_flats.clear();
 
 	if (OpenGL::vboSupport()) {
 		updateVerticesVBO();
 		updateLinesVBO(lines_dirs, line_alpha);
-	} else {
+	}
+	else {
 		if (list_lines > 0) {
 			glDeleteLists(list_lines, 1);
 			list_lines = 0;

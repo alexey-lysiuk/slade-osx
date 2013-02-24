@@ -171,6 +171,10 @@
 		8A64A074166A604200C762DA /* DiskArchive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A64A06E166A604200C762DA /* DiskArchive.cpp */; };
 		8A64A075166A604200C762DA /* SectorSpecialDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A64A070166A604200C762DA /* SectorSpecialDialog.cpp */; };
 		8A64A076166A604200C762DA /* UndoManagerHistoryPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A64A072166A604200C762DA /* UndoManagerHistoryPanel.cpp */; };
+		8A91A28216DA59660059E984 /* ActionSpecialDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A91A28016DA59660059E984 /* ActionSpecialDialog.cpp */; };
+		8A91A28816DA59820059E984 /* GenLineSpecial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A91A28416DA59820059E984 /* GenLineSpecial.cpp */; };
+		8A91A28916DA59820059E984 /* GenLineSpecialPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A91A28616DA59820059E984 /* GenLineSpecialPanel.cpp */; };
+		8A91A28C16DA59A50059E984 /* QuickTextureOverlay3d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A91A28A16DA59A50059E984 /* QuickTextureOverlay3d.cpp */; };
 		8A92003815A86BFB00F58CED /* CIEDeltaEquations.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003215A86BFB00F58CED /* CIEDeltaEquations.cpp */; };
 		8A92003915A86BFB00F58CED /* ColorimetryPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003415A86BFB00F58CED /* ColorimetryPrefsPanel.cpp */; };
 		8A92003A15A86BFB00F58CED /* ScriptEditorPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A92003615A86BFB00F58CED /* ScriptEditorPanel.cpp */; };
@@ -536,6 +540,14 @@
 		8A64A071166A604200C762DA /* SectorSpecialDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectorSpecialDialog.h; path = src/SectorSpecialDialog.h; sourceTree = "<group>"; };
 		8A64A072166A604200C762DA /* UndoManagerHistoryPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UndoManagerHistoryPanel.cpp; path = src/UndoManagerHistoryPanel.cpp; sourceTree = "<group>"; };
 		8A64A073166A604200C762DA /* UndoManagerHistoryPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UndoManagerHistoryPanel.h; path = src/UndoManagerHistoryPanel.h; sourceTree = "<group>"; };
+		8A91A28016DA59660059E984 /* ActionSpecialDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ActionSpecialDialog.cpp; path = src/ActionSpecialDialog.cpp; sourceTree = "<group>"; };
+		8A91A28116DA59660059E984 /* ActionSpecialDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ActionSpecialDialog.h; path = src/ActionSpecialDialog.h; sourceTree = "<group>"; };
+		8A91A28416DA59820059E984 /* GenLineSpecial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GenLineSpecial.cpp; path = src/GenLineSpecial.cpp; sourceTree = "<group>"; };
+		8A91A28516DA59820059E984 /* GenLineSpecial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenLineSpecial.h; path = src/GenLineSpecial.h; sourceTree = "<group>"; };
+		8A91A28616DA59820059E984 /* GenLineSpecialPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GenLineSpecialPanel.cpp; path = src/GenLineSpecialPanel.cpp; sourceTree = "<group>"; };
+		8A91A28716DA59820059E984 /* GenLineSpecialPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenLineSpecialPanel.h; path = src/GenLineSpecialPanel.h; sourceTree = "<group>"; };
+		8A91A28A16DA59A50059E984 /* QuickTextureOverlay3d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuickTextureOverlay3d.cpp; path = src/QuickTextureOverlay3d.cpp; sourceTree = "<group>"; };
+		8A91A28B16DA59A50059E984 /* QuickTextureOverlay3d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuickTextureOverlay3d.h; path = src/QuickTextureOverlay3d.h; sourceTree = "<group>"; };
 		8A92003215A86BFB00F58CED /* CIEDeltaEquations.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CIEDeltaEquations.cpp; path = src/CIEDeltaEquations.cpp; sourceTree = "<group>"; };
 		8A92003315A86BFB00F58CED /* CIEDeltaEquations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CIEDeltaEquations.h; path = src/CIEDeltaEquations.h; sourceTree = "<group>"; };
 		8A92003415A86BFB00F58CED /* ColorimetryPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ColorimetryPrefsPanel.cpp; path = src/ColorimetryPrefsPanel.cpp; sourceTree = "<group>"; };
@@ -1107,6 +1119,8 @@
 				8AD18D57154A8A9A00AB9C07 /* ACSPrefsPanel.h */,
 				8AD18D58154A8A9A00AB9C07 /* ActionSpecial.cpp */,
 				8AD18D59154A8A9A00AB9C07 /* ActionSpecial.h */,
+				8A91A28016DA59660059E984 /* ActionSpecialDialog.cpp */,
+				8A91A28116DA59660059E984 /* ActionSpecialDialog.h */,
 				8AD18D5A154A8A9A00AB9C07 /* ActionSpecialTreeView.cpp */,
 				8AD18D5B154A8A9A00AB9C07 /* ActionSpecialTreeView.h */,
 				8AD18D5C154A8A9A00AB9C07 /* ADatArchive.cpp */,
@@ -1215,6 +1229,10 @@
 				8AD18DD0154A8A9A00AB9C07 /* GameConfiguration.h */,
 				8AD18DD1154A8A9A00AB9C07 /* GeneralPrefsPanel.cpp */,
 				8AD18DD2154A8A9A00AB9C07 /* GeneralPrefsPanel.h */,
+				8A91A28416DA59820059E984 /* GenLineSpecial.cpp */,
+				8A91A28516DA59820059E984 /* GenLineSpecial.h */,
+				8A91A28616DA59820059E984 /* GenLineSpecialPanel.cpp */,
+				8A91A28716DA59820059E984 /* GenLineSpecialPanel.h */,
 				8AD18DD3154A8A9A00AB9C07 /* GfxCanvas.cpp */,
 				8AD18DD4154A8A9A00AB9C07 /* GfxCanvas.h */,
 				8AD18DD5154A8A9A00AB9C07 /* GfxConvDialog.cpp */,
@@ -1373,6 +1391,8 @@
 				8AD18EB5154A8A9B00AB9C07 /* Property.h */,
 				8AD18EB6154A8A9B00AB9C07 /* PropertyList.cpp */,
 				8AD18EB7154A8A9B00AB9C07 /* PropertyList.h */,
+				8A91A28A16DA59A50059E984 /* QuickTextureOverlay3d.cpp */,
+				8A91A28B16DA59A50059E984 /* QuickTextureOverlay3d.h */,
 				8AD18EB8154A8A9B00AB9C07 /* ResArchive.cpp */,
 				8AD18EB9154A8A9B00AB9C07 /* ResArchive.h */,
 				8AD18EBA154A8A9B00AB9C07 /* ResourceManager.cpp */,
@@ -2106,6 +2126,7 @@
 			files = (
 				8AD18F54154A8A9B00AB9C07 /* ACSPrefsPanel.cpp in Sources */,
 				8AD18F55154A8A9B00AB9C07 /* ActionSpecial.cpp in Sources */,
+				8A91A28216DA59660059E984 /* ActionSpecialDialog.cpp in Sources */,
 				8AD18F56154A8A9B00AB9C07 /* ActionSpecialTreeView.cpp in Sources */,
 				8AD18F57154A8A9B00AB9C07 /* ADatArchive.cpp in Sources */,
 				8AD18F58154A8A9B00AB9C07 /* AdvancedPrefsPanel.cpp in Sources */,
@@ -2158,6 +2179,8 @@
 				8AD18F91154A8A9B00AB9C07 /* FileMonitor.cpp in Sources */,
 				8AD18F92154A8A9B00AB9C07 /* GameConfiguration.cpp in Sources */,
 				8AD18F93154A8A9B00AB9C07 /* GeneralPrefsPanel.cpp in Sources */,
+				8A91A28816DA59820059E984 /* GenLineSpecial.cpp in Sources */,
+				8A91A28916DA59820059E984 /* GenLineSpecialPanel.cpp in Sources */,
 				8AD18F94154A8A9B00AB9C07 /* GfxCanvas.cpp in Sources */,
 				8AD18F95154A8A9B00AB9C07 /* GfxConvDialog.cpp in Sources */,
 				8AD18F96154A8A9B00AB9C07 /* GfxEntryPanel.cpp in Sources */,
@@ -2234,6 +2257,7 @@
 				8AD19003154A8A9B00AB9C07 /* PreferencesDialog.cpp in Sources */,
 				8AD19004154A8A9B00AB9C07 /* Property.cpp in Sources */,
 				8AD19005154A8A9B00AB9C07 /* PropertyList.cpp in Sources */,
+				8A91A28C16DA59A50059E984 /* QuickTextureOverlay3d.cpp in Sources */,
 				8AD19006154A8A9B00AB9C07 /* ResArchive.cpp in Sources */,
 				8AD19007154A8A9B00AB9C07 /* ResourceManager.cpp in Sources */,
 				8AD19008154A8A9B00AB9C07 /* RffArchive.cpp in Sources */,

@@ -41,6 +41,9 @@ double MapThing::floatProperty(string key) {
 }
 
 void MapThing::setIntProperty(string key, int value) {
+	// Update modified time
+	setModified();
+
 	if (key == "type")
 		type = value;
 	else if (key == "x")
@@ -48,22 +51,19 @@ void MapThing::setIntProperty(string key, int value) {
 	else if (key == "y")
 		y = value;
 	else
-		MapObject::setIntProperty(key, value);
-
-	// Update modified time
-	modified_time = theApp->runTimer();
+		return MapObject::setIntProperty(key, value);
 }
 
 void MapThing::setFloatProperty(string key, double value) {
+	// Update modified time
+	setModified();
+
 	if (key == "x")
 		x = value;
 	else if (key == "y")
 		y = value;
 	else
-		MapObject::setFloatProperty(key, value);
-
-	// Update modified time
-	modified_time = theApp->runTimer();
+		return MapObject::setFloatProperty(key, value);
 }
 
 void MapThing::copy(MapObject* c) {
@@ -111,26 +111,20 @@ void MapThing::setAnglePoint(fpoint2_t point) {
 	setIntProperty("angle", angle);
 }
 
-void MapThing::writeBackup(PropertyList& plist) {
-	// General properties
-	//MapObject::backup(plist);
-
+void MapThing::writeBackup(mobj_backup_t* backup) {
 	// Type
-	plist["type"] = type;
+	backup->properties["type"] = type;
 
 	// Position
-	plist["x"] = x;
-	plist["y"] = y;
+	backup->properties["x"] = x;
+	backup->properties["y"] = y;
 }
 
-void MapThing::readBackup(PropertyList& plist) {
-	// General properties
-	//MapObject::loadFromBackup(plist);
-
+void MapThing::readBackup(mobj_backup_t* backup) {
 	// Type
-	type = plist["type"].getIntValue();
+	type = backup->properties["type"].getIntValue();
 
 	// Position
-	x = plist["x"].getFloatValue();
-	y = plist["y"].getFloatValue();
+	x = backup->properties["x"].getFloatValue();
+	y = backup->properties["y"].getFloatValue();
 }

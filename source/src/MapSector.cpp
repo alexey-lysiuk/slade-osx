@@ -48,15 +48,15 @@ string MapSector::stringProperty(string key) {
 }
 
 void MapSector::setStringProperty(string key, string value) {
+	// Update modified time
+	setModified();
+
 	if (key == "texturefloor")
 		f_tex = value;
 	else if (key == "textureceiling")
 		c_tex = value;
 	else
-		MapObject::setStringProperty(key, value);
-
-	// Update modified time
-	modified_time = theApp->runTimer();
+		return MapObject::setStringProperty(key, value);
 }
 
 void MapSector::setFloatProperty(string key, double value) {
@@ -71,9 +71,6 @@ void MapSector::setFloatProperty(string key, double value) {
 	}
 
 	MapObject::setFloatProperty(key, value);
-
-	// Update modified time
-	modified_time = theApp->runTimer();
 }
 
 fpoint2_t MapSector::midPoint() {
@@ -327,6 +324,7 @@ void MapSector::connectSide(MapSide* side) {
 	connected_sides.push_back(side);
 	poly_needsupdate = true;
 	bbox.reset();
+	setModified();
 }
 
 void MapSector::disconnectSide(MapSide* side) {
@@ -337,24 +335,22 @@ void MapSector::disconnectSide(MapSide* side) {
 		}
 	}
 
+	setModified();
 	poly_needsupdate = true;
 	bbox.reset();
 }
 
-void MapSector::writeBackup(PropertyList& plist) {
-	// General properties
-	//MapObject::backup(plist);
-
+void MapSector::writeBackup(mobj_backup_t* backup) {
 	// Textures
-	plist["texturefloor"] = f_tex;
-	plist["textureceiling"] = c_tex;
+	backup->properties["texturefloor"] = f_tex;
+	backup->properties["textureceiling"] = c_tex;
 }
 
-void MapSector::readBackup(PropertyList& plist) {
+void MapSector::readBackup(mobj_backup_t* backup) {
 	// General properties
 	//MapObject::loadFromBackup(plist);
 
 	// Textures
-	f_tex = plist["texturefloor"].getStringValue();
-	c_tex = plist["textureceiling"].getStringValue();
+	f_tex = backup->properties["texturefloor"].getStringValue();
+	c_tex = backup->properties["textureceiling"].getStringValue();
 }

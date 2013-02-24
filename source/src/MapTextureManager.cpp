@@ -267,6 +267,14 @@ GLTexture* MapTextureManager::getSprite(string name, string translation, string 
 		mtex.texture->loadImage(&image, pal);
 		return mtex.texture;
 	}
+	else if (name.EndsWith("?")) {
+		name.RemoveLast(1);
+		GLTexture* sprite = getSprite(name + "0", translation, palette);
+		if (!sprite)
+			sprite = getSprite(name + "1", translation, palette);
+		if (sprite)
+			return sprite;
+	}
 
 	return NULL;
 }
@@ -349,6 +357,7 @@ void MapTextureManager::refreshResources() {
 	flats.clear();
 	sprites.clear();
 	thePaletteChooser->setGlobalFromArchive(archive);
+	theMapEditor->forceRefresh(true);
 	//wxLogMessage("texture manager cleared");
 }
 
