@@ -31,6 +31,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Blood RFF File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>rff</string>
@@ -39,6 +41,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Build GRP File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>grp</string>
@@ -47,6 +51,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>CD/HD File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>cd</string>
@@ -56,6 +62,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Dark Forces File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>gob</string>
@@ -65,6 +73,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Data File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>dat</string>
@@ -73,6 +83,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Decent HOG File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>hog</string>
@@ -81,6 +93,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Doom WAD File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>wad</string>
@@ -90,6 +104,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Library File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>lib</string>
@@ -98,6 +114,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Nerve Software Disk File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>disk</string>
@@ -106,6 +124,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Quake PAK File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>pak</string>
@@ -114,6 +134,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Resource File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>resource</string>
@@ -122,6 +144,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Wolfenstein 3D File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>wl1</string>
@@ -136,6 +160,8 @@
 		<dict>
 			<key>CFBundleTypeName</key>
 			<string>ZIP File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>jdf</string>
