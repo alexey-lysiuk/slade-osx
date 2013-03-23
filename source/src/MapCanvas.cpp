@@ -390,10 +390,10 @@ void MapCanvas::set3dCameraThing(MapThing* thing) {
 	fpoint3_t pos(thing->xPos(), thing->yPos(), 40);
 	int sector = editor->getMap().sectorAt(pos.x, pos.y);
 	if (sector >= 0)
-		pos.z += editor->getMap().getSector(sector)->intProperty("heightfloor");
+		pos.z += editor->getMap().getSector(sector)->getFloorHeight();
 
 	// Determine direction
-	fpoint2_t dir = MathStuff::vectorAngle(MathStuff::degToRad(thing->intProperty("angle")));
+	fpoint2_t dir = MathStuff::vectorAngle(MathStuff::degToRad(thing->getAngle()));
 
 	renderer_3d->cameraSet(pos, dir);
 }
@@ -1008,6 +1008,7 @@ void MapCanvas::draw() {
 			glEnable(GL_TEXTURE_2D);
 			col.set_gl(true);
 			Drawing::drawText(S_FMT("%d", renderer_3d->itemDistance()), midx+5, midy+5, rgba_t(255, 255, 255, 200), Drawing::FONT_SMALL);
+			//Drawing::drawText(S_FMT("%1.2f", renderer_3d->camPitch()), midx+5, midy+30, rgba_t(255, 255, 255, 200), Drawing::FONT_SMALL);
 		}
 	}
 
@@ -1396,11 +1397,14 @@ void MapCanvas::lockMouse(bool lock) {
 		img.SetMaskColour(0, 0, 0);
 		SetCursor(wxCursor(img));
 
+// TODO: check if sfml cursor show/hide is even really needed
+#ifndef __WXGTK__
 #ifdef USE_SFML_RENDERWINDOW
 #if SFML_VERSION_MAJOR < 2
 		ShowMouseCursor(false);
 #else
 		setMouseCursorVisible(false);
+#endif
 #endif
 #endif
 	}
@@ -1408,11 +1412,13 @@ void MapCanvas::lockMouse(bool lock) {
 		// Show cursor
 		SetCursor(wxNullCursor);
 
+#ifndef __WXGTK__
 #ifdef USE_SFML_RENDERWINDOW
 #if SFML_VERSION_MAJOR < 2
 		ShowMouseCursor(false);
 #else
 		setMouseCursorVisible(false);
+#endif
 #endif
 #endif
 	}
@@ -1719,11 +1725,11 @@ void MapCanvas::changeTexture3d(selection_3d_t first) {
 	string tex;
 	int type = 0;
 	if (first.type == MapEditor::SEL_FLOOR) {
-		tex = editor->getMap().getSector(first.index)->floorTexture();
+		tex = editor->getMap().getSector(first.index)->getFloorTex();
 		type = 1;
 	}
 	else if (first.type == MapEditor::SEL_CEILING) {
-		tex = editor->getMap().getSector(first.index)->ceilingTexture();
+		tex = editor->getMap().getSector(first.index)->getCeilingTex();
 		type = 1;
 	}
 	else if (first.type == MapEditor::SEL_SIDE_BOTTOM)
@@ -1827,6 +1833,7 @@ void MapCanvas::onKeyBindPress(string name) {
 
 	// Screenshot
 #ifdef USE_SFML_RENDERWINDOW
+#if SFML_VERSION_MAJOR >= 2
 	else if (name == "map_screenshot") {
 		// Capture shot
 		sf::Image shot = capture();
@@ -1851,6 +1858,7 @@ void MapCanvas::onKeyBindPress(string name) {
 		// Editor message
 		editor->addEditorMessage(S_FMT("Screenshot taken (%s)", CHR(filename)));
 	}
+#endif
 #endif
 
 	// Send to editor first
@@ -2384,7 +2392,7 @@ bool MapCanvas::handleAction(string id) {
 		SLADEMap& map = editor->getMap();
 		MapSector* sector = map.getSector(map.sectorAt(pos.x, pos.y));
 		if (sector)
-			pos.z = sector->intProperty("heightfloor") + 40;
+			pos.z = sector->getFloorHeight() + 40;
 		renderer_3d->cameraSetPosition(pos);
 	}
 

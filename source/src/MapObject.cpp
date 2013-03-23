@@ -4,13 +4,8 @@
 #include "SLADEMap.h"
 #include "GameConfiguration.h"
 #include "MainApp.h"
-#include "Console.h"
 
-//unsigned	current_id = 1;
-long		prop_backup_time = -1;
-
-//testing
-//vector<MapObject*> all_objects;
+long	prop_backup_time = -1;
 
 MapObject::MapObject(int type, SLADEMap* parent) {
 	// Init variables
@@ -19,18 +14,15 @@ MapObject::MapObject(int type, SLADEMap* parent) {
 	this->index = 0;
 	this->filtered = false;
 	this->modified_time = theApp->runTimer();
-	this->id = 0;//current_id++;
+	this->id = 0;
 	this->obj_backup = NULL;
 
 	if (parent)
 		parent->addMapObject(this);
-
-	//all_objects.push_back(this);
 }
 
 MapObject::~MapObject() {
 	properties.clear();
-	//all_objects[id - 1] = NULL;
 	if (obj_backup)
 		delete obj_backup;
 }
@@ -80,9 +72,11 @@ void MapObject::copy(MapObject* c) {
 	properties.clear();
 
 	// Copy object properties
-	c->properties.copyTo(properties);
-	this->parent_map = c->parent_map;
-	this->filtered = c->filtered;
+	if (!c->properties.isEmpty()) {
+		c->properties.copyTo(properties);
+		this->parent_map = c->parent_map;
+		this->filtered = c->filtered;
+	}
 
 	// Update modified time
 	setModified();
@@ -90,7 +84,7 @@ void MapObject::copy(MapObject* c) {
 
 bool MapObject::boolProperty(string key) {
 	// If the property exists already, return it
-	if (properties.propertyExists(key))
+	if (properties[key].hasValue())
 		return properties[key].getBoolValue();
 
 	// Otherwise check the game configuration for a default value
@@ -105,7 +99,7 @@ bool MapObject::boolProperty(string key) {
 
 int MapObject::intProperty(string key) {
 	// If the property exists already, return it
-	if (properties.propertyExists(key))
+	if (properties[key].hasValue())
 		return properties[key].getIntValue();
 
 	// Otherwise check the game configuration for a default value
@@ -120,7 +114,7 @@ int MapObject::intProperty(string key) {
 
 double MapObject::floatProperty(string key) {
 	// If the property exists already, return it
-	if (properties.propertyExists(key))
+	if (properties[key].hasValue())
 		return properties[key].getFloatValue();
 
 	// Otherwise check the game configuration for a default value
@@ -135,7 +129,7 @@ double MapObject::floatProperty(string key) {
 
 string MapObject::stringProperty(string key) {
 	// If the property exists already, return it
-	if (properties.propertyExists(key))
+	if (properties[key].hasValue())
 		return properties[key].getStringValue();
 
 	// Otherwise check the game configuration for a default value
@@ -221,10 +215,6 @@ mobj_backup_t* MapObject::getBackup(bool remove) {
 	return bak;
 }
 
-//void MapObject::resetIdCounter() {
-//	current_id = 1;
-//}
-
 long MapObject::propBackupTime() {
 	return prop_backup_time;
 }
@@ -236,15 +226,3 @@ void MapObject::beginPropBackup(long current_time) {
 void MapObject::endPropBackup() {
 	prop_backup_time = -1;
 }
-
-//CONSOLE_COMMAND(m_next_id, 0, false) {
-//	theConsole->logMessage(S_FMT("Next Object ID: %d", current_id));
-//}
-
-//CONSOLE_COMMAND(mobj_check_deleted, 0) {
-//	theConsole->logMessage(S_FMT("Checking %d ids", all_objects.size()));
-//	for (unsigned a = 0; a < all_objects.size(); a++) {
-//		if (all_objects[a])
-//			theConsole->logMessage(S_FMT("Object id %d not deleted", a+1));
-//	}
-//}

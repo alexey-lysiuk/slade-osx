@@ -17,6 +17,7 @@ enum {
 
 struct mobj_backup_t {
 	PropertyList	properties;
+	PropertyList	props_internal;
 	unsigned		id;
 	uint8_t			type;
 
@@ -51,7 +52,7 @@ public:
 	void		setModified();
 
 	PropertyList&	props()				{ return properties; }
-	bool			hasProp(string key)	{ return properties.propertyExists(key); }
+	bool			hasProp(string key)	{ return properties[key].hasValue(); }
 
 	// Generic property modification
 	virtual bool	boolProperty(string key);

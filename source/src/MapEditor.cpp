@@ -1824,7 +1824,7 @@ void MapEditor::createSector(double x, double y) {
 	// Set some sector defaults from game configuration if needed
 	if (!sector_copy && ok) {
 		MapSector* n_sector = map.getSector(map.nSectors()-1);
-		if (n_sector->ceilingTexture().IsEmpty())
+		if (n_sector->getCeilingTex().IsEmpty())
 			theGameConfiguration->applyDefaults(n_sector);
 	}
 
@@ -2142,10 +2142,6 @@ void MapEditor::endLineDraw(bool apply) {
 	// Check if we want to 'apply' the line draw (ie. create the lines)
 	if (apply && draw_points.size() > 1) {
 		// Begin undo level
-		/*undo_manager->beginRecord("Line Draw");
-		map.clearCreatedObjectIds();
-		map.clearDeletedObjectIds();
-		MapObject::beginPropBackup(theApp->runTimer());*/
 		beginUndoRecord("Line Draw");
 
 		// Add extra points if any lines overlap existing vertices
@@ -2167,7 +2163,7 @@ void MapEditor::endLineDraw(bool apply) {
 		for (unsigned a = 0; a < draw_points.size() - 1; a++) {
 			// Check for intersections
 			vector<fpoint2_t> intersect = map.cutLines(draw_points[a].x, draw_points[a].y, draw_points[a+1].x, draw_points[a+1].y);
-			//wxLogMessage("%d intersect points", intersect.size());
+			LOG_MESSAGE(2, S_FMT("%d intersect points", intersect.size()));
 
 			// Create line normally if no intersections
 			if (intersect.size() == 0)
@@ -2284,7 +2280,7 @@ void MapEditor::endLineDraw(bool apply) {
 			MapSector* sector = map.getSector(a);
 
 			// Skip if sector already has properties
-			if (!sector->ceilingTexture().IsEmpty())
+			if (!sector->getCeilingTex().IsEmpty())
 				continue;
 
 			// Copy from adjacent sector if any
@@ -2520,8 +2516,7 @@ void MapEditor::paste(fpoint2_t mouse_pos) {
 
 #pragma endregion
 
-// Why won't it allow numbers for region names?
-#pragma region EDITING THREE-D
+#pragma region EDITING_3D
 
 bool MapEditor::set3dHilight(selection_3d_t item) {
 	bool changed = false;
@@ -2565,14 +2560,6 @@ bool MapEditor::wallMatches(MapSide* side, uint8_t part, string tex) {
 		return false;
 	if (part == SEL_SIDE_BOTTOM && side->stringProperty("texturebottom") != tex)
 		return false;
-
-	// Check it isn't already selected
-	/*
-	for (unsigned s = 0; s < selection_3d.size(); s++) {
-		if (selection_3d[s].type == part && selection_3d[s].index == side->getIndex())
-			return false;
-	}
-	*/
 
 	return true;
 }
@@ -2723,7 +2710,7 @@ void MapEditor::selectAdjacent3d(selection_3d_t item) {
 					continue;
 
 				// Check sector floor texture
-				if (osector->floorTexture() != sector->floorTexture())
+				if (osector->getFloorTex() != sector->getFloorTex())
 					continue;
 			}
 			else {
@@ -2732,7 +2719,7 @@ void MapEditor::selectAdjacent3d(selection_3d_t item) {
 					continue;
 
 				// Check sector ceiling texture
-				if (osector->ceilingTexture() != sector->ceilingTexture())
+				if (osector->getCeilingTex() != sector->getCeilingTex())
 					continue;
 			}
 
@@ -2846,6 +2833,7 @@ void MapEditor::changeOffset3d(int amount, bool x) {
 
 	// Go through items
 	vector<int> done;
+	bool changed = false;
 	bool udmf_ext = (map.currentFormat() == MAP_UDMF && theGameConfiguration->udmfNamespace() == "zdoom");
 	for (unsigned a = 0; a < items.size(); a++) {
 		// Wall
@@ -2895,6 +2883,8 @@ void MapEditor::changeOffset3d(int amount, bool x) {
 				int offset = side->floatProperty(ofs);
 				side->setFloatProperty(ofs, offset + amount);
 			}
+
+			changed = true;
 		}
 
 		// Flat (UDMF+ZDoom only)
@@ -2910,6 +2900,8 @@ void MapEditor::changeOffset3d(int amount, bool x) {
 					double offset = sector->floatProperty("ypanningfloor");
 					sector->setFloatProperty("ypanningfloor", offset + amount);
 				}
+
+				changed = true;
 			}
 			else if (items[a].type == SEL_CEILING) {
 				if (x) {
@@ -2920,15 +2912,17 @@ void MapEditor::changeOffset3d(int amount, bool x) {
 					double offset = sector->floatProperty("ypanningceiling");
 					sector->setFloatProperty("ypanningceiling", offset + amount);
 				}
+
+				changed = true;
 			}
 		}
 	}
 
 	// End undo level
-	endUndoRecord();
+	endUndoRecord(changed);
 
 	// Editor message
-	if (items.size() > 0) {
+	if (items.size() > 0 && changed) {
 		string axis = "X";
 		if (!x) axis = "Y";
 
@@ -3261,14 +3255,14 @@ void MapEditor::copy3d(int type) {
 	else if (hilight_3d.type == SEL_FLOOR) {
 		// Texture
 		if (type == COPY_TEXTYPE)
-			copy_texture = map.getSector(hilight_3d.index)->floorTexture();
+			copy_texture = map.getSector(hilight_3d.index)->getFloorTex();
 	}
 
 	// Ceiling
 	else if (hilight_3d.type == SEL_CEILING) {
 		// Texture
 		if (type == COPY_TEXTYPE)
-			copy_texture = map.getSector(hilight_3d.index)->ceilingTexture();
+			copy_texture = map.getSector(hilight_3d.index)->getCeilingTex();
 	}
 
 	// Thing
@@ -3403,12 +3397,17 @@ void MapEditor::changeThingZ3d(int amount) {
 }
 
 void MapEditor::deleteThing3d() {
+	// Begin undo level
+	beginUndoRecord("Delete Thing", false, false, true);
+
 	// Go through 3d selection
 	for (unsigned a = 0; a < selection_3d.size(); a++) {
 		// Check if thing
 		if (selection_3d[a].type == SEL_THING)
 			map.removeThing(selection_3d[a].index);
 	}
+
+	endUndoRecord();
 }
 
 void MapEditor::changeScale3d(double amount, bool x) {
@@ -3888,6 +3887,24 @@ CONSOLE_COMMAND(m_n_polys, 0, false) {
 		npoly += map.getSector(a)->getPolygon()->nSubPolys();
 
 	theConsole->logMessage(S_FMT("%d polygons total", npoly));
+}
+
+CONSOLE_COMMAND(mobj_info, 1, false) {
+	long id;
+	args[0].ToLong(&id);
+
+	MapObject* obj = theMapEditor->mapEditor().getMap().getObjectById(id);
+	if (!obj)
+		theConsole->logMessage("Object id out of range");
+	else {
+		mobj_backup_t bak;
+		obj->backup(&bak);
+		theConsole->logMessage(S_FMT("Object %d: %s #%d", id, CHR(obj->getTypeName()), obj->getIndex()));
+		theConsole->logMessage("Properties:");
+		theConsole->logMessage(bak.properties.toString());
+		theConsole->logMessage("Properties (internal):");
+		theConsole->logMessage(bak.props_internal.toString());
+	}
 }
 
 //CONSOLE_COMMAND(m_test_save, 1, false) {
