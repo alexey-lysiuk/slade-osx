@@ -6,7 +6,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: private.h 73264 2012-12-23 11:50:33Z SC $
+// RCS-ID:      $Id: private.h 73595 2013-03-02 13:01:57Z SC $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -138,6 +138,8 @@ public :
 
     virtual void        SetupKeyEvent(wxKeyEvent &wxevent, NSEvent * nsEvent, NSString* charString = NULL);
     virtual void        SetupMouseEvent(wxMouseEvent &wxevent, NSEvent * nsEvent);
+    void                SetupCoordinates(wxCoord &x, wxCoord &y, NSEvent *nsEvent);
+    virtual bool        SetupCursor(NSEvent* event);
 
 
 #if !wxOSX_USE_NATIVE_FLIPPED

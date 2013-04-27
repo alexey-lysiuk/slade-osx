@@ -16,7 +16,7 @@
 #endif /* __cplusplus */
 
 /* fill in with the string wxGetOsDescription() will return */
-#define WXWIN_OS_DESCRIPTION "Darwin 12.2.1 x86_64"
+#define WXWIN_OS_DESCRIPTION "Darwin 10.8.0 i386"
 
 /* the installation location prefix from configure */
 #define wxINSTALL_PREFIX "/Volumes/Storage/Work/wxWidgets/_inst"
@@ -239,7 +239,7 @@
 #define wxUSE_FILE 1
 #define wxUSE_FFILE 1
 
-#define wxUSE_FSVOLUME      0
+#define wxUSE_FSVOLUME 1
 
 #define wxUSE_STDPATHS 1
 
@@ -257,7 +257,7 @@
 
 #define wxUSE_STOPWATCH 1
 
-#define wxUSE_FSWATCHER     0
+#define wxUSE_FSWATCHER 1
 
 #define wxUSE_CONFIG 1
 
@@ -1008,25 +1008,25 @@
 #define HAVE_USLEEP 1
 
 /* Define if you have wcscasecmp() function  */
-#define HAVE_WCSCASECMP 1
+/* #undef HAVE_WCSCASECMP */
 
 /* Define if you have wcsncasecmp() function  */
-#define HAVE_WCSNCASECMP 1
+/* #undef HAVE_WCSNCASECMP */
 
 /* Define if you have wcslen function  */
 #define HAVE_WCSLEN 1
 
 /* Define if you have wcsdup function  */
-#define HAVE_WCSDUP 1
+/* #undef HAVE_WCSDUP */
 
 /* Define if you have wcsftime() function  */
 #define HAVE_WCSFTIME 1
 
 /* Define if you have strnlen() function */
-#define HAVE_STRNLEN 1
+/* #undef HAVE_STRNLEN */
 
 /* Define if you have wcsnlen() function */
-#define HAVE_WCSNLEN 1
+/* #undef HAVE_WCSNLEN */
 
 /* Define if you have wcstoull() and wcstoll() */
 /* #undef HAVE_WCSTOULL */
@@ -1140,7 +1140,7 @@
 #define HAVE_UNSETENV 1
 
 /* Define if you have the <X11/XKBlib.h> header file.  */
-/* #undef HAVE_X11_XKBLIB_H */
+#define HAVE_X11_XKBLIB_H 1
 
 /* Define if you have the <X11/extensions/xf86vmode.h> header file.  */
 /* #undef HAVE_X11_EXTENSIONS_XF86VMODE_H */
@@ -1251,17 +1251,13 @@
 /* #undef wxHAS_INOTIFY */
 
 /* Define if you have kqueu_xxx() functions. */
-/* #undef wxHAS_KQUEUE */
+#define wxHAS_KQUEUE 1
 
 /* -------------------------------------------------------------------------
    Win32 adjustments section
    ------------------------------------------------------------------------- */
 
 #ifdef __WIN32__
-
-/* we need to define wxUSE_XPM_IN_MSW for MSW compilation for compatibility
-   with wx/msw/setup.h */
-#define wxUSE_XPM_IN_MSW wxUSE_XPM
 
 /* When using an external jpeg library and the Windows headers already define
  * boolean, define to the type used by the jpeg library for boolean.  */

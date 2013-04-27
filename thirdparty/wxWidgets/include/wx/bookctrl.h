@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     19.08.03
-// RCS-ID:      $Id: bookctrl.h 72406 2012-08-30 20:21:29Z VZ $
+// RCS-ID:      $Id: bookctrl.h 73850 2013-04-25 10:11:03Z VZ $
 // Copyright:   (c) 2003 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -215,6 +215,9 @@ public:
         }
     }
 
+    // return the index of the given page or wxNOT_FOUND
+    int FindPage(const wxWindow* page) const;
+
     // hit test: returns which page is hit and, optionally, where (icon, label)
     virtual int HitTest(const wxPoint& WXUNUSED(pt),
                         long * WXUNUSED(flags) = NULL) const
@@ -404,19 +407,23 @@ typedef void (wxEvtHandler::*wxBookCtrlEventFunction)(wxBookCtrlEvent&);
     // dedicated to majority of desktops
     #include "wx/notebook.h"
     #define wxBookCtrl                             wxNotebook
-    #define wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGED    wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED
-    #define wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGING   wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGING
+    #define wxEVT_BOOKCTRL_PAGE_CHANGED            wxEVT_NOTEBOOK_PAGE_CHANGED
+    #define wxEVT_BOOKCTRL_PAGE_CHANGING           wxEVT_NOTEBOOK_PAGE_CHANGING
     #define EVT_BOOKCTRL_PAGE_CHANGED(id, fn)      EVT_NOTEBOOK_PAGE_CHANGED(id, fn)
     #define EVT_BOOKCTRL_PAGE_CHANGING(id, fn)     EVT_NOTEBOOK_PAGE_CHANGING(id, fn)
 #else
     // dedicated to Smartphones
     #include "wx/choicebk.h"
     #define wxBookCtrl                             wxChoicebook
-    #define wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGED    wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGED
-    #define wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGING   wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGING
+    #define wxEVT_BOOKCTRL_PAGE_CHANGED            wxEVT_CHOICEBOOK_PAGE_CHANGED
+    #define wxEVT_BOOKCTRL_PAGE_CHANGING           wxEVT_CHOICEBOOK_PAGE_CHANGING
     #define EVT_BOOKCTRL_PAGE_CHANGED(id, fn)      EVT_CHOICEBOOK_PAGE_CHANGED(id, fn)
     #define EVT_BOOKCTRL_PAGE_CHANGING(id, fn)     EVT_CHOICEBOOK_PAGE_CHANGING(id, fn)
 #endif
+
+// old wxEVT_COMMAND_* constants
+#define wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGED    wxEVT_BOOKCTRL_PAGE_CHANGED
+#define wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGING   wxEVT_BOOKCTRL_PAGE_CHANGING
 
 #if WXWIN_COMPATIBILITY_2_6
     #define wxBC_TOP                               wxBK_TOP

@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     28.10.99
-// RCS-ID:      $Id: spinctlg.h 72995 2012-11-20 12:49:53Z VZ $
+// RCS-ID:      $Id: spinctlg.h 73630 2013-03-09 15:08:31Z VZ $
 // Copyright:   (c) Vadim Zeitlin
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -43,7 +43,7 @@ class wxSpinCtrlTextGeneric; // wxTextCtrl used for the wxSpinCtrlGenericBase
 // ----------------------------------------------------------------------------
 
 class WXDLLIMPEXP_CORE wxSpinCtrlGenericBase
-                : public wxCompositeWindow<wxSpinCtrlBase>
+                : public wxNavigationEnabled<wxCompositeWindow<wxSpinCtrlBase> >
 {
 public:
     wxSpinCtrlGenericBase() { Init(); }
@@ -87,6 +87,8 @@ public:
 #if wxUSE_TOOLTIPS
     virtual void DoSetToolTip(wxToolTip *tip);
 #endif // wxUSE_TOOLTIPS
+
+    virtual bool SetBackgroundColour(const wxColour& colour);
 
     // get the subcontrols
     wxTextCtrl   *GetText() const       { return m_textCtrl; }

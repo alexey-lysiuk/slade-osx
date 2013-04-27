@@ -12,7 +12,7 @@
 // Author:      Robin Dunn
 //
 // Created:     13-Jan-2000
-// RCS-ID:      $Id: stc.h 73150 2012-12-08 13:27:55Z VZ $
+// RCS-ID:      $Id: stc.h.in 73150 2012-12-08 13:27:55Z VZ $
 // Copyright:   (c) 2000 by Total Control Software
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////

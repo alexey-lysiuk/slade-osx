@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by: Ron Lee
 // Created:     01/02/97
-// RCS-ID:      $Id: window.h 73139 2012-12-08 00:37:10Z VZ $
+// RCS-ID:      $Id: window.h 73756 2013-03-31 01:12:21Z VZ $
 // Copyright:   (c) Vadim Zeitlin
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -1511,11 +1511,6 @@ protected:
     // widgets state are necessary
     virtual void DoEnable(bool WXUNUSED(enable)) { }
 
-    // called when the on-screen widget state changes and provides an
-    // an opportunity for the widget to update its visual state (colours,
-    // fonts, anything else) as necessary
-    virtual void OnEnabled(bool WXUNUSED(enabled)) { }
-
 
     // the window id - a number which uniquely identifies a window among
     // its siblings unless it is wxID_ANY
@@ -1768,7 +1763,7 @@ protected:
     static void NotifyCaptureLost();
 
 private:
-    // recursively call our own and our children OnEnabled() when the
+    // recursively call our own and our children DoEnable() when the
     // enabled/disabled status changed because a parent window had been
     // enabled/disabled
     void NotifyWindowOnEnableChange(bool enabled);

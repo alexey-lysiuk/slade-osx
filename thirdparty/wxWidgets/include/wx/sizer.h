@@ -4,7 +4,7 @@
 // Author:      Robert Roebling and Robin Dunn
 // Modified by: Ron Lee, Vadim Zeitlin (wxSizerFlags)
 // Created:
-// RCS-ID:      $Id: sizer.h 72436 2012-09-08 21:48:57Z VZ $
+// RCS-ID:      $Id: sizer.h 73729 2013-03-27 23:10:15Z VZ $
 // Copyright:   (c) Robin Dunn, Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -715,6 +715,10 @@ public:
 
     void Show(bool show) { ShowItems(show); }
 
+    // This is the ShowItems() counterpart and returns true if any of the sizer
+    // items are shown.
+    virtual bool AreAnyItemsShown() const;
+
 protected:
     wxSize              m_size;
     wxSize              m_minSize;
@@ -1033,6 +1037,7 @@ public:
 
     // override to hide/show the static box as well
     virtual void ShowItems (bool show);
+    virtual bool AreAnyItemsShown() const;
 
     virtual bool Detach( wxWindow *window );
     virtual bool Detach( wxSizer *sizer ) { return wxBoxSizer::Detach(sizer); }

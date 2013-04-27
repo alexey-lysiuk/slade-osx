@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin, Robert Roebling
 // Modified by:
 // Created:     26.05.99
-// RCS-ID:      $Id: dnd.h 58757 2009-02-08 11:45:59Z VZ $
+// RCS-ID:      $Id: dnd.h 73571 2013-02-27 12:05:17Z SN $
 // Copyright:   (c) wxWidgets Team
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ public:
         { m_data = NULL; }
     virtual ~wxDropSourceBase() { }
 
-    // set the data which is transfered by drag and drop
+    // set the data which is transferred by drag and drop
     void SetData(wxDataObject& data)
       { m_data = &data; }
 

@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by: Wlodzimierz ABX Skiba from wx/listbook.h
 // Created:     15.09.04
-// RCS-ID:      $Id: choicebk.h 71435 2012-05-15 10:03:57Z VZ $
+// RCS-ID:      $Id: choicebk.h 73850 2013-04-25 10:11:03Z VZ $
 // Copyright:   (c) Vadim Zeitlin, Wlodzimierz Skiba
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,8 +22,8 @@
 
 class WXDLLIMPEXP_FWD_CORE wxChoice;
 
-wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGED,  wxBookCtrlEvent );
-wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGING, wxBookCtrlEvent );
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_CHOICEBOOK_PAGE_CHANGED,  wxBookCtrlEvent );
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_CHOICEBOOK_PAGE_CHANGING, wxBookCtrlEvent );
 
 // wxChoicebook flags
 #define wxCHB_DEFAULT          wxBK_DEFAULT
@@ -117,10 +117,14 @@ typedef wxBookCtrlEventFunction wxChoicebookEventFunction;
 #define wxChoicebookEventHandler(func) wxBookCtrlEventHandler(func)
 
 #define EVT_CHOICEBOOK_PAGE_CHANGED(winid, fn) \
-    wx__DECLARE_EVT1(wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGED, winid, wxBookCtrlEventHandler(fn))
+    wx__DECLARE_EVT1(wxEVT_CHOICEBOOK_PAGE_CHANGED, winid, wxBookCtrlEventHandler(fn))
 
 #define EVT_CHOICEBOOK_PAGE_CHANGING(winid, fn) \
-    wx__DECLARE_EVT1(wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGING, winid, wxBookCtrlEventHandler(fn))
+    wx__DECLARE_EVT1(wxEVT_CHOICEBOOK_PAGE_CHANGING, winid, wxBookCtrlEventHandler(fn))
+
+// old wxEVT_COMMAND_* constants
+#define wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGED    wxEVT_CHOICEBOOK_PAGE_CHANGED
+#define wxEVT_COMMAND_CHOICEBOOK_PAGE_CHANGING   wxEVT_CHOICEBOOK_PAGE_CHANGING
 
 #endif // wxUSE_CHOICEBOOK
 

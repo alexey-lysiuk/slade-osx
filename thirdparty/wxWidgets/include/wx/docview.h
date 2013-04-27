@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: docview.h 73048 2012-11-28 14:17:30Z VZ $
+// RCS-ID:      $Id: docview.h 73850 2013-04-25 10:11:03Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -85,6 +85,9 @@ public:
     // SetDocumentSaved() is only used internally, don't call it
     bool GetDocumentSaved() const { return m_savedYet; }
     void SetDocumentSaved(bool saved = true) { m_savedYet = saved; }
+
+    // activate the first view of the document if any
+    void Activate();
 
     // return true if the document hasn't been modified since the last time it
     // was saved (implying that it returns false if it was never saved, even if
@@ -443,6 +446,9 @@ public:
     // Find template from document class info, may return NULL.
     wxDocTemplate* FindTemplate(const wxClassInfo* documentClassInfo);
 
+    // Find document from file name, may return NULL.
+    wxDocument* FindDocumentByPath(const wxString& path) const;
+
     wxDocument *GetCurrentDocument() const;
 
     void SetMaxDocsOpen(int n) { m_maxDocsOpen = n; }
@@ -549,10 +555,6 @@ protected:
     // if the latter is NULL, it also checks if we don't have just a single
     // view and returns it then
     wxView *GetActiveView() const;
-
-    // activate the first view of the given document if any
-    void ActivateDocument(wxDocument *doc);
-
 
     int               m_defaultDocumentNameCounter;
     int               m_maxDocsOpen;
@@ -871,7 +873,7 @@ public:
         if ( !BaseFrame::Create(frame, id, title, pos, size, style, name) )
             return false;
 
-        this->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
+        this->Connect(wxID_EXIT, wxEVT_MENU,
                       wxCommandEventHandler(wxDocParentFrameAny::OnExit));
         this->Connect(wxEVT_CLOSE_WINDOW,
                       wxCloseEventHandler(wxDocParentFrameAny::OnCloseWindow));

@@ -3,7 +3,7 @@
 // Purpose:     Declaration of wxRichToolTip class.
 // Author:      Vadim Zeitlin
 // Created:     2011-10-07
-// RCS-ID:      $Id: richtooltip.h 73050 2012-11-28 14:18:17Z VZ $
+// RCS-ID:      $Id: richtooltip.h 73589 2013-03-02 12:11:32Z VZ $
 // Copyright:   (c) 2011 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,7 +88,7 @@ public:
     void SetTitleFont(const wxFont& font);
 
     // Show the tooltip for the given window and optionally a specified area.
-    void ShowFor(wxWindow* win, wxRect* rect = NULL);
+    void ShowFor(wxWindow* win, const wxRect* rect = NULL);
 
     // Non-virtual dtor as this class is not supposed to be derived from.
     ~wxRichToolTip();

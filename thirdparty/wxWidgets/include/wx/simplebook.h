@@ -3,7 +3,7 @@
 // Purpose:     wxBookCtrlBase-derived class without any controller.
 // Author:      Vadim Zeitlin
 // Created:     2012-08-21
-// RCS-ID:      $Id: simplebook.h 72407 2012-08-30 20:21:54Z VZ $
+// RCS-ID:      $Id: simplebook.h 73850 2013-04-25 10:11:03Z VZ $
 // Copyright:   (c) 2012 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,13 +145,13 @@ protected:
 
     virtual wxBookCtrlEvent* CreatePageChangingEvent() const
     {
-        return new wxBookCtrlEvent(wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGING,
+        return new wxBookCtrlEvent(wxEVT_BOOKCTRL_PAGE_CHANGING,
                                    GetId());
     }
 
     virtual void MakeChangedEvent(wxBookCtrlEvent& event)
     {
-        event.SetEventType(wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGED);
+        event.SetEventType(wxEVT_BOOKCTRL_PAGE_CHANGED);
     }
 
     virtual wxWindow *DoRemovePage(size_t page)

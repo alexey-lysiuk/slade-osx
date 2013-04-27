@@ -3,7 +3,7 @@
 // Purpose:     wxFileSystemWatcherBase
 // Author:      Bartosz Bekier
 // Created:     2009-05-23
-// RCS-ID:      $Id: fswatcher.h 72987 2012-11-19 12:52:18Z VZ $
+// RCS-ID:      $Id: fswatcher.h 73571 2013-02-27 12:05:17Z SN $
 // Copyright:   (c) 2009 Bartosz Bekier <bartosz.bekier@gmail.com>
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -152,7 +152,7 @@ public:
 
     virtual wxEventCategory GetEventCategory() const
     {
-        // TODO this has to be merged with "similiar" categories and changed
+        // TODO this has to be merged with "similar" categories and changed
         return wxEVT_CATEGORY_UNKNOWN;
     }
 

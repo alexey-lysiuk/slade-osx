@@ -3,7 +3,7 @@
 // Purpose:     wxSearchCtrlBase class
 // Author:      Vince Harron
 // Created:     2006-02-18
-// RCS-ID:      $Id: srchctrl.h 68911 2011-08-27 12:13:23Z VZ $
+// RCS-ID:      $Id: srchctrl.h 73850 2013-04-25 10:11:03Z VZ $
 // Copyright:   (c) Vince Harron
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -42,8 +42,8 @@
 
 extern WXDLLIMPEXP_DATA_CORE(const char) wxSearchCtrlNameStr[];
 
-wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_COMMAND_SEARCHCTRL_CANCEL_BTN, wxCommandEvent);
-wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_COMMAND_SEARCHCTRL_SEARCH_BTN, wxCommandEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_SEARCHCTRL_CANCEL_BTN, wxCommandEvent);
+wxDECLARE_EXPORTED_EVENT(WXDLLIMPEXP_CORE, wxEVT_SEARCHCTRL_SEARCH_BTN, wxCommandEvent);
 
 // ----------------------------------------------------------------------------
 // a search ctrl is a text control with a search button and a cancel button
@@ -89,10 +89,14 @@ private:
 // ----------------------------------------------------------------------------
 
 #define EVT_SEARCHCTRL_CANCEL_BTN(id, fn) \
-    wx__DECLARE_EVT1(wxEVT_COMMAND_SEARCHCTRL_CANCEL_BTN, id, wxCommandEventHandler(fn))
+    wx__DECLARE_EVT1(wxEVT_SEARCHCTRL_CANCEL_BTN, id, wxCommandEventHandler(fn))
 
 #define EVT_SEARCHCTRL_SEARCH_BTN(id, fn) \
-    wx__DECLARE_EVT1(wxEVT_COMMAND_SEARCHCTRL_SEARCH_BTN, id, wxCommandEventHandler(fn))
+    wx__DECLARE_EVT1(wxEVT_SEARCHCTRL_SEARCH_BTN, id, wxCommandEventHandler(fn))
+
+// old wxEVT_COMMAND_* constants
+#define wxEVT_COMMAND_SEARCHCTRL_CANCEL_BTN   wxEVT_SEARCHCTRL_CANCEL_BTN
+#define wxEVT_COMMAND_SEARCHCTRL_SEARCH_BTN   wxEVT_SEARCHCTRL_SEARCH_BTN
 
 #endif // wxUSE_SEARCHCTRL
 

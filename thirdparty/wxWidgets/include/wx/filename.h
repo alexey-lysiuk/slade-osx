@@ -4,7 +4,7 @@
 // Author:      Robert Roebling, Vadim Zeitlin
 // Modified by:
 // Created:     28.12.00
-// RCS-ID:      $Id: filename.h 72777 2012-10-25 22:30:43Z VZ $
+// RCS-ID:      $Id: filename.h 73632 2013-03-09 15:08:40Z VZ $
 // Copyright:   (c) 2000 Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -490,16 +490,16 @@ public:
 
     // Dir accessors
     size_t GetDirCount() const { return m_dirs.size(); }
-    void AppendDir(const wxString& dir);
+    bool AppendDir(const wxString& dir);
     void PrependDir(const wxString& dir);
-    void InsertDir(size_t before, const wxString& dir);
+    bool InsertDir(size_t before, const wxString& dir);
     void RemoveDir(size_t pos);
     void RemoveLastDir() { RemoveDir(GetDirCount() - 1); }
 
     // Other accessors
     void SetExt( const wxString &ext )          { m_ext = ext; m_hasExt = !m_ext.empty(); }
-    void ClearExt()                             { m_ext = wxEmptyString; m_hasExt = false; }
-    void SetEmptyExt()                          { m_ext = wxT(""); m_hasExt = true; }
+    void ClearExt()                             { m_ext.clear(); m_hasExt = false; }
+    void SetEmptyExt()                          { m_ext.clear(); m_hasExt = true; }
     wxString GetExt() const                     { return m_ext; }
     bool HasExt() const                         { return m_hasExt; }
 

@@ -6,7 +6,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: private.h 67233 2011-03-18 15:45:51Z SC $
+// RCS-ID:      $Id: private.h 73532 2013-02-17 14:54:43Z SC $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -332,7 +332,6 @@ public :
     wxBitmap            GetBitmap() const;
     void                SetBitmap( const wxBitmap& bitmap );
     void                SetBitmapPosition( wxDirection dir );
-    void                SetupTabs( const wxNotebook &notebook );
 
     void                GetBestRect( wxRect *r ) const;
     bool                IsEnabled() const;

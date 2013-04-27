@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (c) Karsten Ballueder
-// RCS-ID:      $Id: treectrl.h 72638 2012-10-07 22:42:02Z VZ $
+// RCS-ID:      $Id: treectrl.h 73850 2013-04-25 10:11:03Z VZ $
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -289,10 +289,10 @@ public:
         // delete this item and associated data if any
     virtual void Delete(const wxTreeItemId& item) = 0;
         // delete all children (but don't delete the item itself)
-        // NB: this won't send wxEVT_COMMAND_TREE_ITEM_DELETED events
+        // NB: this won't send wxEVT_TREE_ITEM_DELETED events
     virtual void DeleteChildren(const wxTreeItemId& item) = 0;
         // delete all items from the tree
-        // NB: this won't send wxEVT_COMMAND_TREE_ITEM_DELETED events
+        // NB: this won't send wxEVT_TREE_ITEM_DELETED events
     virtual void DeleteAllItems() = 0;
 
         // expand this item

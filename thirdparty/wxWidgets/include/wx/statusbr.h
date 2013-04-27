@@ -4,7 +4,7 @@
 // Author:      Vadim Zeitlin
 // Modified by:
 // Created:     05.02.00
-// RCS-ID:      $Id: statusbr.h 70808 2012-03-04 20:31:42Z VZ $
+// RCS-ID:      $Id: statusbr.h 73691 2013-03-21 22:36:52Z VZ $
 // Copyright:   (c) Vadim Zeitlin
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -45,6 +45,7 @@ extern WXDLLIMPEXP_DATA_CORE(const char) wxStatusBarNameStr[];
 #define wxSB_NORMAL    0x0000
 #define wxSB_FLAT      0x0001
 #define wxSB_RAISED    0x0002
+#define wxSB_SUNKEN    0x0003
 
 // ----------------------------------------------------------------------------
 // wxStatusBarPane: an helper for wxStatusBar
@@ -150,10 +151,7 @@ public:
     // field styles
     // ------------
 
-    // Set the field style. Use either wxSB_NORMAL (default) for a standard 3D
-    // border around a field, wxSB_FLAT for no border around a field, so that it
-    // appears flat or wxSB_POPOUT to make the field appear raised.
-    // Setting field styles only works on wxMSW
+    // Set the field border style to one of wxSB_XXX values.
     virtual void SetStatusStyles(int n, const int styles[]);
 
     int GetStatusStyle(int n) const

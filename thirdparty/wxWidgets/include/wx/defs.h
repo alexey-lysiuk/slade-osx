@@ -4,7 +4,7 @@
  *  Author:      Julian Smart and others
  *  Modified by: Ryan Norton (Converted to C)
  *  Created:     01/02/97
- *  RCS-ID:      $Id: defs.h 73405 2013-01-20 02:10:07Z VZ $
+ *  RCS-ID:      $Id: defs.h 73572 2013-02-28 13:31:58Z VS $
  *  Copyright:   (c) Julian Smart
  *  Licence:     wxWindows licence
  */
@@ -3360,7 +3360,8 @@ typedef const void* WXWidget;
 /*  If a manifest is being automatically generated, add common controls 6 to it */
 /*  --------------------------------------------------------------------------- */
 
-#if (!defined wxUSE_NO_MANIFEST || wxUSE_NO_MANIFEST == 0 ) && \
+#if wxUSE_GUI && \
+    (!defined wxUSE_NO_MANIFEST || wxUSE_NO_MANIFEST == 0 ) && \
     ( defined _MSC_FULL_VER && _MSC_FULL_VER >= 140040130 )
 
 #define WX_CC_MANIFEST(cpu)                     \

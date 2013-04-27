@@ -4,7 +4,7 @@
 // Author:      Ryan Norton <wxprojects@comcast.net>
 // Modified by:
 // Created:     11/07/04
-// RCS-ID:      $Id: mediactrl.h 67280 2011-03-22 14:17:38Z DS $
+// RCS-ID:      $Id: mediactrl.h 73571 2013-02-27 12:05:17Z SN $
 // Copyright:   (c) Ryan Norton
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -242,7 +242,7 @@ protected:
 // for wxMediaCtrl.  Backends are searched alphabetically -
 // the one with the earliest letter is tried first.
 //
-// Note that this is currently not API or ABI compatable -
+// Note that this is currently not API or ABI compatible -
 // so statically link or make the client compile on-site.
 //
 // ----------------------------------------------------------------------------
@@ -392,7 +392,7 @@ protected:
 };
 
 // ----------------------------------------------------------------------------
-// End compilation gaurd
+// End compilation guard
 // ----------------------------------------------------------------------------
 #endif // wxUSE_MEDIACTRL
 

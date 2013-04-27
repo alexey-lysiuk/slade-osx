@@ -7,7 +7,7 @@
 // Author:      Robert Roebling, Harm van der Heijden, Julian Smart et al
 // Modified by:
 // Created:     21/3/2000
-// RCS-ID:      $Id: dirctrlg.h 72842 2012-11-01 17:15:08Z VZ $
+// RCS-ID:      $Id: dirctrlg.h 73850 2013-04-25 10:11:03Z VZ $
 // Copyright:   (c) Robert Roebling, Harm van der Heijden, Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -39,10 +39,8 @@ enum
     wxDIRCTRL_DIR_ONLY       = 0x0010,
     // When setting the default path, select the first file in the directory
     wxDIRCTRL_SELECT_FIRST   = 0x0020,
-#if WXWIN_COMPATIBILITY_2_8
-    // Unused, for compatibility only
+    // Show the filter list
     wxDIRCTRL_SHOW_FILTERS   = 0x0040,
-#endif // WXWIN_COMPATIBILITY_2_8
     // Use 3D borders on internal controls
     wxDIRCTRL_3D_INTERNAL    = 0x0080,
     // Editable labels
@@ -211,12 +209,10 @@ private:
     wxDECLARE_NO_COPY_CLASS(wxGenericDirCtrl);
 };
 
-wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_COMMAND_DIRCTRL_CHANGED, wxTreeEvent );
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_CORE, wxEVT_DIRCTRL_CHANGED, wxTreeEvent );
 
-#define wx__DECLARE_DIRCTRL_EVT(evt, id, fn) \
-    wx__DECLARE_EVT1(wxEVT_COMMAND_DIRCTRL_ ## evt, id, wxTreeEventHandler(fn))
-
-#define EVT_DIRCTRL_CHANGED(id, fn) wx__DECLARE_DIRCTRL_EVT(CHANGED, id, fn)
+#define EVT_DIRCTRL_CHANGED(id, fn) \
+    wx__DECLARE_EVT1(wxEVT_DIRCTRL_CHANGED, id, wxTreeEventHandler(fn))
 
 //-----------------------------------------------------------------------------
 // wxDirFilterListCtrl
@@ -309,6 +305,9 @@ protected:
 extern WXDLLIMPEXP_DATA_CORE(wxFileIconsTable *) wxTheFileIconsTable;
 
 #endif // wxUSE_DIRDLG || wxUSE_FILEDLG || wxUSE_FILECTRL
+
+// old wxEVT_COMMAND_* constants
+#define wxEVT_COMMAND_DIRCTRL_CHANGED   wxEVT_DIRCTRL_CHANGED
 
 #endif
     // _WX_DIRCTRLG_H_

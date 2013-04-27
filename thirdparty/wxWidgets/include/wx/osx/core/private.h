@@ -6,7 +6,7 @@
 // Author:      Stefan Csomor
 // Modified by:
 // Created:     1998-01-01
-// RCS-ID:      $Id: private.h 72924 2012-11-08 15:46:23Z SC $
+// RCS-ID:      $Id: private.h 73598 2013-03-03 22:44:14Z VZ $
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,8 @@ public :
     virtual wxBitmap    GetBitmap() const = 0;
     virtual void        SetBitmap( const wxBitmap& bitmap ) = 0;
     virtual void        SetBitmapPosition( wxDirection dir ) = 0;
-    virtual void        SetupTabs( const wxNotebook &notebook ) =0;
+    virtual void        SetupTabs( const wxNotebook& WXUNUSED(notebook) ) {}
+    virtual int         TabHitTest( const wxPoint & WXUNUSED(pt), long *flags ) {*flags=1; return -1;};
     virtual void        GetBestRect( wxRect *r ) const = 0;
     virtual bool        IsEnabled() const = 0;
     virtual void        Enable( bool enable ) = 0;
