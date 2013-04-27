@@ -396,22 +396,26 @@ void ArchivePanel::removeMenus() {
  * Performs an undo operation
  *******************************************************************/
 void ArchivePanel::undo() {
-	// Undo
-	undo_manager->undo();
+	if (!(cur_area && cur_area->undo())) {
+		// Undo
+		undo_manager->undo();
 
-	// Refresh entry list
-	entry_list->updateList();
+		// Refresh entry list
+		entry_list->updateList();
+	}
 }
 
 /* ArchivePanel::redo
  * Performs a redo operation
  *******************************************************************/
 void ArchivePanel::redo() {
-	// Redo
-	undo_manager->redo();
+	if (!(cur_area && cur_area->redo())) {
+		// Redo
+		undo_manager->redo();
 
-	// Refresh entry list
-	entry_list->updateList();
+		// Refresh entry list
+		entry_list->updateList();
+	}
 }
 
 /* ArchivePanel::save
@@ -1157,6 +1161,7 @@ bool ArchivePanel::pasteEntry() {
 
 	// Go through all clipboard items
 	bool pasted = false;
+	undo_manager->beginRecord("Paste Entry");
 	for (unsigned a = 0; a < theClipboard->nItems(); a++) {
 		// Check item type
 		if (theClipboard->getItem(a)->getType() != CLIPBOARD_ENTRY_TREE)
@@ -1169,6 +1174,7 @@ bool ArchivePanel::pasteEntry() {
 		if (archive->paste(clip->getTree(), index, entry_list->getCurrentDir()))
 			pasted = true;
 	}
+	undo_manager->endRecord(true);
 
 	if (pasted) {
 		// Update archive
@@ -1604,7 +1610,6 @@ bool ArchivePanel::optimizePNG() {
 
 	// Go through selection
 	for (unsigned a = 0; a < selection.size(); a++) {
-		theSplashWindow->Raise();
 		theSplashWindow->setProgressMessage(selection[a]->getName(true));
 		theSplashWindow->setProgress(float(a) / float(selection.size()));
 		if (selection[a]->getType()->getFormat() == "img_png") {
@@ -1613,7 +1618,6 @@ bool ArchivePanel::optimizePNG() {
 		}
 	}
 	theSplashWindow->hide();
-	theMainWindow->Raise();
 
 	// Finish recording undo level
 	undo_manager->endRecord(true);

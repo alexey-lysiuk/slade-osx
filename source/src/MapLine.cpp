@@ -289,8 +289,10 @@ double MapLine::distanceTo(double x, double y) {
 	// Update length data if needed
 	if (length < 0) {
 		length = MathStuff::distance(vertex1->xPos(), vertex1->yPos(), vertex2->xPos(), vertex2->yPos());
-		ca = (vertex2->xPos() - vertex1->xPos()) / length;
-		sa = (vertex2->yPos() - vertex1->yPos()) / length;
+		if (length != 0) {
+			ca = (vertex2->xPos() - vertex1->xPos()) / length;
+			sa = (vertex2->yPos() - vertex1->yPos()) / length;
+		}
 	}
 
 	// Calculate intersection point
@@ -449,4 +451,21 @@ void MapLine::readBackup(mobj_backup_t* backup) {
 
 	// Special
 	special = backup->props_internal["special"];
+}
+
+void MapLine::copy(MapObject *c) {
+    if(getObjType() != c->getObjType())
+        return;
+
+    MapObject::copy(c);
+
+    MapLine *l = static_cast<MapLine*>(c);
+
+    if(side1 && l->side1)
+        side1->copy(l->side1);
+
+    if(side2 && l->side2)
+        side2->copy(l->side2);
+
+    setIntProperty("special", l->intProperty("special"));
 }
