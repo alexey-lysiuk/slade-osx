@@ -185,6 +185,8 @@ void MapEditorWindow::setupLayout() {
 	theApp->getAction("mapw_undo")->addToMenu(menu_editor);
 	theApp->getAction("mapw_redo")->addToMenu(menu_editor);
 	menu_editor->AppendSeparator();
+	theApp->getAction("mapw_find_items")->addToMenu(menu_editor);
+	menu_editor->AppendSeparator();
 	theApp->getAction("mapw_preferences")->addToMenu(menu_editor);
 	theApp->getAction("mapw_setbra")->addToMenu(menu_editor);
 	menu->Append(menu_editor, "&Edit");
@@ -670,6 +672,48 @@ bool MapEditorWindow::handleAction(string id) {
 			theArchiveManager->openBaseResource(brap.getSelectedPath());
 
 		return true;
+	}
+
+	if (id == "mapw_find_items")
+	{
+/*
+		SLADEMap& map = editor.getMap();
+		  
+		for ( unsigned int i = 0; i < map.nSectors(); ++i )
+		{
+			//puts( (*it)->props().toString().c_str() );
+
+			MapSector* sector = map.getSector(i);
+			const bbox_t box = sector->boundingBox();
+
+			printf( "SECTOR %zi: (%f, %f) - (%f, %f)\n", i, box.min.x, box.min.y, box.max.x, box.max.y );
+			puts( sector->props().toString().c_str() );
+		}
+*/
+
+		SLADEMap& map = editor.getMap();
+
+		//vector<int> items;
+		vector<int>& items = editor.getSelection();
+
+		items.clear();
+
+		for ( int i = 0; i < map.nSectors(); ++i )
+		{
+			MapSector* sector = map.getSector(i);
+		
+			if (1024 & sector->intProperty("special"))
+			{
+				items.push_back(i);
+			}
+
+			//map_canvas->itemsSelected(items);
+
+			if (!items.empty())
+			{
+				editor.selectionUpdated();
+			}
+		}
 	}
 
 	// Editor->Preferences

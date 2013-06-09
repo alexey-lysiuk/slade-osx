@@ -544,6 +544,7 @@ void MainApp::initActions() {
 	new SAction("mapw_redo", "Redo", "t_redo", "Redo", "Ctrl+Y");
 	new SAction("mapw_setbra", "Set &Base Resource Archive", "e_archive", "Set the Base Resource Archive, to act as the program 'IWAD'");
 	new SAction("mapw_preferences", "&Preferences...", "t_settings", "Setup SLADE options and preferences");
+	new SAction("mapw_find_items", "&Find Items...", "", "Find items");
 	int group_mode = SAction::newGroup();
 	new SAction("mapw_mode_vertices", "Vertices Mode", "t_verts", "Change to vertices editing mode", "", SAction::RADIO, -1, group_mode);
 	new SAction("mapw_mode_lines", "Lines Mode", "t_lines", "Change to lines editing mode", "", SAction::RADIO, -1, group_mode);
