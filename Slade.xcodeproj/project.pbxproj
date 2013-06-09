@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A17BAC51764C2E500C5D768 /* libGLEW.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A17BAC41764C2E500C5D768 /* libGLEW.a */; };
 		8A17E7DA154C3435008FD77E /* libftgl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A17E7D9154C3435008FD77E /* libftgl.a */; };
 		8A17E7DC154C3467008FD77E /* libfreetype.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A17E7DB154C3467008FD77E /* libfreetype.a */; };
 		8A21528D154BD58E000E4252 /* libfluidsynth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A21528C154BD58E000E4252 /* libfluidsynth.a */; };
@@ -181,7 +182,6 @@
 		8AD18A56154A8A7000AB9C07 /* SLADE-osx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 8AD18A54154A8A7000AB9C07 /* SLADE-osx.icns */; };
 		8AD18F54154A8A9B00AB9C07 /* ACSPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D56154A8A9A00AB9C07 /* ACSPrefsPanel.cpp */; };
 		8AD18F55154A8A9B00AB9C07 /* ActionSpecial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D58154A8A9A00AB9C07 /* ActionSpecial.cpp */; };
-		8AD18F56154A8A9B00AB9C07 /* ActionSpecialTreeView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D5A154A8A9A00AB9C07 /* ActionSpecialTreeView.cpp */; };
 		8AD18F57154A8A9B00AB9C07 /* ADatArchive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D5C154A8A9A00AB9C07 /* ADatArchive.cpp */; };
 		8AD18F58154A8A9B00AB9C07 /* AdvancedPrefsPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D5E154A8A9A00AB9C07 /* AdvancedPrefsPanel.cpp */; };
 		8AD18F59154A8A9B00AB9C07 /* AnimatedEntryPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AD18D60154A8A9A00AB9C07 /* AnimatedEntryPanel.cpp */; };
@@ -400,6 +400,7 @@
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		8A103248154AF4BE00D4393F /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = source/Info.plist; sourceTree = "<group>"; };
+		8A17BAC41764C2E500C5D768 /* libGLEW.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libGLEW.a; path = thirdparty/GLEW/lib/libGLEW.a; sourceTree = "<group>"; };
 		8A17E7D9154C3435008FD77E /* libftgl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libftgl.a; path = thirdparty/FTGL/lib/libftgl.a; sourceTree = "<group>"; };
 		8A17E7DB154C3467008FD77E /* libfreetype.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfreetype.a; path = thirdparty/FreeType/lib/libfreetype.a; sourceTree = "<group>"; };
 		8A21528C154BD58E000E4252 /* libfluidsynth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfluidsynth.a; path = thirdparty/FluidSynth/lib/libfluidsynth.a; sourceTree = "<group>"; };
@@ -559,8 +560,6 @@
 		8AD18D57154A8A9A00AB9C07 /* ACSPrefsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ACSPrefsPanel.h; path = src/ACSPrefsPanel.h; sourceTree = "<group>"; };
 		8AD18D58154A8A9A00AB9C07 /* ActionSpecial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ActionSpecial.cpp; path = src/ActionSpecial.cpp; sourceTree = "<group>"; };
 		8AD18D59154A8A9A00AB9C07 /* ActionSpecial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ActionSpecial.h; path = src/ActionSpecial.h; sourceTree = "<group>"; };
-		8AD18D5A154A8A9A00AB9C07 /* ActionSpecialTreeView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ActionSpecialTreeView.cpp; path = src/ActionSpecialTreeView.cpp; sourceTree = "<group>"; };
-		8AD18D5B154A8A9A00AB9C07 /* ActionSpecialTreeView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ActionSpecialTreeView.h; path = src/ActionSpecialTreeView.h; sourceTree = "<group>"; };
 		8AD18D5C154A8A9A00AB9C07 /* ADatArchive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ADatArchive.cpp; path = src/ADatArchive.cpp; sourceTree = "<group>"; };
 		8AD18D5D154A8A9A00AB9C07 /* ADatArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ADatArchive.h; path = src/ADatArchive.h; sourceTree = "<group>"; };
 		8AD18D5E154A8A9A00AB9C07 /* AdvancedPrefsPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AdvancedPrefsPanel.cpp; path = src/AdvancedPrefsPanel.cpp; sourceTree = "<group>"; };
@@ -1051,6 +1050,7 @@
 				8A21528F154BD59F000E4252 /* libfreeimage.a in Frameworks */,
 				8A17E7DC154C3467008FD77E /* libfreetype.a in Frameworks */,
 				8A17E7DA154C3435008FD77E /* libftgl.a in Frameworks */,
+				8A17BAC51764C2E500C5D768 /* libGLEW.a in Frameworks */,
 				8A2152DB154BD645000E4252 /* libglib-2.0.a in Frameworks */,
 				8A2152DE154BD645000E4252 /* libgthread-2.0.a in Frameworks */,
 				8AE371E0154D56D100D88A7F /* libintl.a in Frameworks */,
@@ -1121,8 +1121,6 @@
 				8AD18D59154A8A9A00AB9C07 /* ActionSpecial.h */,
 				8A91A28016DA59660059E984 /* ActionSpecialDialog.cpp */,
 				8A91A28116DA59660059E984 /* ActionSpecialDialog.h */,
-				8AD18D5A154A8A9A00AB9C07 /* ActionSpecialTreeView.cpp */,
-				8AD18D5B154A8A9A00AB9C07 /* ActionSpecialTreeView.h */,
 				8AD18D5C154A8A9A00AB9C07 /* ADatArchive.cpp */,
 				8AD18D5D154A8A9A00AB9C07 /* ADatArchive.h */,
 				8AD18D5E154A8A9A00AB9C07 /* AdvancedPrefsPanel.cpp */,
@@ -1538,6 +1536,7 @@
 				8A21528E154BD59F000E4252 /* libfreeimage.a */,
 				8A17E7DB154C3467008FD77E /* libfreetype.a */,
 				8A17E7D9154C3435008FD77E /* libftgl.a */,
+				8A17BAC41764C2E500C5D768 /* libGLEW.a */,
 				8A2152CE154BD645000E4252 /* libglib-2.0.a */,
 				8A2152D1154BD645000E4252 /* libgthread-2.0.a */,
 				8AE371DF154D56D100D88A7F /* libintl.a */,
@@ -2127,7 +2126,6 @@
 				8AD18F54154A8A9B00AB9C07 /* ACSPrefsPanel.cpp in Sources */,
 				8AD18F55154A8A9B00AB9C07 /* ActionSpecial.cpp in Sources */,
 				8A91A28216DA59660059E984 /* ActionSpecialDialog.cpp in Sources */,
-				8AD18F56154A8A9B00AB9C07 /* ActionSpecialTreeView.cpp in Sources */,
 				8AD18F57154A8A9B00AB9C07 /* ADatArchive.cpp in Sources */,
 				8AD18F58154A8A9B00AB9C07 /* AdvancedPrefsPanel.cpp in Sources */,
 				8AD18F59154A8A9B00AB9C07 /* AnimatedEntryPanel.cpp in Sources */,
@@ -2494,6 +2492,7 @@
 					thirdparty/sndfile/lib,
 					thirdparty/vorbis/lib,
 					thirdparty/wxWidgets/lib,
+					"\"$(SRCROOT)/thirdparty/GLEW/lib\"",
 				);
 				PRODUCT_NAME = Slade;
 				SHARED_PRECOMPS_DIR = "$(OBJROOT)/PrecompiledHeaders";
@@ -2548,6 +2547,7 @@
 					thirdparty/sndfile/lib,
 					thirdparty/vorbis/lib,
 					thirdparty/wxWidgets/lib,
+					"\"$(SRCROOT)/thirdparty/GLEW/lib\"",
 				);
 				PRODUCT_NAME = Slade;
 				SHARED_PRECOMPS_DIR = "$(OBJROOT)/PrecompiledHeaders";
